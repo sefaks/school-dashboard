@@ -1,0 +1,408 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model alembic_version {
+  version_num String @id(map: "alembic_version_pkc") @db.VarChar(32)
+}
+
+model assignment_class {
+  assignment_id Int
+  class_id      Int
+  assignments   assignments @relation(fields: [assignment_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  classes       classes     @relation(fields: [class_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([assignment_id, class_id])
+}
+
+model assignment_student {
+  id                      Int                       @id @default(autoincrement())
+  assignment_id           Int?
+  student_id              Int?
+  assignments             assignments?              @relation(fields: [assignment_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  students                students?                 @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  test_student_assignment test_student_assignment[]
+}
+
+model assignments {
+  id                 Int                  @id @default(autoincrement())
+  start_date         DateTime             @db.Timestamp(6)
+  deadline_date      DateTime             @db.Timestamp(6)
+  assignee_id        Int?
+  assignee_type      assigneetype
+  description        String?              @db.VarChar
+  status             assignmentstatus
+  header             String?              @db.VarChar
+  subject_id         Int?
+  assignment_class   assignment_class[]
+  assignment_student assignment_student[]
+  subjects           subjects?            @relation(fields: [subject_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  comments           comments[]
+
+  @@index([id], map: "ix_assignments_id")
+}
+
+model classes {
+  id               Int                @id @default(autoincrement())
+  class_code       String             @unique @db.VarChar
+  grade            Int
+  institution_id   Int
+  assignment_class assignment_class[]
+  institutions     institutions       @relation(fields: [institution_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  schedules        schedules[]
+  student_class    student_class[]
+  teacher_class    teacher_class[]
+
+  @@index([id], map: "ix_classes_id")
+}
+
+model comments {
+  id            Int         @id @default(autoincrement())
+  assignment_id Int
+  user_id       Int
+  user_type     String      @db.VarChar
+  content       String      @db.VarChar
+  created_at    DateTime?   @db.Timestamp(6)
+  assignments   assignments @relation(fields: [assignment_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([id], map: "ix_comments_id")
+}
+
+model contents {
+  id            Int      @id @default(autoincrement())
+  unit_id       Int
+  content_count Int?
+  lesson_id     Int?
+  content_name  String?  @db.VarChar
+  level         Int?
+  content_id    String   @db.Uuid
+  unit_no       Int
+  lessons       lessons? @relation(fields: [lesson_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  units         units    @relation(fields: [unit_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([id], map: "ix_contents_id")
+}
+
+model institutions {
+  id                  Int                   @id @default(autoincrement())
+  name                String                @db.VarChar
+  phone_number        String                @db.VarChar
+  address             String?               @db.VarChar
+  email               String?               @unique(map: "ix_institutions_email") @db.VarChar
+  password            String?               @db.VarChar
+  classes             classes[]
+  lessons             lessons[]
+  student_institution student_institution[]
+  teacher_institution teacher_institution[]
+
+  @@index([address], map: "ix_institutions_address")
+  @@index([id], map: "ix_institutions_id")
+  @@index([name], map: "ix_institutions_name")
+  @@index([phone_number], map: "ix_institutions_phone_number")
+}
+
+model lesson_schedules {
+  id          Int       @id @default(autoincrement())
+  lesson_id   Int
+  schedule_id Int
+  start_time  DateTime  @db.Timestamp(6)
+  end_time    DateTime  @db.Timestamp(6)
+  day_of_week dayofweek
+  teacher_id  Int
+  lessons     lessons   @relation(fields: [lesson_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  schedules   schedules @relation(fields: [schedule_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  teachers    teachers  @relation(fields: [teacher_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([id], map: "ix_lesson_schedules_id")
+}
+
+model lessons {
+  id               Int                @id @default(autoincrement())
+  name             String             @db.VarChar
+  grade            Int
+  curriculum_year  DateTime           @db.Date
+  institution_id   Int
+  subject_id       Int?
+  description      String?            @db.VarChar
+  lesson_image     String?            @db.VarChar
+  contents         contents[]
+  lesson_schedules lesson_schedules[]
+  institutions     institutions       @relation(fields: [institution_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  subjects         subjects?          @relation(fields: [subject_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  teacher_lesson   teacher_lesson[]
+
+  @@index([id], map: "ix_lessons_id")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model parent_student {
+  parent_id  Int
+  student_id Int
+  parents    parents  @relation(fields: [parent_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  students   students @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([parent_id, student_id])
+}
+
+model parents {
+  id             Int              @id @default(autoincrement())
+  name           String           @db.VarChar
+  surname        String           @db.VarChar
+  email          String           @db.VarChar
+  phone          String           @db.VarChar
+  parent_student parent_student[] 
+
+  @@index([id], map: "ix_parents_id")
+}
+
+model questions {
+  id            Int             @id @default(autoincrement())
+  test_question test_question[]
+
+  @@index([id], map: "ix_questions_id")
+}
+
+model schedules {
+  id               Int                @id @default(autoincrement())
+  name             String             @db.VarChar
+  created_at       DateTime?          @db.Timestamp(6)
+  updated_at       DateTime?          @db.Timestamp(6)
+  class_id         Int
+  status           schedulestatus
+  lesson_schedules lesson_schedules[]
+  classes          classes            @relation(fields: [class_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([id], map: "ix_schedules_id")
+}
+
+model student_class {
+  student_id Int
+  class_id   Int
+  classes    classes  @relation(fields: [class_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  students   students @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([student_id, class_id])
+}
+
+model student_institution {
+  student_id     Int
+  institution_id Int
+  institutions   institutions @relation(fields: [institution_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  students       students     @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([student_id, institution_id])
+}
+
+model students {
+  id                  Int                   @id @default(autoincrement())
+  name                String                @db.VarChar
+  surname             String                @db.VarChar
+  gender              String?               @db.VarChar
+  email               String                @unique @db.VarChar
+  password            String                @db.VarChar
+  birth_date          DateTime?             @db.Date
+  school_name         String?               @db.VarChar
+  grade               Int?
+  is_active           Boolean?
+  photo               String?               @db.VarChar
+  school_no           String?               @db.VarChar
+  assignment_student  assignment_student[]
+  parent_student      parent_student[]      
+  student_class       student_class[]
+  student_institution student_institution[]
+
+  @@index([id], map: "ix_students_id")
+}
+
+model subjects {
+  id              Int               @id @default(autoincrement())
+  subject_name    subject_name
+  assignments     assignments[]
+  lessons         lessons[]
+  teacher_subject teacher_subject[]
+  units           units[]
+
+  @@index([id], map: "ix_subjects_id")
+}
+
+model teacher_class {
+  teacher_id Int
+  class_id   Int
+  classes    classes  @relation(fields: [class_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  teachers   teachers @relation(fields: [teacher_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([teacher_id, class_id])
+}
+
+model teacher_institution {
+  teacher_id     Int
+  institution_id Int
+  institutions   institutions @relation(fields: [institution_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  teachers       teachers     @relation(fields: [teacher_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([teacher_id, institution_id])
+}
+
+model teacher_lesson {
+  teacher_id Int
+  lesson_id  Int
+  lessons    lessons  @relation(fields: [lesson_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  teachers   teachers @relation(fields: [teacher_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([teacher_id, lesson_id])
+}
+
+model teachers {
+  id                  Int                   @id @default(autoincrement())
+  name                String?               @db.VarChar
+  surname             String?               @db.VarChar
+  email               String                @unique(map: "ix_teachers_email") @db.VarChar
+  password            String                @db.VarChar
+  gender              String?               @db.VarChar
+  title               String?               @db.VarChar
+  is_active           Boolean?
+  phone_number        String?               @db.VarChar
+  photo               String?               @db.VarChar
+  lesson_schedules    lesson_schedules[]
+  teacher_class       teacher_class[]
+  teacher_institution teacher_institution[]
+  teacher_lesson      teacher_lesson[]
+  teacher_subject     teacher_subject[]
+
+  @@index([gender], map: "ix_teachers_gender")
+  @@index([id], map: "ix_teachers_id")
+  @@index([name], map: "ix_teachers_name")
+  @@index([surname], map: "ix_teachers_surname")
+  @@index([title], map: "ix_teachers_title")
+  @@index([phone_number], map: "ix_teachers_phone_number")
+}
+
+model test_question {
+  test_id     Int
+  question_id Int
+  questions   questions @relation(fields: [question_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tests       tests     @relation(fields: [test_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([test_id, question_id])
+}
+
+model test_student_assignment {
+  test_id               Int
+  assignment_student_id Int
+  status                assignmentstatus
+  answers               String[]           @db.VarChar
+  score                 Int?
+  evaluation            String?            @db.VarChar
+  assignment_student    assignment_student @relation(fields: [assignment_student_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tests                 tests              @relation(fields: [test_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([test_id, assignment_student_id])
+}
+
+model tests {
+  id                      Int                       @id @default(autoincrement())
+  name                    String?                   @db.VarChar(255)
+  test_no                 Int?
+  unit_id                 Int
+  test_question           test_question[]
+  test_student_assignment test_student_assignment[]
+  units                   units                     @relation(fields: [unit_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([id], map: "ix_tests_id")
+  @@index([name], map: "ix_tests_name")
+  @@index([test_no], map: "ix_tests_test_no")
+}
+
+model units {
+  id         Int        @id @default(autoincrement())
+  name       String     @db.VarChar
+  grade      Int
+  unit_no    Int?
+  subject_id Int
+  contents   contents[]
+  tests      tests[]
+  subjects   subjects   @relation(fields: [subject_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([id], map: "ix_units_id")
+}
+
+model teacher_subject {
+  teacher_id Int
+  subject_id Int
+  subjects   subjects @relation(fields: [subject_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  teachers   teachers @relation(fields: [teacher_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([teacher_id, subject_id])
+}
+
+enum assigneetype {
+  AUTO
+  TEACHER
+}
+
+enum assignmentstatus {
+  ASSIGNED
+  COMPLETED
+  PENDING
+  PAST_DUE
+}
+
+enum dayofweek {
+  Monday
+  Tuesday
+  Wednesday
+  Thursday
+  Friday
+  Saturday
+  Sunday
+}
+
+enum difficulty {
+  easy
+  medium
+  hard
+}
+
+enum name {
+  TURKCE
+  MATEMATIK
+  FEN_B_LG_S_     @map("FEN_BİLGİSİ")
+  SOSYAL_BILGILER
+  INGILIZCE
+  DIN_BILGISI
+  COGRAFYA
+  TAR_H           @map("TARİH")
+}
+
+enum schedulestatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum subject {
+  TURKCE
+  MATEMATIK
+  FEN_B_LG_S_     @map("FEN_BİLGİSİ")
+  SOSYAL_BILGILER
+  INGILIZCE
+  DIN_BILGISI
+  COGRAFYA
+  TAR_H           @map("TARİH")
+}
+
+enum subject_name {
+  TURKCE
+  MATEMATIK
+  FEN_BILIMLERI
+  SOSYAL_BILGILER
+  INGILIZCE
+  DIN_BILGISI
+  COGRAFYA
+  TAR_H           @map("TARİH")
+}

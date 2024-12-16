@@ -19,7 +19,7 @@ const StudentForm = dynamic(() => import("./forms/StudentForm"), {
 const forms: {
   [key: string]: (type: "create" | "update", data?: any) => JSX.Element;
 } = {
-  teacher: (type, data) => <TeacherForm type={type} data={data} />,// we will use this to render the form
+  teacher: (type, data) => <TeacherForm type={type} data={data} />,// we will use this to render the form. 
   student: (type, data) => <StudentForm type={type} data={data} /> // we will use this to render the form
 };
 
@@ -58,6 +58,11 @@ const FormModal = ({
   const [open, setOpen] = useState(false); // we use this to open the modal, if it is true, the modal will be opened
 
   const Form = () => {
+    // we will use this to render the form
+    // if the type is delete, we will render a form with a delete button
+    // if the type is create or update, we will render the form
+    // if the type is create for example, we will render the form with the data
+    // if the type is update, we will render the form with the data
     return type === "delete" && id ? (
       <form action="" className="p-4 flex flex-col gap-4">
         <span className="text-center font-medium">
