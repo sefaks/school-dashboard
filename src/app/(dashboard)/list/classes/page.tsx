@@ -9,10 +9,10 @@ import { Prisma, classes, students, teachers } from "@prisma/client";
 import Image from "next/image";
 
 type ClassList = classes & {
-  class_student: Array<{  // in here, we define with array because a class can have multiple students
+  student_class: Array<{  // in here, we define with array because a class can have multiple students
     students: students 
   }>; 
-  class_teacher: Array<{  // in here, we define with array because a class can have multiple teachers
+  teacher_class: Array<{  // in here, we define with array because a class can have multiple teachers
     teachers: teachers 
   }>;
 
@@ -52,17 +52,16 @@ const renderRow = (item: ClassList) => (
     className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
   >
     <td className="flex items-center gap-4 p-4">{item.class_code}</td>
-    <td className="hidden md:table-cell">{item.class_student ? item.class_student.length : 0}</td>
+    <td className="hidden md:table-cell">{item.student_class?.length || 0}</td>
+    <td className="hidden md:table-cell">{item.grade}</td>
     <td className="hidden md:table-cell">
-      {item.class_teacher?.map((teacher_item: { teachers: teachers }, index: number) => (
+      {item.teacher_class?.map((teacher_item: { teachers: teachers }, index: number) => (
         <span key={teacher_item.teachers.id}>
-          {teacher_item.teachers.name}
-          {index < item.class_teacher.length - 1 && ', '}
+          {teacher_item.teachers.name} {teacher_item.teachers.surname}
+          {index < item.teacher_class.length - 1 && ', '}
         </span>
       ))}
     </td> 
-    <td className="hidden md:table-cell">{item.grade}</td>
-    <td className="hidden md:table-cell">{item.institution_id}</td>
     <td>
       <div className="flex items-center gap-2">
           <>
@@ -124,29 +123,34 @@ const ClassListPage = async ({searchParams}:{searchParams:{[key:string]:string} 
     }
   }
             
-
-  const [classesData, count] = await prisma.$transaction([ 
+  const [classesData, count] = await prisma.$transaction([
     prisma.classes.findMany({
-      where: query, 
+      where: query,
       include: {
         student_class: {
           include: {
-            students: true // Öğrencileri dahil et
-          }
+            students: true, // Öğrenciler dahil
+          },
         },
         teacher_class: {
           include: {
-            teachers: true // Öğretmenleri dahil et
-          }
-        }
+            teachers: true, // Öğretmenler dahil
+          },
+        },
       },
       take: ITEM_PER_PAGE,
-      skip: (p - 1) * ITEM_PER_PAGE
+      skip: (p - 1) * ITEM_PER_PAGE,
     }),
     prisma.classes.count({
-      where: query // Sadece filtreyi kullanarak toplam sınıf sayısını al
-    })
+      where: query, // Filtreli sınıf sayısı
+    }),
   ]);
+
+  classesData.forEach((classItem) => {
+    console.log(`Class: ${classItem.class_code}`);
+    console.log(`Students in class:`, classItem.student_class.map(sc => sc.students));
+    console.log(`Teachers in class:`, classItem.teacher_class.map(tc => tc.teachers));
+  });
   
   
 

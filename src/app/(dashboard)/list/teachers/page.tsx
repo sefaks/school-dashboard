@@ -142,7 +142,7 @@ const renderRow = (item:TeacherList) => (
           }
         
         case "class_code":
-          whereClause.teacher_class = {
+          query.teacher_class = {
             some:{
               classes:{
                 class_code: {
@@ -186,6 +186,15 @@ const renderRow = (item:TeacherList) => (
             equals: parseInt(value),
           };
           break;
+
+        case "lessonId":
+          query.teacher_lesson = {
+            some:{
+              lessons:{
+                id: parseInt(value)
+              }
+            }
+          }
         }
       }
     }

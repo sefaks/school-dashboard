@@ -16,17 +16,18 @@ type LessonsList = lessons & {
 
 const columns = [
   {
-    header: "Subject Name",
+    header: "Lesson Name",
     accessor: "name",
-  },
-  {
-    header: "Curriculum Year",
-    accessor: "year",
   },
   {
     header: "Grade",
     accessor: "grade",
   },
+  {
+    header: "Curriculum Year",
+    accessor: "year",
+  },
+ 
   {
     header: "Teachers",
     accessor: "teacher",
@@ -44,8 +45,12 @@ const renderRow = (item: LessonsList) => (
     className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
   >
     <td className="flex items-center gap-4 p-4">{item.name}</td>
-    <td className="hidden md:table-cell">{String(item.curriculum_year)}</td>
     <td className="hidden md:table-cell">{item.grade}</td>
+    <td className="hidden md:table-cell">{new Date(item.curriculum_year).toLocaleDateString("tr-TR", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        })}</td>
     <td className="hidden md:table-cell">
       {item.teacher_lesson.map((teacher_item: { teachers: teachers }, index: number) => (
         <span key={teacher_item.teachers.id}>
@@ -118,14 +123,13 @@ const LessonListPage = async ({searchParams}:{searchParams:{[key:string]:string}
           }
 
         break;
-        
-
         }
 
     }
   }
             
 
+  
   const[lessonsData,count] = await prisma.$transaction([ // we get the data and the count of the data together. We using studentsData for rendering the table data and count for pagination
   prisma.lessons.findMany({
    where: query, 

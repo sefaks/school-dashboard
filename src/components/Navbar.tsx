@@ -5,6 +5,8 @@
 // -top-3 is a tailwindcss class that sets the top of the div to -3, that means it will be 3 pixels above the top of the div
 // ring-1 is a tailwindcss class that sets the ring around the div to 1 pixel, the ring is the border around the div
 
+import { UserButton } from "@clerk/nextjs";
+
 
 const Navbar = () => {
     return (
@@ -28,7 +30,7 @@ const Navbar = () => {
                     <span className="text-xs leading-3 font-medium">Sefa Kose</span>
                     <span className="test-[10px] text-gray-500 text-right" >Admin</span>
                 </div>
-                <img src="/avatar.png" alt="" width={36} height={36} className="rounded-full" />
+                <UserButton/>
             </div>
 
         </div>
