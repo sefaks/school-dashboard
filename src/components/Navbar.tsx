@@ -24,7 +24,12 @@ const Navbar = () => {
     const handleLogout = () => {
         // Çerezleri temizleme
         document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-        document.cookie = "role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+        document.cookie = "role=; path=/; expires=Thu, 01 Jan 197   0 00:00:00 GMT";
+
+        // LocalStorage'daki token'ı temizleme
+        localStorage.removeItem('token');
+        // LocalStorage'daki role'ü temizleme
+
         
         // Kullanıcıyı login sayfasına yönlendirme
         router.push('/login');

@@ -1,13 +1,14 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { routeAccessMap } from './lib/settings'; // settings.ts'yi import ettik
+import { routeAccessMap } from './lib/settings';
 
 export function middleware(request: NextRequest) {
   const token = request.cookies.get('token')?.value;
   const userRole = request.cookies.get('role')?.value;
+  const path = request.nextUrl.pathname;
 
-  // Ana sayfa veya login sayfası kontrolü
-  if (request.nextUrl.pathname === '/' || request.nextUrl.pathname === '/login') {
+  // Public paths kontrolü
+  if (path === '/login') {
     if (token) {
       if (userRole === 'teacher') {
         return NextResponse.redirect(new URL('/teacher', request.url));
@@ -16,9 +17,7 @@ export function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL('/admin', request.url));
       }
     }
-    if (request.nextUrl.pathname === '/') {
-      return NextResponse.redirect(new URL('/login', request.url));
-    }
+    return NextResponse.next();
   }
 
   // Token kontrolü
@@ -26,30 +25,48 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  // Önce spesifik route'ları kontrol et
-  for (const [route, roles] of Object.entries(routeAccessMap)) {
-    const regex = new RegExp(`^${route}$`); // Tam eşleşme için başlangıç ve bitiş ekle
-    if (regex.test(request.nextUrl.pathname)) {
-      if (!roles.includes(userRole as string)) {
-        return NextResponse.redirect(new URL('/unauthorized', request.url));
-      }
-      return NextResponse.next(); // Eğer yetki varsa, diğer kontrollere geçmeden devam et
+  // Ana sayfa yönlendirmesi
+  if (path === '/') {
+    if (userRole === 'teacher') {
+      return NextResponse.redirect(new URL('/teacher', request.url));
+    }
+    if (userRole === 'admin') {
+      return NextResponse.redirect(new URL('/admin', request.url));
     }
   }
 
-  // Genel yolları kontrol et
-  const isAdminPath = request.nextUrl.pathname.startsWith('/admin');
-  const isTeacherPath = request.nextUrl.pathname.startsWith('/teacher');
+  // List route'ları için yetki kontrolü
+  if (path.startsWith('/list/')) {
+    const matchingRoute = Object.entries(routeAccessMap).find(([route]) => {
+      return new RegExp(`^${route}$`).test(path);
+    });
 
-  if (isAdminPath && userRole !== 'admin') {
-    return NextResponse.redirect(new URL('/unauthorized', request.url));
+    if (matchingRoute) {
+      const [_, allowedRoles] = matchingRoute;
+      if (!allowedRoles.includes(userRole as string)) {
+        return NextResponse.redirect(new URL('/unauthorized', request.url));
+      }
+    }
   }
 
-  if (isTeacherPath && userRole !== 'teacher') {
+  // Admin ve Teacher route'ları için yetki kontrolü
+  if (path.startsWith('/admin') && userRole !== 'admin') {
+    return NextResponse.redirect(new URL('/unauthorized', request.url));
+  }
+  if (path.startsWith('/teacher') && userRole !== 'teacher') {
     return NextResponse.redirect(new URL('/unauthorized', request.url));
   }
 
   return NextResponse.next();
 }
 
-// Middleware'i export ettik
+export const config = {
+  matcher: [
+    '/',
+    '/login',
+    '/admin/:path*',
+    '/teacher/:path*',
+    '/list/:path*',
+    '/unauthorized'
+  ]
+};

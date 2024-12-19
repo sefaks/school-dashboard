@@ -29,9 +29,14 @@ const LoginPage = () => {
 
       console.log("Login successful!", response.data);
       // Token'ı kaydet ve kullanıcıyı yönlendir
-      localStorage.setItem("token", response.data.access_token);
-      document.cookie = `token=${response.data.access_token}; path=/`
-      document.cookie = `role=${role}; path=/`
+      const token = response.data.access_token;
+      localStorage.setItem("token", token);
+      document.cookie = `token=${token}; path=/; Secure; SameSite=Strict`;
+      document.cookie = `role=${role}; path=/; Secure; SameSite=Strict`;
+
+      // saving local storage
+      localStorage.setItem("role", role);
+      localStorage.setItem("token", token);
       
       // route depend on endpoint
       if (role === "teacher") {
