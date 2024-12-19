@@ -1,58 +1,114 @@
+"use client"
 
-"use client";
-
-import React, { useEffect } from 'react';
-
-import * as SignIn from '@clerk/elements/sign-in';
-import * as Clerk from '@clerk/elements/common';
-import Image from 'next/image';
-import { useUser } from '@clerk/nextjs';
-
+import { useState } from "react";
+import axios from "axios";
+import { LiaChalkboardTeacherSolid } from "react-icons/lia";
+import { RiSchoolLine } from "react-icons/ri";
 
 const LoginPage = () => {
+  const [role, setRole] = useState("teacher"); // Varsayılan rol teacher
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-    const {isLoaded,isSignedIn, user} = useUser();
-
-
-    useEffect(() => {
-        if (isLoaded && isSignedIn) {
-            window.location.href = '/dashboard';
-        }
+  const handleLogin = async () => {
+    if (!email || !password) {
+      alert("Lütfen email ve şifre giriniz.");
+      return;
     }
-    
 
+    const endpoint =
+      role === "teacher"
+        ? "http://127.0.0.1:8000/auth/teacher/login"
+        : "http://127.0.0.1:8000/auth/institution_admin/login";
 
-    return (
-        <div className='h-screen flex items-center justify-center bg-lamaPurple'>
- 
-            <SignIn.Root>
-                <SignIn.Step name= 'start' className="bg-white p-12 rounded-md shadow-2xl flex flex-col gap-2">
+    try {
+      const response = await axios.post(endpoint, {
+        email: email,
+        password,
+      });
 
-                        <div className='flex flex-row gap-3'>
-                        <Image className='rounded-full' src="/5.png" alt="" width={150} height={150}/>
-                        <h1 className='text-4xl text-purple-600 font-bold flex items-center gap-2'>ARF</h1>
-                        </div>
-                   
-                    <h2 className='text-purple-800 my-[10px] font-bold text-md'>Sign in to your account</h2>
-                    <Clerk.GlobalError className='text-sm text-red-400'/>
-                    <Clerk.Field name="identifier" className='flex flex-col gap-2'> 
-                        <Clerk.Label className='text-xs text-gray-500'>Email</Clerk.Label>
-                        <Clerk.Input type='text' className='p-2 rounded-md ring-1 ring-gray-300' required placeholder="Email" />
-                        <Clerk.FieldError className='text-sm text-red-400'/>
-                    </Clerk.Field>
-                    <Clerk.Field name="password" className='flex flex-col gap-2'> 
-                        <Clerk.Label className='text-xs text-gray-500'>Password</Clerk.Label>
-                        <Clerk.Input type='password' required className='p-2 rounded-md ring-1 ring-gray-300' placeholder='******'/>
-                        <Clerk.FieldError className='text-sm text-red-400'/>
-                    </Clerk.Field>
+      console.log("Login successful!", response.data);
+      // Token'ı kaydet ve kullanıcıyı yönlendir
+      localStorage.setItem("token", response.data.access_token);
+      document.cookie = `token=${response.data.access_token}; path=/`
+      document.cookie = `role=${role}; path=/`
+      
+      // route depend on endpoint
+      if (role === "teacher") {
+        window.location.href = "/teacher";
+      } else {
+        window.location.href = "/admin";
+      }
 
-                <SignIn.Action submit className='bg-blue-500 text-white my-1 rounded-md text-sm p-[10px]'> Sign In </SignIn.Action>
-                </SignIn.Step>
-            </SignIn.Root>
+    } catch (error: any) {
+      console.error("Login error:", error.response?.data || error.message);
+      alert(
+        error.response?.data?.detail || "Giriş başarısız. Bilgilerinizi kontrol edin."
+      );
+    }
+  };
 
-        
+  return (
+    <div className="h-screen flex flex-col items-center justify-center bg-gray-100 gap-3">
+      <div className="flex flex-row items-center justify-start gap-2 ">
+        <img src="5.png" alt="" width={100} height={100} className="rounded-full" />
+        <h1 className="text-3xl font-bold  text-purple-600">Arf Login</h1>
+      </div>
+
+      <div className="flex space-x-4 mb-4">
+        <button
+          onClick={() => setRole("teacher")}
+          className={`p-2 flex flex-row items-center justify-center gap-2 ${
+            role === "teacher" ? "bg-purple-600 text-white" : "bg-gray-200"
+          } rounded`}
+        >
+          Teacher
+          <LiaChalkboardTeacherSolid />
+        </button>
+        <button
+          onClick={() => setRole("admin")}
+          className={`p-2 flex flex-row items-center justify-center gap-2 ${
+            role === "admin" ? "bg-purple-600 text-white" : "bg-gray-200"
+          } rounded`}
+        >
+          Institution Admin
+          <RiSchoolLine />
+        </button>
+      </div>
+
+      <form
+        className="bg-white p-6 rounded shadow-md w-80 flex flex-col space-y-4"
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleLogin();
+        }}
+      >
+        <div className="flex flex-col">
+          <label className="text-sm text-gray-600">Email</label>
+          <input
+            type="email"
+            className="p-2 border rounded"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
         </div>
-    );
-    }
+        <div className="flex flex-col">
+          <label className="text-sm text-gray-600">Password</label>
+          <input
+            type="password"
+            className="p-2 border rounded"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </div>
+        <button type="submit" className="bg-green-600 text-white p-2 rounded">
+          Login
+        </button>
+      </form>
+    </div>
+  );
+};
 
 export default LoginPage;
