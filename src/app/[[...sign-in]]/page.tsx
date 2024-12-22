@@ -1,16 +1,16 @@
-// app/(auth)/login/page.tsx
 'use client'
 import { useState } from "react"
+import { useRouter } from "next/navigation" // Yönlendirme işlemi için useRouter
 import { LiaChalkboardTeacherSolid } from "react-icons/lia"
 import { RiSchoolLine } from "react-icons/ri"
-import { useAuth } from "@/contexts/AuthContext"
+import { signIn } from "next-auth/react" // next-auth'dan signIn fonksiyonunu import ediyoruz
 
 const LoginPage = () => {
-  const [role, setRole] = useState("teacher")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  
-  const { login, error, loading } = useAuth()
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null) // Hata mesajını tutacağız
+  const router = useRouter()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -20,11 +20,28 @@ const LoginPage = () => {
       return
     }
 
+    setLoading(true)
+    setError(null) // Eski hatayı sıfırlıyoruz
+
     try {
-      await login(email, password, role)
-    } catch (error: any) {
-      // Error handling is now managed by AuthContext
-      console.error("Login error:", error)
+      const response = await signIn("credentials", {
+        redirect: false,  // Oturum açtığında sayfayı otomatik yönlendirmemek için 'false' olarak ayarlıyoruz
+        email,
+        password,
+        // role backend tarafında kontrol edilebilir, burada göndermeyebilirsiniz
+      })
+
+      // `response` objesinin `status` ve `error` alanlarını kontrol edin
+      if (response?.error) {
+        setError(response.error) // Eğer hata varsa, hata mesajını ayarlıyoruz
+      } else {
+        // save token to local storage
+        router.push("/teacher") // Kullanıcıyı yönlendirecek sayfa
+      }
+    } catch (error) {
+      setError("Oturum açma sırasında bir hata oluştu.")
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -35,27 +52,7 @@ const LoginPage = () => {
         <h1 className="text-3xl font-bold text-purple-600">Arf Login</h1>
       </div>
 
-      {/* Role Selection */}
-      <div className="flex space-x-4 mb-4">
-        <button
-          onClick={() => setRole("teacher")}
-          className={`p-2 flex flex-row items-center justify-center gap-2 ${
-            role === "teacher" ? "bg-purple-600 text-white" : "bg-gray-200"
-          } rounded`}
-        >
-          Teacher
-          <LiaChalkboardTeacherSolid />
-        </button>
-        <button
-          onClick={() => setRole("admin")}
-          className={`p-2 flex flex-row items-center justify-center gap-2 ${
-            role === "admin" ? "bg-purple-600 text-white" : "bg-gray-200"
-          } rounded`}
-        >
-          Institution Admin
-          <RiSchoolLine />
-        </button>
-      </div>
+  
 
       {/* Login Form */}
       <form

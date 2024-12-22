@@ -1,10 +1,12 @@
+"use client"
+
 import FormModal from "@/components/FormModal";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
+import { useAuth } from "@/contexts/AuthContext";
 import {
-  assignmentsData,
-  role,
+  assignmentsData, role,
 } from "@/lib/data";
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
@@ -24,8 +26,26 @@ type AssignmentList = assignments & {
     
  
 };
-    
 
+  const statusColors: { [key in assignmentstatus]: string } = {
+    ASSIGNED: "bg-blue-500",
+    COMPLETED: "bg-green-500",
+    PENDING: "bg-purple-500",
+    PAST_DUE: "bg-red-500",
+  };
+
+  const subjectColors: Record<subject_name, string> = {
+    [subject_name.TURKCE]: "text-red-500",
+    [subject_name.MATEMATIK]: "text-blue-500",
+    [subject_name.FEN_BILIMLERI]: "text-green-500",
+    [subject_name.SOSYAL_BILGILER]: "text-yellow-500",
+    [subject_name.INGILIZCE]: "text-teal-500",
+    [subject_name.DIN_BILGISI]: "text-purple-500",
+    [subject_name.COGRAFYA]: "text-indigo-500",
+    [subject_name.TAR_H]: "text-orange-500",
+  };
+
+const AssignmentListPage = async ({searchParams}:{searchParams:{[key:string]:string} |undefined }) => {
 
 
 const columns = [
@@ -52,29 +72,12 @@ const columns = [
     accessor: "dueDate",
     className: "hidden md:table-cell",
   },
-  {
-    header: "Actions",
-    accessor: "action",
-  },
+  ...(role === "teacher" ? 
+  [{
+     header: "Actions" ,
+      accessor: "actions",
+    }] : []),
 ];
-
-  const statusColors: { [key in assignmentstatus]: string } = {
-    ASSIGNED: "bg-blue-500",
-    COMPLETED: "bg-green-500",
-    PENDING: "bg-purple-500",
-    PAST_DUE: "bg-red-500",
-  };
-
-  const subjectColors: Record<subject_name, string> = {
-    [subject_name.TURKCE]: "text-red-500",
-    [subject_name.MATEMATIK]: "text-blue-500",
-    [subject_name.FEN_BILIMLERI]: "text-green-500",
-    [subject_name.SOSYAL_BILGILER]: "text-yellow-500",
-    [subject_name.INGILIZCE]: "text-teal-500",
-    [subject_name.DIN_BILGISI]: "text-purple-500",
-    [subject_name.COGRAFYA]: "text-indigo-500",
-    [subject_name.TAR_H]: "text-orange-500",
-  };
 
 
 
@@ -84,11 +87,10 @@ const renderRow = (item: AssignmentList) => (
     className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
   >
 
-
     <td className="hidden md:table-cell">
       {item.subjects ? (
         <span
-        className={`${subjectColors[item.subjects.subject_name as subject_name]} text-white py-1 px-3 rounded-full`}
+        className={`${subjectColors[item.subjects.subject_name as subject_name]} py-1 px-3 rounded-full`}
         >
           {item.subjects.subject_name}
         </span>
@@ -143,7 +145,7 @@ const renderRow = (item: AssignmentList) => (
 );
 
 // we get the data from the database and render it in the table, searchParams is the search query that we get from the URL.
-const AssignmentListPage = async ({searchParams}:{searchParams:{[key:string]:string} |undefined }) => {
+
 
   // we get the page number from the searchParams, if there is no page number, we set it to 1
   const { page, ...queryParams } = searchParams as { [key: string]: string };
@@ -163,8 +165,6 @@ const AssignmentListPage = async ({searchParams}:{searchParams:{[key:string]:str
                 contains: value,
                 mode: "insensitive",
               },
-
-              
             },
           ];
         break;

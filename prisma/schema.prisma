@@ -95,6 +95,7 @@ model institutions {
   address             String?               @db.VarChar
   email               String?               @unique(map: "ix_institutions_email") @db.VarChar
   password            String?               @db.VarChar
+  admins              admins[]
   classes             classes[]
   lessons             lessons[]
   student_institution student_institution[]
@@ -146,7 +147,7 @@ model parent_student {
   parents    parents  @relation(fields: [parent_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   students   students @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-  @@id([parent_id, student_id])
+  @@ignore
 }
 
 model parents {
@@ -155,7 +156,7 @@ model parents {
   surname        String           @db.VarChar
   email          String           @db.VarChar
   phone          String           @db.VarChar
-  parent_student parent_student[] 
+  parent_student parent_student[] @ignore
 
   @@index([id], map: "ix_parents_id")
 }
@@ -212,7 +213,7 @@ model students {
   photo               String?               @db.VarChar
   school_no           String?               @db.VarChar
   assignment_student  assignment_student[]
-  parent_student      parent_student[]      
+  parent_student      parent_student[]      @ignore
   student_class       student_class[]
   student_institution student_institution[]
 
@@ -338,6 +339,18 @@ model teacher_subject {
   teachers   teachers @relation(fields: [teacher_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@id([teacher_id, subject_id])
+}
+
+model admins {
+  id             Int           @id @default(autoincrement())
+  name           String?       @db.VarChar
+  email          String?       @unique(map: "ix_admins_email") @db.VarChar
+  password       String        @db.VarChar
+  institution_id Int?
+  institutions   institutions? @relation(fields: [institution_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([id], map: "ix_admins_id")
+  @@index([name], map: "ix_admins_name")
 }
 
 enum assigneetype {

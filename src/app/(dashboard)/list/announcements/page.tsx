@@ -1,9 +1,12 @@
+"use client"
 import FormModal from "@/components/FormModal";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
-import { announcementsData, role } from "@/lib/data";
+import { useAuth } from "@/contexts/AuthContext";
+import { announcementsData } from "@/lib/data";
 import Image from "next/image";
+import { use } from "react";
 
 type Announcement = {
   id: number;
@@ -12,7 +15,11 @@ type Announcement = {
   date: string;
 };
 
-const columns = [
+
+const AnnouncementListPage = () => {
+  const role = useAuth().user?.role;
+
+  const columns = [
   {
     header: "Title",
     accessor: "title",
@@ -26,13 +33,14 @@ const columns = [
     accessor: "date",
     className: "hidden md:table-cell",
   },
-  {
-    header: "Actions",
-    accessor: "action",
-  },
+  ...(role === "admin" ? 
+  [{
+     header: "Actions" ,
+      accessor: "actions",
+    }] : []),
 ];
 
-const AnnouncementListPage = () => {
+
   const renderRow = (item: Announcement) => (
     <tr
       key={item.id}

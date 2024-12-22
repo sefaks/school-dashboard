@@ -1,15 +1,22 @@
 import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { NextRequest } from 'next/server';
+import { getToken } from 'next-auth/jwt';  // getToken metodu ile token'ı doğruluyoruz
 import { routeAccessMap } from './lib/settings';
 
-export function middleware(request: NextRequest) {
-  const token = request.cookies.get('token')?.value;
-  const userRole = request.cookies.get('role')?.value;
+const secret = process.env.NEXTAUTH_SECRET || 'J+Zlxm7RBRTzgaz/r3LCHhHGXT4vWRoqW9TsfuDZ1Ks=';
+
+export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
 
-  // Public paths kontrolü
+  // Login sayfasına erişimi kontrol et
   if (path === '/login') {
+    console.log('Login sayfasına erişim kontrolü');
+    const token = await getToken({ req: request, secret });
+
+    // Token varsa, kullanıcıyı uygun sayfaya yönlendir
     if (token) {
+      const userRole = token.role;  // Token'dan role bilgisini alıyoruz
+
       if (userRole === 'teacher') {
         return NextResponse.redirect(new URL('/teacher', request.url));
       }
@@ -17,13 +24,18 @@ export function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL('/admin', request.url));
       }
     }
+
     return NextResponse.next();
   }
 
-  // Token kontrolü
+  // Token doğrulaması ve role kontrolü
+  const token = await getToken({ req: request, secret });
+
   if (!token) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
+
+  const userRole = token.role;  // Token'dan role bilgisini alıyoruz
 
   // Ana sayfa yönlendirmesi
   if (path === '/') {
@@ -53,6 +65,7 @@ export function middleware(request: NextRequest) {
   if (path.startsWith('/admin') && userRole !== 'admin') {
     return NextResponse.redirect(new URL('/unauthorized', request.url));
   }
+
   if (path.startsWith('/teacher') && userRole !== 'teacher') {
     return NextResponse.redirect(new URL('/unauthorized', request.url));
   }
@@ -62,11 +75,10 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/',
     '/login',
     '/admin/:path*',
     '/teacher/:path*',
     '/list/:path*',
-    '/unauthorized'
-  ]
+    '/unauthorized',
+  ],
 };
