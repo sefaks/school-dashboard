@@ -1,65 +1,41 @@
-"use client"
-
-import { useState } from "react";
-import axios from "axios";
-import { LiaChalkboardTeacherSolid } from "react-icons/lia";
-import { RiSchoolLine } from "react-icons/ri";
+// app/(auth)/login/page.tsx
+'use client'
+import { useState } from "react"
+import { LiaChalkboardTeacherSolid } from "react-icons/lia"
+import { RiSchoolLine } from "react-icons/ri"
+import { useAuth } from "@/contexts/AuthContext"
 
 const LoginPage = () => {
-  const [role, setRole] = useState("teacher"); // Varsayılan rol teacher
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [role, setRole] = useState("teacher")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  
+  const { login, error, loading } = useAuth()
 
-  const handleLogin = async () => {
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
     if (!email || !password) {
-      alert("Lütfen email ve şifre giriniz.");
-      return;
+      alert("Lütfen email ve şifre giriniz.")
+      return
     }
-
-    const endpoint =
-      role === "teacher"
-        ? "http://127.0.0.1:8000/auth/teacher/login"
-        : "http://127.0.0.1:8000/auth/institution_admin/login";
 
     try {
-      const response = await axios.post(endpoint, {
-        email: email,
-        password,
-      });
-
-      console.log("Login successful!", response.data);
-      // Token'ı kaydet ve kullanıcıyı yönlendir
-      const token = response.data.access_token;
-      localStorage.setItem("token", token);
-      document.cookie = `token=${token}; path=/; Secure; SameSite=Strict`;
-      document.cookie = `role=${role}; path=/; Secure; SameSite=Strict`;
-
-      // saving local storage
-      localStorage.setItem("role", role);
-      localStorage.setItem("token", token);
-      
-      // route depend on endpoint
-      if (role === "teacher") {
-        window.location.href = "/teacher";
-      } else {
-        window.location.href = "/admin";
-      }
-
+      await login(email, password, role)
     } catch (error: any) {
-      console.error("Login error:", error.response?.data || error.message);
-      alert(
-        error.response?.data?.detail || "Giriş başarısız. Bilgilerinizi kontrol edin."
-      );
+      // Error handling is now managed by AuthContext
+      console.error("Login error:", error)
     }
-  };
+  }
 
   return (
     <div className="h-screen flex flex-col items-center justify-center bg-gray-100 gap-3">
       <div className="flex flex-row items-center justify-start gap-2 ">
         <img src="5.png" alt="" width={100} height={100} className="rounded-full" />
-        <h1 className="text-3xl font-bold  text-purple-600">Arf Login</h1>
+        <h1 className="text-3xl font-bold text-purple-600">Arf Login</h1>
       </div>
 
+      {/* Role Selection */}
       <div className="flex space-x-4 mb-4">
         <button
           onClick={() => setRole("teacher")}
@@ -81,12 +57,10 @@ const LoginPage = () => {
         </button>
       </div>
 
+      {/* Login Form */}
       <form
         className="bg-white p-6 rounded shadow-md w-80 flex flex-col space-y-4"
-        onSubmit={(e) => {
-          e.preventDefault();
-          handleLogin();
-        }}
+        onSubmit={handleLogin}
       >
         <div className="flex flex-col">
           <label className="text-sm text-gray-600">Email</label>
@@ -98,6 +72,7 @@ const LoginPage = () => {
             required
           />
         </div>
+        
         <div className="flex flex-col">
           <label className="text-sm text-gray-600">Password</label>
           <input
@@ -108,12 +83,23 @@ const LoginPage = () => {
             required
           />
         </div>
-        <button type="submit" className="bg-green-600 text-white p-2 rounded">
-          Login
+
+        {/* Error Message */}
+        {error && (
+          <div className="text-red-500 text-sm">{error}</div>
+        )}
+
+        {/* Submit Button */}
+        <button 
+          type="submit" 
+          className="bg-green-600 text-white p-2 rounded flex justify-center items-center"
+          disabled={loading}
+        >
+          {loading ? 'Logging in...' : 'Login'}
         </button>
       </form>
     </div>
-  );
-};
+  )
+}
 
-export default LoginPage;
+export default LoginPage
