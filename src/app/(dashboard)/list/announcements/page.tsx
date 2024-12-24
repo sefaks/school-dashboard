@@ -3,10 +3,9 @@ import FormModal from "@/components/FormModal";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
-import { useAuth } from "@/contexts/AuthContext";
 import { announcementsData } from "@/lib/data";
+import { useSession } from "next-auth/react";
 import Image from "next/image";
-import { use } from "react";
 
 type Announcement = {
   id: number;
@@ -17,7 +16,11 @@ type Announcement = {
 
 
 const AnnouncementListPage = () => {
-  const role = useAuth().user?.role;
+  // take role from session
+  const {data:session,status} = useSession();
+
+  const role = session?.user.role;
+  
 
   const columns = [
   {

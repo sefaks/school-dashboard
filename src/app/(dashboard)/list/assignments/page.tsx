@@ -1,16 +1,13 @@
-"use client"
 
+import { authOptions } from "@/app/auth";
 import FormModal from "@/components/FormModal";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
-import { useAuth } from "@/contexts/AuthContext";
-import {
-  assignmentsData, role,
-} from "@/lib/data";
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
 import { Prisma, assignments, assignmentstatus, classes, subject_name, teachers } from "@prisma/client";
+import { getServerSession } from "next-auth";
 import Image from "next/image";
 
 type AssignmentList = assignments & {
@@ -46,7 +43,12 @@ type AssignmentList = assignments & {
   };
 
 const AssignmentListPage = async ({searchParams}:{searchParams:{[key:string]:string} |undefined }) => {
+  
+    // take role from session
 
+ const session = await getServerSession(authOptions);
+
+const role = (session as { user: { role: string } })?.user.role;
 
 const columns = [
   {
@@ -72,16 +74,19 @@ const columns = [
     accessor: "dueDate",
     className: "hidden md:table-cell",
   },
+  // actions for teacher, not
   ...(role === "teacher" ? 
   [{
      header: "Actions" ,
       accessor: "actions",
     }] : []),
+
+
 ];
 
 
 
-const renderRow = (item: AssignmentList) => (
+const renderRow = (item: AssignmentList, role:string) => (
   <tr
     key={item.id}
     className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
@@ -133,7 +138,7 @@ const renderRow = (item: AssignmentList) => (
       </td>
     <td>
       <div className="flex items-center gap-2">
-        {role === "admin"  && (
+        {role === "teacher"  && (
           <>
             <FormModal table="assignment" type="update" data={item} />
             <FormModal table="assignment" type="delete" id={item.id} />
@@ -220,7 +225,7 @@ const renderRow = (item: AssignmentList) => (
         </div>
       </div>
       {/* LIST */}
-      <Table columns={columns} renderRow={renderRow} data={assignmentsData} />
+      <Table columns={columns} renderRow={(item) => renderRow(item, role)} data={assignmentsData} />
       {/* PAGINATION */}
       <Pagination page={p} count={count} />
     </div>

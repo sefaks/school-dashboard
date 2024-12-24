@@ -1,12 +1,14 @@
+import { authOptions } from "@/app/auth";
 import FormModal from "@/components/FormModal";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
-import { classesData, role } from "@/lib/data";
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
 import { Prisma, classes, students, teachers } from "@prisma/client";
+import { getServerSession } from "next-auth";
 import Image from "next/image";
+import Link from "next/link";
 
 type ClassList = classes & {
   student_class: Array<{  // in here, we define with array because a class can have multiple students
@@ -18,34 +20,9 @@ type ClassList = classes & {
 
 };
   
-const columns = [
-  {
-    header: "Class Name",
-    accessor: "name",
-  },
-  {
-    header: "Capacity",
-    accessor: "capacity",
-    className: "hidden md:table-cell",
-  },
-  {
-    header: "Grade",
-    accessor: "grade",
-    className: "hidden md:table-cell",
-  },
-  {
-    header: "Teachers",
-    accessor: "teachers",
-    className: "hidden md:table-cell",
-  },
-  {
-    header: "Actions",
-    accessor: "action",
-  },
-];
 
 
-const renderRow = (item: ClassList) => (
+const renderRow = (item: ClassList,role:string) => (
 
   <tr
     key={item.id}
@@ -64,10 +41,17 @@ const renderRow = (item: ClassList) => (
     </td> 
     <td>
       <div className="flex items-center gap-2">
+      <Link href={`/list/classes/${item.id}`}>
+          <button className="w-7 h-7 flex items-center justify-center rounded-full bg-lamaSky">
+            <Image src="/view.png" alt="" width={16} height={16} />
+          </button>
+        </Link>
+        {role === "admin" && (
           <>
             <FormModal table="class" type="update" data={item} />
             <FormModal table="class" type="delete" id={item.id} />
           </>
+        )}
         
       </div>
     </td>
@@ -76,6 +60,39 @@ const renderRow = (item: ClassList) => (
 
 const ClassListPage = async ({searchParams}:{searchParams:{[key:string]:string} |undefined }) => {
 
+  const session = await getServerSession(authOptions);
+  const role = (session as { user: { role: string } })?.user.role;
+
+  const columns = [
+    {
+      header: "Class Name",
+      accessor: "name",
+    },
+    {
+      header: "Capacity",
+      accessor: "capacity",
+      className: "hidden md:table-cell",
+    },
+    {
+      header: "Grade",
+      accessor: "grade",
+      className: "hidden md:table-cell",
+    },
+    {
+      header: "Teachers",
+      accessor: "teachers",
+      className: "hidden md:table-cell",
+    },
+    // actions for admin role
+    ...(role === "admin" ? 
+  [{
+     header: "Actions" ,
+      accessor: "actions",
+    }] : []),
+  ];
+  
+  
+  
   const { page, ...queryParams } = searchParams as { [key: string]: string };
   const p = page ? parseInt(page) : 1; 
 
@@ -148,8 +165,6 @@ const ClassListPage = async ({searchParams}:{searchParams:{[key:string]:string} 
 
   classesData.forEach((classItem) => {
     console.log(`Class: ${classItem.class_code}`);
-    console.log(`Students in class:`, classItem.student_class.map(sc => sc.students));
-    console.log(`Teachers in class:`, classItem.teacher_class.map(tc => tc.teachers));
   });
   
   
@@ -168,12 +183,14 @@ const ClassListPage = async ({searchParams}:{searchParams:{[key:string]:string} 
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
-            {role === "admin" && <FormModal table="class" type="create" />}
-          </div>
+            {role === "admin" && (
+        
+          <FormModal table="class" type="create"/>
+        )}          </div>
         </div>
       </div>
       {/* LIST */}
-      <Table columns={columns} renderRow={renderRow} data={classesData} />
+      <Table columns={columns} renderRow={(item) => renderRow(item, role)} data={classesData} />
       {/* PAGINATION */}
       <Pagination page={p} count={count} />
           </div>

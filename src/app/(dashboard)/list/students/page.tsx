@@ -1,11 +1,12 @@
+import { authOptions } from "@/app/auth";
 import FormModal from "@/components/FormModal";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
-import { role, studentsData } from "@/lib/data";
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
 import { Prisma, classes, parents, students } from "@prisma/client";
+import { getServerSession } from "next-auth";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -14,40 +15,13 @@ type StudentList = students & {
   student_class: Array<{  // in here, we define with array because a student can have multiple classes
     classes: classes 
   }>; // its defining student's classes
-  student_parent: Array<{  // in here, we define with array because a student can have multiple parents
+  parent_student: Array<{  // in here, we define with array because a student can have multiple parents
     parents: parents 
   }>; // its defining student's parents
 };
 
 
-const columns = [
-  {
-    header: "Info",
-    accessor: "info",
-  },
-  {
-    header: "Student No",
-    accessor: "studentNo",
-    className: "hidden md:table-cell",
-  },
-  {
-    header: "Classes",
-    accessor: "classes",
-    className: "hidden lg:table-cell",
-  },
-  {
-    header: "Phone",
-    accessor: "phone",
-    className: "hidden lg:table-cell",
-  },
-  
-  {
-    header: "Actions",
-    accessor: "action",
-  },
-];
-
-const renderRow = (item: StudentList) => (
+const renderRow = (item: StudentList, role:string) => (
   <tr
     key={item.id}
     className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
@@ -75,10 +49,10 @@ const renderRow = (item: StudentList) => (
       ))}
     </td>  
     <td className="hidden md:table-cell">
-      {item.student_parent?.map((parent_item: { parents: parents }, index: number) => (
+      {item.parent_student?.map((parent_item: { parents: parents }, index: number) => (
         <span key={parent_item.parents.id}>
           {parent_item.parents.email}
-          {index < item.student_parent.length - 1 && ', '}
+          {index < item.parent_student.length - 1 && ', '}
         </span>
       ))}
     </td>
@@ -101,6 +75,38 @@ const renderRow = (item: StudentList) => (
 
 const StudentListPage = async ({searchParams}:{searchParams:{[key:string]:string} | undefined;
 }) => {
+
+  const session = await getServerSession(authOptions);
+  const role = (session as { user: { role: string } })?.user.role;
+
+const columns = [
+  {
+    header: "Info",
+    accessor: "info",
+  },
+  {
+    header: "Student No",
+    accessor: "studentNo",
+    className: "hidden md:table-cell",
+  },
+  {
+    header: "Classes",
+    accessor: "classes",
+    className: "hidden lg:table-cell",
+  },
+  {
+    header: "Phone",
+    accessor: "phone",
+    className: "hidden lg:table-cell",
+  },
+ // actions column will be shown only for admin
+  ...(role === "admin" ? 
+  [{
+     header: "Actions" ,
+      accessor: "actions",
+    }] : []),
+];
+
   
   const { page, ...queryParams } = searchParams as { [key: string]: string };
   const p = page ? parseInt(page) : 1; 
@@ -222,7 +228,7 @@ const StudentListPage = async ({searchParams}:{searchParams:{[key:string]:string
         </div>
       </div>
       {/* LIST */}
-      <Table columns={columns} renderRow={renderRow} data={studentsData} />
+      <Table columns={columns} renderRow={(item) => renderRow(item, role)} data={studentsData} />
       {/* PAGINATION */}
       <Pagination page={p} count={count} />
     </div>

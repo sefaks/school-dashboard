@@ -1,11 +1,12 @@
+import { authOptions } from "@/app/auth";
 import FormModal from "@/components/FormModal";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
-import { parentsData, role } from "@/lib/data";
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
 import { Prisma, parents, students } from "@prisma/client";
+import { getServerSession } from "next-auth";
 import Image from "next/image";
 
 type ParentList = parents & {
@@ -42,7 +43,7 @@ const columns = [
   },
 ];
 
-const renderRow = (item: ParentList) => (
+const renderRow = (item: ParentList, role:string) => (
   <tr
     key={item.id}
     className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
@@ -70,6 +71,9 @@ const renderRow = (item: ParentList) => (
 );
 
 const ParentListPage = async ({searchParams}:{searchParams:{[key:string]:string} | undefined; }) => {
+
+  const session = await getServerSession(authOptions);
+  const role = (session as { user: { role: string } })?.user.role;
   
   const { page, ...queryParams } = searchParams as { [key: string]: string };
   const p = page ? parseInt(page) : 1; 
@@ -160,7 +164,7 @@ const ParentListPage = async ({searchParams}:{searchParams:{[key:string]:string}
         </div>
       </div>
       {/* LIST */}
-      <Table columns={columns} renderRow={renderRow} data={parentsData} />
+      <Table columns={columns}  renderRow={(item) => renderRow(item, role)} data={parentsData} />
       {/* PAGINATION */}
       <Pagination page={p} count={count} />
     </div>

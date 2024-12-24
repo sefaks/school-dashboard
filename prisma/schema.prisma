@@ -147,8 +147,8 @@ model parent_student {
   parents    parents  @relation(fields: [parent_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   students   students @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-  @@ignore
-}
+  @@id([parent_id, student_id])
+  }
 
 model parents {
   id             Int              @id @default(autoincrement())
@@ -156,7 +156,7 @@ model parents {
   surname        String           @db.VarChar
   email          String           @db.VarChar
   phone          String           @db.VarChar
-  parent_student parent_student[] @ignore
+  parent_student parent_student[] 
 
   @@index([id], map: "ix_parents_id")
 }
@@ -213,9 +213,9 @@ model students {
   photo               String?               @db.VarChar
   school_no           String?               @db.VarChar
   assignment_student  assignment_student[]
-  parent_student      parent_student[]      @ignore
+  parent_student      parent_student[]
   student_class       student_class[]
-  student_institution student_institution[]
+  student_institution student_institution[] 
 
   @@index([id], map: "ix_students_id")
 }

@@ -1,14 +1,27 @@
-import NextAuth from "next-auth";
+import NextAuth, { AuthOptions, NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { signInSchema } from "@/lib/zod";
 import { getTeacherFromDb, getInstitutionAdminFromDb } from "@/lib/db";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import prisma from "@/lib/prisma";
 
+// .env'den secret alınması
 const secret = process.env.NEXTAUTH_SECRET || "J+Zlxm7RBRTzgaz/r3LCHhHGXT4vWRoqW9TsfuDZ1Ks=";
 
+// JWT ve Session için tip güvenliği sağlamak
+interface User {
+  id: string;
+  email: string;
+  name: string;
+  token: string;
+  role: string;
+}
 
-export const { handlers, auth } = NextAuth({
+interface SessionUser {
+  accessToken: string;
+  role: string;
+}
+
+export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
       credentials: {
@@ -17,32 +30,31 @@ export const { handlers, auth } = NextAuth({
       },
       authorize: async (credentials) => {
         try {
-          const { email, password } = credentials;
+        const { email, password } = credentials as { email: string, password: string };
 
-          // İlk olarak teacher-login'e istek gönderiyoruz
-          let backendResponse = await fetch("http://127.0.0.1:8000/auth/teacher/login", {
+        // İlk olarak teacher-login'e istek gönderiyoruz
+        let backendResponse = await fetch("https://base-service-ua14.onrender.com/auth/teacher/login", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, password }),
-          });
+        });
 
-          // Eğer teacher-login başarılı olduysa
+          // If login is successful, get teacher from DB
           if (backendResponse.ok) {
             const teacherLoginData = await backendResponse.json();
             const { access_token, is_active } = teacherLoginData;
             console.log("Teacher login successful");
-            console.log(teacherLoginData.access_token)
 
-            // Eğer öğretmen aktifse, bilgilerini DB'den alıyoruz
+            // If teacher is active, get teacher from DB
             if (is_active) {
-                const teacher = await getTeacherFromDb(email as string); // Öğretmeni DB'den al
+                const teacher = await getTeacherFromDb(email as string); // Get teacher 
                 if (teacher) {
                     return {
                         id: teacher.id.toString(),
                         email: teacher.email,
                         name: teacher.name || teacher.email,
                         token: access_token,
-                        role: "teacher",
+                        role: "teacher", // Adding role to JWT
                     };
                 }
             } else {
@@ -50,9 +62,9 @@ export const { handlers, auth } = NextAuth({
             }
           }
 
-          // Eğer teacher-login başarısızsa, admin-login'i deneyelim
+          // If teacher login failed, try institution admin login
           console.log("Teacher login failed, trying institution admin login...");
-          backendResponse = await fetch("http://127.0.0.1:8000/auth/institution_admin/login", {
+          backendResponse = await fetch("https://base-service-ua14.onrender.com/auth/institution_admin/login", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, password }),
@@ -71,6 +83,7 @@ export const { handlers, auth } = NextAuth({
                         email: admin.email,
                         name: admin.name || admin.email,
                         token: access_token,
+                        role: "admin",
                     };
                 } else {
                     throw new Error("Institution Admin account is not found.");
@@ -80,7 +93,7 @@ export const { handlers, auth } = NextAuth({
             }
           }
 
-          // Eğer her iki login da başarısız olduysa, hata fırlat
+          // If login failed for both teacher and admin
           throw new Error("Login failed for both teacher and admin.");
         } catch (error) {
           console.error("Authorization error:", error);
@@ -98,23 +111,32 @@ export const { handlers, auth } = NextAuth({
   session: {
     strategy: "jwt", // Use JWT strategy
   },
+  jwt: {
+    secret: secret,
+  },
 
-  secret: secret, // .env file for the secret
+  secret: secret, // secret is using for JWT encryption.
 
-callbacks: {
-    async jwt({ token, user }) {
-        if (user) {
-          token.accessToken = (user as { token: string }).token;  // Add access_token to JWT
-          token.role = (user as { role: string }).role;  // Add role to JWT (Backend'den gelen role)
-        }
-        return token;
-      },      
+callbacks: { // this callback function is used to add the role to the JWT token each time a user logs in
+    async jwt({ token, user }: { token: any, user: any }) {
+      if (user) {
+        token.accessToken = (user as unknown as { token: string }).token;  // Add access_token to JWT
+        token.role = (user as unknown as { role: string }).role as string;  // Add role to JWT (Backend'den gelen role)
+      }
+      else {
+        console.log("No user:", user);
+      }
+      return token;
+    },      
 
-      async session({ session, token }: { session: any, token: any }) {
-        session.user.accessToken = token.accessToken; // Add access_token to session
-        session.user.role = token.role;  // Add role to session (JWT'den alınan role)
-        return session;
-      },
+    async session({ session, token }: { session: any, token: any }) { // Add accessToken and role to session
+      session.user.accessToken = token.accessToken as string;
+      session.user.role = token.role as string;
+      return session;
+    },
       
 },
-});
+}
+
+export const auth = NextAuth(authOptions);
+export default auth;

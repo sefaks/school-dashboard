@@ -1,4 +1,5 @@
-import { role } from "@/lib/data";
+import { authOptions } from "@/app/auth";
+import { getServerSession } from "next-auth";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -111,9 +112,22 @@ const menuItems = [
   },
 ];
 
-const Menu = () => {
-  // access current user
- 
+const Menu = async () => {
+
+  const session = await getServerSession(authOptions);
+
+  const role = (session as { user: { role: string } })?.user.role;
+
+  if (!session) {
+    console.error("Session could not be fetched.");
+
+  }
+  if (session)  {
+    console.log("Session fetched successfully.");
+    console.log("Full session object:", session);
+    console.log("Role: ", role);
+  }
+
   return (
     <div className="mt-4 text-sm">
       {menuItems.map((i) => (
@@ -122,7 +136,7 @@ const Menu = () => {
             {i.title}
           </span>
           {i.items.map((item) => {
-            if (item.visible.includes(role)) {
+            if (item.visible.includes(role ?? "")) {
               return (
                 <Link
                   href={item.href}
