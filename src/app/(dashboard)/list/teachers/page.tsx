@@ -9,6 +9,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ITEM_PER_PAGE } from "@/lib/settings";
 import { FieldRef } from "@prisma/client/runtime/library";
+import { getRoleAndUserIdAndInstitutionId } from "@/lib/utils";
 
 type TeacherList = teachers & {
   teacher_subject: Array<{  // in here, we define with array because a teacher can have multiple subjects
@@ -118,6 +119,8 @@ const renderRow = (item:TeacherList) => (
   // define take and skip, take is the number of data that we want to get, skip is the number of data that we want to skip.For pagination
   const TeacherListPage = async ({searchParams}:{searchParams:{[key:string]:string} | undefined;
   }) => {
+
+    const { role, current_user_id, institution_id} = await getRoleAndUserIdAndInstitutionId();
     
     const { page, ...queryParams } = searchParams as { [key: string]: string };
     const p = page ? parseInt(page) : 1; 
@@ -198,7 +201,26 @@ const renderRow = (item:TeacherList) => (
         }
       }
     }
-    
+
+    switch(role){
+      case "admin":
+        // get teachers wih current institution id. firstly get all teachers, then filter them by teacher_institution
+        query.teacher_institution = {
+          some:{
+            institution_id: parseInt(institution_id)
+          }
+        }
+        break;
+        
+      case "teacher":
+        query.teacher_institution = {
+          some:{
+            institution_id: parseInt(institution_id)
+          }
+        }  
+      break;
+    }
+
     const [teachersData, count] = await prisma.$transaction([ 
       prisma.teachers.findMany({
         where: query,

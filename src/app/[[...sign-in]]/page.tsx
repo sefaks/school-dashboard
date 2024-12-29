@@ -28,15 +28,16 @@ const LoginPage = () => {
         redirect: false,  // Oturum açtığında sayfayı otomatik yönlendirmemek için 'false' olarak ayarlıyoruz
         email,
         password,
-        // role backend tarafında kontrol edilebilir, burada göndermeyebilirsiniz
       })
 
       // `response` objesinin `status` ve `error` alanlarını kontrol edin
       if (response?.error) {
-        setError(response.error) // Eğer hata varsa, hata mesajını ayarlıyoruz
+        // error alanı varsa, hata mesajını ayarlayın
+        setError(response.error)
       } else {
-        // save token to local storage
-        router.push("/teacher") // Kullanıcıyı yönlendirecek sayfa
+        
+        // Oturum açma başarılıysa, kullanıcıyı yönlendirin
+        router.push("/")
       }
     } catch (error) {
       setError("Oturum açma sırasında bir hata oluştu.")

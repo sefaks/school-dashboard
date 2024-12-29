@@ -5,6 +5,7 @@ import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
+import { getRoleAndUserIdAndInstitutionId } from "@/lib/utils";
 import { Prisma, classes, students, teachers } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import Image from "next/image";
@@ -60,8 +61,7 @@ const renderRow = (item: ClassList,role:string) => (
 
 const ClassListPage = async ({searchParams}:{searchParams:{[key:string]:string} |undefined }) => {
 
-  const session = await getServerSession(authOptions);
-  const role = (session as { user: { role: string } })?.user.role;
+  const { role, current_user_id,institution_id } = await getRoleAndUserIdAndInstitutionId();
 
   const columns = [
     {
@@ -111,11 +111,26 @@ const ClassListPage = async ({searchParams}:{searchParams:{[key:string]:string} 
                 mode: "insensitive",
               },
             },
+            // for teacher name   
+            {
+              teacher_class: {
+                some:{
+                  teachers:{
+                    name:{
+                      contains: value,
+                      mode: "insensitive",
+                    }
+                  }
+                }
+              }
+            },
             
           ];
         break;
         case "grade":
           query.grade = parseInt(value)
+        break
+        
         
         case "teacherId":
           query.teacher_class = {
@@ -125,6 +140,7 @@ const ClassListPage = async ({searchParams}:{searchParams:{[key:string]:string} 
               }
             }
           }
+        break
         case "studentId":
           query.student_class = {
             some:{
@@ -133,11 +149,26 @@ const ClassListPage = async ({searchParams}:{searchParams:{[key:string]:string} 
               }
             }
           }
-
-
+        break
         }
 
     }
+  }
+  switch (role) {
+    case "admin":
+      query.institution_id = parseInt(institution_id);
+      break;
+    case "teacher":
+      query.teacher_class = {
+        some:{
+          teachers:{
+            id: parseInt(current_user_id)
+          }
+        }
+      }
+      break;
+    default:
+      return null;
   }
             
   const [classesData, count] = await prisma.$transaction([

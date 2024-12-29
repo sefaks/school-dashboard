@@ -7,19 +7,6 @@ import prisma from "@/lib/prisma";
 // .env'den secret alınması
 const secret = process.env.NEXTAUTH_SECRET || "J+Zlxm7RBRTzgaz/r3LCHhHGXT4vWRoqW9TsfuDZ1Ks=";
 
-// JWT ve Session için tip güvenliği sağlamak
-interface User {
-  id: string;
-  email: string;
-  name: string;
-  token: string;
-  role: string;
-}
-
-interface SessionUser {
-  accessToken: string;
-  role: string;
-}
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -61,7 +48,6 @@ export const authOptions: NextAuthOptions = {
                 throw new Error("Teacher account is not active.");
             }
           }
-
           // If teacher login failed, try institution admin login
           console.log("Teacher login failed, trying institution admin login...");
           backendResponse = await fetch("https://base-service-ua14.onrender.com/auth/institution_admin/login", {
@@ -72,27 +58,23 @@ export const authOptions: NextAuthOptions = {
 
           if (backendResponse.ok) {
             const adminLoginData = await backendResponse.json();
-            const { access_token, is_active } = adminLoginData;
+            const { access_token } = adminLoginData;
 
             // Eğer admin aktifse, bilgilerini DB'den alıyoruz
-            if (is_active) {
                 const admin = await getInstitutionAdminFromDb(email as string); // Admin bilgilerini al
                 if (admin) {
-                    return {
-                        id: admin.id.toString(),
-                        email: admin.email,
-                        name: admin.name || admin.email,
-                        token: access_token,
-                        role: "admin",
-                    };
+                  return {
+                    id: admin.id.toString(),
+                    institution_id: admin.institution_id ? admin.institution_id.toString() : null,
+                    email: admin.email,
+                    name: admin.name || admin.email,
+                    token: access_token,
+                    role: "admin",
+                  };
                 } else {
-                    throw new Error("Institution Admin account is not found.");
+                  throw new Error("Institution Admin account is not found.");
                 }
-            } else {
-                throw new Error("Institution Admin account is not active.");
-            }
           }
-
           // If login failed for both teacher and admin
           throw new Error("Login failed for both teacher and admin.");
         } catch (error) {
@@ -122,6 +104,8 @@ callbacks: { // this callback function is used to add the role to the JWT token 
       if (user) {
         token.accessToken = (user as unknown as { token: string }).token;  // Add access_token to JWT
         token.role = (user as unknown as { role: string }).role as string;  // Add role to JWT (Backend'den gelen role)
+        token.id = (user as unknown as { id: string }).id as string;  // Add id to JWT
+        token.institution_id = (user as unknown as { institution_id: string }).institution_id as string;  // Add institution_id to JWT
       }
       else {
         console.log("No user:", user);
@@ -130,8 +114,11 @@ callbacks: { // this callback function is used to add the role to the JWT token 
     },      
 
     async session({ session, token }: { session: any, token: any }) { // Add accessToken and role to session
+      // console.log("Session:", session);
       session.user.accessToken = token.accessToken as string;
       session.user.role = token.role as string;
+      session.user.id = token.id as string;
+      session.user.institution_id = token.institution_id as string;
       return session;
     },
       

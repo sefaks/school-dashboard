@@ -5,6 +5,7 @@ import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
+import { getRoleAndUserIdAndInstitutionId } from "@/lib/utils";
 import { Prisma, classes, parents, students } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import Image from "next/image";
@@ -18,6 +19,9 @@ type StudentList = students & {
   parent_student: Array<{  // in here, we define with array because a student can have multiple parents
     parents: parents 
   }>; // its defining student's parents
+  student_institution: {
+    institution_id: number
+  }
 };
 
 
@@ -76,8 +80,8 @@ const renderRow = (item: StudentList, role:string) => (
 const StudentListPage = async ({searchParams}:{searchParams:{[key:string]:string} | undefined;
 }) => {
 
-  const session = await getServerSession(authOptions);
-  const role = (session as { user: { role: string } })?.user.role;
+  const { role, current_user_id, institution_id } = await getRoleAndUserIdAndInstitutionId();
+
 
 const columns = [
   {
@@ -177,6 +181,33 @@ const columns = [
       }
     }
 
+  // We filter the data according to the role of the user
+  // if we have teacher role, we filter the data according to the teacher id from teacher_classes to student_classes
+  switch (role) {
+    case "admin":
+      query.student_institution = {
+        some: {
+          institution_id: parseInt(institution_id),
+        },
+      };
+      break; // Admin case'i burada bitiyor
+  
+    case "teacher":
+      query.student_class = {
+        some: {
+          classes: {
+            teacher_class: {
+              some: {
+                teacher_id: parseInt(current_user_id),
+              },
+            },
+          },
+        },
+      };
+      break; // Teacher case'i burada bitiyor
+  }
+  
+
   const [studentsData, count] = await prisma.$transaction([ // we get the data and the count of the data together. We using studentsData for rendering the table data and count for pagination
     prisma.students.findMany({
     where: query, // we filter the data according to the query
@@ -196,13 +227,11 @@ const columns = [
     skip: (p - 1) * ITEM_PER_PAGE, // we skip the data according to the page, if the page is 1, we skip 0, if the page is 2, we skip 10
 
   }),
-  prisma.students.count() // we get the count of the data
-  ]); 
-
-
-
-
-  
+  // we get the count of the data with filtered data
+  prisma.students.count({
+    where: query,
+  }),
+  ]);
 
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">

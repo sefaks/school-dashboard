@@ -17,7 +17,7 @@ const UnauthorizedPage = () => {
         <p className="mt-2 text-gray-700">You do not have permission to view this page.</p>
         <button
           className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg"
-          onClick={() => router.push('/signin')} // Kullanıcıyı login sayfasına yönlendir
+          onClick={() => router.push('/login')} // Kullanıcıyı login sayfasına yönlendir
         >
           Go to Login
         </button>

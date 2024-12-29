@@ -30,15 +30,18 @@ export const getTeacherFromDb = async (email: string) => {
         where: {
           email: email,
         },
-      })
-      // Eğer admin varsa ve şifre doğrulaması geçiyorsa, admini döndür
+        include: {
+          institutions: true, // İlgili institution verisini de çekiyoruz
+        },
+      });
+  
       if (admin) {
-        return admin
+        return admin;
       }
-      return null
+      return null;
     } catch (error) {
-      console.error("Error fetching admin from DB:", error)
-      return null
+      console.error("Error fetching admin from DB:", error);
+      return null;
     }
-  }
+  };
   

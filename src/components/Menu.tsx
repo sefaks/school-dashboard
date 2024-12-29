@@ -1,4 +1,5 @@
 import { authOptions } from "@/app/auth";
+import {getRoleAndUserIdAndInstitutionId } from "@/lib/utils";
 import { getServerSession } from "next-auth";
 import Image from "next/image";
 import Link from "next/link";
@@ -114,19 +115,7 @@ const menuItems = [
 
 const Menu = async () => {
 
-  const session = await getServerSession(authOptions);
-
-  const role = (session as { user: { role: string } })?.user.role;
-
-  if (!session) {
-    console.error("Session could not be fetched.");
-
-  }
-  if (session)  {
-    console.log("Session fetched successfully.");
-    console.log("Full session object:", session);
-    console.log("Role: ", role);
-  }
+  const { role, current_user_id, institution_id } = await getRoleAndUserIdAndInstitutionId();
 
   return (
     <div className="mt-4 text-sm">

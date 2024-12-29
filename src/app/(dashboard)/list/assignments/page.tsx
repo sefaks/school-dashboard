@@ -6,6 +6,7 @@ import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
+import { getRoleAndUserIdAndInstitutionId } from "@/lib/utils";
 import { Prisma, assignments, assignmentstatus, classes, subject_name, teachers } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import Image from "next/image";
@@ -44,11 +45,7 @@ type AssignmentList = assignments & {
 
 const AssignmentListPage = async ({searchParams}:{searchParams:{[key:string]:string} |undefined }) => {
   
-    // take role from session
-
- const session = await getServerSession(authOptions);
-
-const role = (session as { user: { role: string } })?.user.role;
+  const { role, current_user_id,institution_id } = await getRoleAndUserIdAndInstitutionId();
 
 const columns = [
   {
@@ -149,7 +146,6 @@ const renderRow = (item: AssignmentList, role:string) => (
   </tr>
 );
 
-// we get the data from the database and render it in the table, searchParams is the search query that we get from the URL.
 
 
   // we get the page number from the searchParams, if there is no page number, we set it to 1
@@ -173,10 +169,28 @@ const renderRow = (item: AssignmentList, role:string) => (
             },
           ];
         break;
-      
         }
-
     }
+  }
+
+  // We filter the data according to the role of the user
+  switch (role) {
+    case "admin":
+      // filter that institution_id is equal to all assignment class and assignment_student's student institution_id
+      query.assignment_class = {
+        some: {
+          classes: {
+            institution_id: parseInt(institution_id),
+          },
+        },
+      };
+      break;
+  
+    // If the user is a teacher, we filter the data according to the teacher's id
+    case "teacher":
+      query.assignee_type = "TEACHER"; // Öğretmenlerin atadığı ödevler
+      query.assignee_id = parseInt(current_user_id); // Giriş yapan öğretmenin id'si
+      break;
   }
             
   // transactions are used to execute multiple queries at once. We get the data and the count of the data together. We using studentsData for rendering the table data and count for pagination
@@ -200,7 +214,8 @@ const renderRow = (item: AssignmentList, role:string) => (
         where: query, // Aynı filtreyle toplam sayıyı hesaplıyoruz
       })
     ]);
-  
+    
+    console.log(assignmentsData);
 
  
 

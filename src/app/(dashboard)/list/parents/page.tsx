@@ -5,43 +5,20 @@ import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
+import { getRoleAndUserIdAndInstitutionId } from "@/lib/utils";
 import { Prisma, parents, students } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import Image from "next/image";
+import { parse } from "path";
 
 type ParentList = parents & {
-  parent_student: Array<{  // in here, we define with array because a parent can have multiple students
-    students: students 
-  }>; 
+  parent_student: Array<{  // in here, we define with array because a parent can have multiple students, and a student can have multiple institutions. its nested relation
+    students: students // its defining student's students
 
-    
+  }>;
   }
 
-const columns = [
-  {
-    header: "Info",
-    accessor: "info",
-  },
-  {
-    header: "Student Names",
-    accessor: "students",
-    className: "hidden md:table-cell",
-  },
-  {
-    header: "Phone",
-    accessor: "phone",
-    className: "hidden lg:table-cell",
-  },
-  {
-    header: "Address",
-    accessor: "address",
-    className: "hidden lg:table-cell",
-  },
-  {
-    header: "Actions",
-    accessor: "action",
-  },
-];
+
 
 const renderRow = (item: ParentList, role:string) => (
   <tr
@@ -72,8 +49,34 @@ const renderRow = (item: ParentList, role:string) => (
 
 const ParentListPage = async ({searchParams}:{searchParams:{[key:string]:string} | undefined; }) => {
 
-  const session = await getServerSession(authOptions);
-  const role = (session as { user: { role: string } })?.user.role;
+  const { role, current_user_id, institution_id } = await getRoleAndUserIdAndInstitutionId();
+
+  const columns = [
+    {
+      header: "Info",
+      accessor: "info",
+    },
+    {
+      header: "Student Names",
+      accessor: "students",
+      className: "hidden md:table-cell",
+    },
+    {
+      header: "Phone",
+      accessor: "phone",
+      className: "hidden lg:table-cell",
+    },
+    {
+      header: "Address",
+      accessor: "address",
+      className: "hidden lg:table-cell",
+    },
+    ...(role === "admin" ? 
+    [{
+       header: "Actions" ,
+        accessor: "actions",
+      }] : []),
+    ];
   
   const { page, ...queryParams } = searchParams as { [key: string]: string };
   const p = page ? parseInt(page) : 1; 
@@ -123,6 +126,56 @@ const ParentListPage = async ({searchParams}:{searchParams:{[key:string]:string}
       }
     }
   }
+  // We filter the data according to the role of the user
+  
+  switch (role) {
+    case "admin":
+      // Admin için parents sorgusu
+      query.parent_student = {
+          some: {
+            students: {
+              student_institution: {
+                some: {
+                  institution_id: parseInt(institution_id),
+                },
+              },
+            },
+          },
+        };
+    break;
+  
+    case "teacher":
+      // Teacher için parents sorgusu
+        query.parent_student = {
+            some: {
+              students: {
+                student_class: {
+                  some: {
+                    classes: {
+                      teacher_class: {
+                        some: {
+                          teacher_id: parseInt(current_user_id),
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          };
+    
+        break;
+  
+    default:
+      throw new Error("Invalid role");
+  }
+    
+
+
+      
+
+
+
   // we get the data from the database, we get the parents, we include the parent_student, which is the relation between parent and student
   const [parentsData, count] = await prisma.$transaction([ 
     prisma.parents.findMany({

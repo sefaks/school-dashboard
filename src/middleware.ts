@@ -12,7 +12,7 @@ export async function middleware(request: NextRequest) {
   if (path === '/login') {
     console.log('Login sayfasına erişim kontrolü');
     const token = await getToken({ req: request, secret });
-
+    
     // Token varsa, kullanıcıyı uygun sayfaya yönlendir
     if (token) {
       const userRole = token.role;  // Token'dan role bilgisini alıyoruz
@@ -75,6 +75,7 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
+    '/',
     '/login',
     '/admin/:path*',
     '/teacher/:path*',

@@ -48,15 +48,16 @@ model assignments {
 }
 
 model classes {
-  id               Int                @id @default(autoincrement())
-  class_code       String             @unique @db.VarChar
-  grade            Int
-  institution_id   Int
-  assignment_class assignment_class[]
-  institutions     institutions       @relation(fields: [institution_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  schedules        schedules[]
-  student_class    student_class[]
-  teacher_class    teacher_class[]
+  id                   Int                    @id @default(autoincrement())
+  class_code           String                 @unique @db.VarChar
+  grade                Int
+  institution_id       Int
+  announcement_classes announcement_classes[] 
+  assignment_class     assignment_class[]
+  institutions         institutions           @relation(fields: [institution_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  schedules            schedules[]
+  student_class        student_class[]
+  teacher_class        teacher_class[]
 
   @@index([id], map: "ix_classes_id")
 }
@@ -148,15 +149,17 @@ model parent_student {
   students   students @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@id([parent_id, student_id])
-  }
+
+}
 
 model parents {
-  id             Int              @id @default(autoincrement())
-  name           String           @db.VarChar
-  surname        String           @db.VarChar
-  email          String           @db.VarChar
-  phone          String           @db.VarChar
-  parent_student parent_student[] 
+  id                   Int                    @id @default(autoincrement())
+  name                 String                 @db.VarChar
+  surname              String                 @db.VarChar
+  email                String                 @db.VarChar
+  phone                String                 @db.VarChar
+  announcement_parents announcement_parents[]
+  parent_student       parent_student[]       
 
   @@index([id], map: "ix_parents_id")
 }
@@ -213,9 +216,9 @@ model students {
   photo               String?               @db.VarChar
   school_no           String?               @db.VarChar
   assignment_student  assignment_student[]
-  parent_student      parent_student[]
+  parent_student      parent_student[]      
   student_class       student_class[]
-  student_institution student_institution[] 
+  student_institution student_institution[]
 
   @@index([id], map: "ix_students_id")
 }
@@ -259,21 +262,22 @@ model teacher_lesson {
 }
 
 model teachers {
-  id                  Int                   @id @default(autoincrement())
-  name                String?               @db.VarChar
-  surname             String?               @db.VarChar
-  email               String                @unique(map: "ix_teachers_email") @db.VarChar
-  password            String                @db.VarChar
-  gender              String?               @db.VarChar
-  title               String?               @db.VarChar
-  is_active           Boolean?
-  phone_number        String?               @db.VarChar
-  photo               String?               @db.VarChar
-  lesson_schedules    lesson_schedules[]
-  teacher_class       teacher_class[]
-  teacher_institution teacher_institution[]
-  teacher_lesson      teacher_lesson[]
-  teacher_subject     teacher_subject[]
+  id                    Int                     @id @default(autoincrement())
+  name                  String?                 @db.VarChar
+  surname               String?                 @db.VarChar
+  email                 String                  @unique(map: "ix_teachers_email") @db.VarChar
+  password              String                  @db.VarChar
+  gender                String?                 @db.VarChar
+  title                 String?                 @db.VarChar
+  is_active             Boolean?
+  phone_number          String?                 @db.VarChar
+  photo                 String?                 @db.VarChar
+  announcement_teachers announcement_teachers[]
+  lesson_schedules      lesson_schedules[]
+  teacher_class         teacher_class[]
+  teacher_institution   teacher_institution[]
+  teacher_lesson        teacher_lesson[]
+  teacher_subject       teacher_subject[]
 
   @@index([gender], map: "ix_teachers_gender")
   @@index([id], map: "ix_teachers_id")
@@ -353,6 +357,51 @@ model admins {
   @@index([name], map: "ix_admins_name")
 }
 
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model announcement_classes {
+  announcement_id Int
+  class_id        Int
+  announcements   announcements? @relation(fields: [announcement_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  classes         classes?       @relation(fields: [class_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([announcement_id, class_id])
+
+}
+
+model announcement_parents {
+  announcement_id Int
+  parent_id       Int
+  announcements   announcements @relation(fields: [announcement_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  parents         parents       @relation(fields: [parent_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([announcement_id, parent_id])
+}
+
+model announcement_teachers {
+  announcement_id Int
+  teacher_id      Int
+  announcements   announcements @relation(fields: [announcement_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  teachers        teachers      @relation(fields: [teacher_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([announcement_id, teacher_id])
+}
+
+model announcements {
+  id                    Int                     @id @default(autoincrement())
+  title                 String                  @db.VarChar
+  content               String
+  created_at            DateTime?               @db.Timestamp(6)
+  updated_at            DateTime?               @db.Timestamp(6)
+  is_active             Boolean?
+  publisher_id          Int
+  publisher_type        publishertype
+  announcement_classes  announcement_classes[]  
+  announcement_parents  announcement_parents[]
+  announcement_teachers announcement_teachers[]
+
+  @@index([id], map: "ix_announcements_id")
+}
+
 enum assigneetype {
   AUTO
   TEACHER
@@ -418,4 +467,9 @@ enum subject_name {
   DIN_BILGISI
   COGRAFYA
   TAR_H           @map("TARİH")
+}
+
+enum publishertype {
+  ADMIN
+  TEACHER
 }
