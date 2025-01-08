@@ -4,6 +4,7 @@ import { Providers } from "./providers";
 import { Session } from "@clerk/nextjs/server";
 import SessionExpiryModal from "@/components/SessionExpiryModal";
 import { ToastContainer } from "react-toastify";
+import AccountActivationModal from "@/components/AccountActivationModal";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -20,6 +21,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     
         <html lang="en">
           <body className={inter.className}>
+          <AccountActivationModal />
+
           <SessionExpiryModal />
               {children}  <ToastContainer position="bottom-right" theme="dark" />
           </body>

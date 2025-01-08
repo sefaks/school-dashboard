@@ -405,6 +405,33 @@ export const deleteClass = async (classId: number, token: string) => {
 }
 
 
+export const activateTeacher = async (formData: any, token: string) => {
+  try {
+    const response = await axios.post(`${API_BASE_URL}/auth/teacher/activate`, formData, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return response.data;
+  } catch (error: any) {
+    console.error("Error details:", error);
+
+    if (error.response) {
+      console.error("API Error:", error.response.data);
+      throw new Error(error.response.data.detail || "Failed to activate teacher!");
+    } else if (error.request) {
+      console.error("No response received from server:", error.request);
+      throw new Error("No response from server.");
+    } else {
+      console.error("Error during setup:", error.message);
+      throw new Error("An unexpected error occurred!");
+    }
+  }
+}
+
+
 
 
 

@@ -84,6 +84,29 @@ export const announcementSchema = z.object({
 
 export type AnnouncementSchema = z.infer<typeof announcementSchema>;
 
+
+
+const SubjectEnum = z.enum([
+  "TURKCE",
+  "MATEMATIK",
+  "FEN_B_LG_S_", // "FEN_BİLGİSİ" için backend mapping olacak
+  "SOSYAL_BILGILER",
+  "INGILIZCE",
+  "DIN_BILGISI",
+  "COGRAFYA",
+  "TAR_H", // "TARİH" için backend mapping olacak
+]);
+
+export const TeacherActivateSchema = z.object({
+  gender: z.enum(["Erkek", "Kadın"], { message: "Gender must be 'Erkek' or 'Kadın'" }),
+  subjects: z.array(SubjectEnum).nonempty({ message: "At least one subject must be selected!" }),
+  title: z.string().min(1, { message: "Title is required!" }),
+});
+
+export type TeacherActivateSchema = z.infer<typeof TeacherActivateSchema>;
+
+
+
     
 
     

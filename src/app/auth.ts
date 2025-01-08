@@ -58,17 +58,17 @@ export const authOptions: NextAuthOptions = {
               const teacherLoginData = await backendResponse.json();
               const { access_token, is_active } = teacherLoginData;
       
-              if (is_active) {
+             
                 return {
                   id: teacher.id.toString(),
                   email: teacher.email,
                   name: teacher.name || teacher.email,
                   token: access_token,
                   role: "teacher",
+                  is_active: teacher.is_active,
                 };
-              } else {
-                throw new Error("Teacher account is inactive.");
-              }
+             
+              
             } else {
               throw new Error("Teacher password is incorrect.");
             }
@@ -130,6 +130,7 @@ callbacks: { // this callback function is used to add the role to the JWT token 
         token.role = (user as unknown as { role: string }).role as string;  // Add role to JWT (Backend'den gelen role)
         token.id = (user as unknown as { id: string }).id as string;  // Add id to JWT
         token.institution_id = (user as unknown as { institution_id: string }).institution_id as string;  // Add institution_id to JWT
+        token.is_active = (user as unknown as { is_active: boolean }).is_active as boolean;  // Add is_active to JWT
       }
       return token;
     },      
@@ -140,6 +141,7 @@ callbacks: { // this callback function is used to add the role to the JWT token 
       session.user.role = token.role as string;
       session.user.id = token.id as string;
       session.user.institution_id = token.institution_id as string;
+      session.user.is_active = token.is_active as boolean;
       return session;
     },
       

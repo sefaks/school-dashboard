@@ -9,6 +9,7 @@ export type FormContainerProps = {
     | "class"
     | "assignment"
     | "announcement"
+    | "activate"
            ;
   type: "create" | "update" | "delete";
   data?: any;
@@ -152,6 +153,17 @@ const FormContainer = async ({ table, type, data, id }: FormContainerProps) => {
         relatedData = { announcementClasses, teachers, parents };
         console.log("related_data",relatedData);
         break;
+
+    case "activate":
+        //subject enum'ları ve gender enum'ları
+      const activateSubjects = await prisma.subjects.findMany()
+      ;
+      const activateGenders = ["Erkek", "Kadın"];
+
+
+      relatedData = { activateSubjects, activateGenders };
+
+
 
     default:
       break;

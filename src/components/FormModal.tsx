@@ -27,6 +27,10 @@ const AnnouncementForm = dynamic(() => import("./forms/AnnouncementForm"), {
   loading: () => <h1>Loading...</h1>,
 });
 
+const ActivateForm = dynamic(() => import("./forms/ActivateForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
+
 // Dynamically map forms
 const forms: {
   [key: string]: (
@@ -76,6 +80,15 @@ const forms: {
       relatedData={relatedData}
     />
   ),
+
+  activate : (setOpen, type, data, relatedData) => (
+    <ActivateForm
+      type={type}
+      data={data}
+      setOpen={setOpen}
+      relatedData={relatedData}
+    />
+  )
 };
 const FormModal = ({
   table,
