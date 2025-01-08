@@ -1,4 +1,5 @@
 import { authOptions } from "@/app/auth";
+import FormContainer from "@/components/FormContainer";
 import FormModal from "@/components/FormModal";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
@@ -49,8 +50,8 @@ const renderRow = (item: ClassList,role:string) => (
         </Link>
         {role === "admin" && (
           <>
-            <FormModal table="class" type="update" data={item} />
-            <FormModal table="class" type="delete" id={item.id} />
+            <FormContainer table="class" type="update" data={item} />
+            <FormContainer table="class" type="delete" id={item.id} />
           </>
         )}
         
@@ -214,10 +215,10 @@ const ClassListPage = async ({searchParams}:{searchParams:{[key:string]:string} 
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
-            {role === "admin" && (
         
-          <FormModal table="class" type="create"/>
-        )}          </div>
+            {role === "admin" &&
+             <FormContainer table="class" type="create" />}
+       </div>
         </div>
       </div>
       {/* LIST */}

@@ -1,4 +1,5 @@
 import { authOptions } from "@/app/auth";
+import FormContainer from "@/components/FormContainer";
 import FormModal from "@/components/FormModal";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
@@ -53,27 +54,24 @@ const renderRow = (item: StudentList, role:string) => (
       ))}
     </td>  
     <td className="hidden md:table-cell">
-      {item.parent_student?.map((parent_item: { parents: parents }, index: number) => (
-        <span key={parent_item.parents.id}>
-          {parent_item.parents.email}
-          {index < item.parent_student.length - 1 && ', '}
-        </span>
-      ))}
+    <span >{item.gender}</span>
     </td>
-    
-      <div className="flex items-center gap-2">
-        <Link href={`/list/students/${item.id}`}>
-          <button className="w-7 h-7 flex items-center justify-center rounded-full bg-lamaSky">
-            <Image src="/view.png" alt="" width={16} height={16} />
-          </button>
-        </Link>
-        {role === "admin" && (
-          // <button className="w-7 h-7 flex items-center justify-center rounded-full bg-lamaPurple">
-          //   <Image src="/delete.png" alt="" width={16} height={16} />
-          // </button>
-          <FormModal table="student" type="delete" id={item.id}/>
-        )}
-      </div>
+   
+    <td>
+        <div className="flex items-center gap-2">
+          <Link href={`/list/students/${item.id}`}>
+            <button className="w-7 h-7 flex items-center justify-center rounded-full bg-lamaSky">
+              <Image src="/view.png" alt="" width={16} height={16} />
+            </button>
+          </Link>
+          {role === "admin" && (
+            // <button className="w-7 h-7 flex items-center justify-center rounded-full bg-lamaPurple">
+            //   <Image src="/delete.png" alt="" width={16} height={16} />
+            // </button>
+            <FormContainer table="student" type="delete" id={item.id} />
+          )}
+        </div>
+      </td>
   </tr>
 );
 
@@ -94,13 +92,13 @@ const columns = [
     className: "hidden md:table-cell",
   },
   {
-    header: "Classes",
-    accessor: "classes",
+    header: "Class",
+    accessor: "class",
     className: "hidden lg:table-cell",
   },
   {
-    header: "Phone",
-    accessor: "phone",
+    header: "Gender",
+    accessor: "gender",
     className: "hidden lg:table-cell",
   },
  // actions column will be shown only for admin
@@ -251,7 +249,7 @@ const columns = [
               // <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
               //   <Image src="/plus.png" alt="" width={14} height={14} />
               // </button>
-              <FormModal table="student" type="create"/>
+              <FormContainer table="student" type="create" />
             )}
           </div>
         </div>

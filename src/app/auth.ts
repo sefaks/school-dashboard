@@ -14,81 +14,105 @@ export const authOptions: NextAuthOptions = {
       credentials: {
         email: { label: "Email", type: "text" },
         password: { label: "Password", type: "password" },
+        name: {label:"Name",type:"text",optional:true},
+        surname: {label:"Surname",type:"text",optional:true},
+        isRegister: { label: "Register", type: "boolean", optional: true }, // Register flag
       },
       authorize: async (credentials) => {
         try {
-        const { email, password } = credentials as { email: string, password: string };
+          const { email, password, name, surname, isRegister } = credentials as unknown as { email: string; password: string; name?: string; surname?:string, isRegister?: boolean };
 
-        // İlk olarak teacher-login'e istek gönderiyoruz
-        let backendResponse = await fetch("https://base-service-ua14.onrender.com/auth/teacher/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password }),
-        });
+          if(isRegister){
+            const register_response = await fetch("http://127.0.0.1:8000/auth/teacher/register", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email, password, name, surname }),
+            });
 
-          // If login is successful, get teacher from DB
-          if (backendResponse.ok) {
-            const teacherLoginData = await backendResponse.json();
-            const { access_token, is_active } = teacherLoginData;
-            console.log("Teacher login successful");
-
-            // If teacher is active, get teacher from DB
-            if (is_active) {
-                const teacher = await getTeacherFromDb(email as string); // Get teacher 
-                if (teacher) {
-                    return {
-                        id: teacher.id.toString(),
-                        email: teacher.email,
-                        name: teacher.name || teacher.email,
-                        token: access_token,
-                        role: "teacher", // Adding role to JWT
-                    };
-                }
-            } else {
-                throw new Error("Teacher account is not active.");
+            if (!register_response.ok) {
+              throw new Error("Teacher registration failed.");
             }
-          }
-          // If teacher login failed, try institution admin login
-          console.log("Teacher login failed, trying institution admin login...");
-          backendResponse = await fetch("https://base-service-ua14.onrender.com/auth/institution_admin/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password }),
-          });
 
-          if (backendResponse.ok) {
-            const adminLoginData = await backendResponse.json();
-            const { access_token } = adminLoginData;
-
-            // Eğer admin aktifse, bilgilerini DB'den alıyoruz
-                const admin = await getInstitutionAdminFromDb(email as string); // Admin bilgilerini al
-                if (admin) {
-                  return {
-                    id: admin.id.toString(),
-                    institution_id: admin.institution_id ? admin.institution_id.toString() : null,
-                    email: admin.email,
-                    name: admin.name || admin.email,
-                    token: access_token,
-                    role: "admin",
-                  };
-                } else {
-                  throw new Error("Institution Admin account is not found.");
-                }
+            const registeredTeacher = await register_response.json();
+            return {
+              id: registeredTeacher.id.toString(),
+              email: registeredTeacher.email,
+              name: registeredTeacher.name,
+              role: "teacher",
+            };
           }
-          // If login failed for both teacher and admin
-          throw new Error("Login failed for both teacher and admin.");
-        } catch (error) {
-          console.error("Authorization error:", error);
-          return null; // Authorization failed
+
+          // Kullanıcıyı veritabanında email ile arıyoruz
+          const teacher = await getTeacherFromDb(email);
+          const admin = await getInstitutionAdminFromDb(email);
+      
+          if (teacher) {
+            // Öğretmen bulunduysa, öğretmen girişi için API'yi çağırıyoruz
+            let backendResponse = await fetch("https://base-service-ua14.onrender.com/auth/teacher/login", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email, password }),
+            });
+      
+            if (backendResponse.ok) {
+              const teacherLoginData = await backendResponse.json();
+              const { access_token, is_active } = teacherLoginData;
+      
+              if (is_active) {
+                return {
+                  id: teacher.id.toString(),
+                  email: teacher.email,
+                  name: teacher.name || teacher.email,
+                  token: access_token,
+                  role: "teacher",
+                };
+              } else {
+                throw new Error("Teacher account is inactive.");
+              }
+            } else {
+              throw new Error("Teacher password is incorrect.");
+            }
+          } else if (admin) {
+            // Eğer admin bulunduysa, admin girişi için API'yi çağırıyoruz
+            let backendResponse = await fetch("https://base-service-ua14.onrender.com/auth/institution_admin/login", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email, password }),
+            });
+      
+            if (backendResponse.ok) {
+              const adminLoginData = await backendResponse.json();
+              const { access_token } = adminLoginData;
+      
+              return {
+                id: admin.id.toString(),
+                institution_id: admin.institution_id?.toString() || null,
+                email: admin.email,
+                name: admin.name || admin.email,
+                token: access_token,
+                role: "admin",
+              };
+            } else {
+              throw new Error("Institution admin password is incorrect.");
+            }
+          } else {
+            // Eğer kullanıcı hem öğretmen hem de admin olarak bulunmadıysa
+            throw new Error("Email address not found for teacher or institution admin.");
+          }
+        } catch (error:any) {
+          console.error("Authorization error:", error.message);
+          throw new Error(error.message);
         }
       },
-    }),
-  ],
+}),
+],
 
   pages: {
     signIn: "/sigin", // Custom login page
-    error: "/unauthorized", // Custom error page
+    error: "/unauthorized", // Custom error page,
+    newUser: "/new-user", // Custom new user page
   },
+
 
   session: {
     strategy: "jwt", // Use JWT strategy
@@ -106,9 +130,6 @@ callbacks: { // this callback function is used to add the role to the JWT token 
         token.role = (user as unknown as { role: string }).role as string;  // Add role to JWT (Backend'den gelen role)
         token.id = (user as unknown as { id: string }).id as string;  // Add id to JWT
         token.institution_id = (user as unknown as { institution_id: string }).institution_id as string;  // Add institution_id to JWT
-      }
-      else {
-        console.log("No user:", user);
       }
       return token;
     },      

@@ -1,16 +1,12 @@
 import Menu from "@/components/Menu";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
+import SessionExpiryModal from "@/components/SessionExpiryModal";
 
 export default function DashboardLayout({ 
     children }
     :Readonly< { children: React.ReactNode }>) {
-        
-        // in the below, the left side is 14% of the screen and the right side is 86% of the screen. Its changed for different screen sizes. This library is called tailwindcss.
-        // lg:block means that the logo will be shown on screens larger than large.
-        // the link is used to navigate to the home page.
-        // overflow-scroll is used to make the page scrollable.
-        // navbar children is used to display the navbar on the page for each page.
+    
     return (
         <div className="h-screen flex">
 

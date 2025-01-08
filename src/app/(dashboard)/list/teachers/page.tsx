@@ -9,7 +9,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { ITEM_PER_PAGE } from "@/lib/settings";
 import { FieldRef } from "@prisma/client/runtime/library";
-import { getRoleAndUserIdAndInstitutionId } from "@/lib/utils";
+import { getRoleAndUserIdAndInstitutionId, subjectNameMap } from "@/lib/utils";
+import FormContainer from "@/components/FormContainer";
 
 type TeacherList = teachers & {
   teacher_subject: Array<{  // in here, we define with array because a teacher can have multiple subjects
@@ -74,13 +75,13 @@ const renderRow = (item:TeacherList) => (
       </div>
     </td>
     <td className="hidden md:table-cell">
-      {item.teacher_subject.map((subject: { subjects: subjects }, index: number) => (
-        <span key={subject.subjects.id}>
-          {subject.subjects.subject_name}
-          {index < item.teacher_subject.length - 1 && ', '}
-        </span>
-      ))}
-    </td>
+  {item.teacher_subject.map((subject, index) => (
+    <span key={subject.subjects.id}>
+      {subjectNameMap[subject.subjects.subject_name] || subject.subjects.subject_name}
+      {index < item.teacher_subject.length - 1 && ", "}
+    </span>
+  ))}
+</td>
 
     <td className="hidden md:table-cell">
       {item.teacher_class.map((classItem: { classes: classes }, index: number) => (
@@ -105,8 +106,8 @@ const renderRow = (item:TeacherList) => (
           // <button className="w-7 h-7 flex items-center justify-center rounded-full bg-lamaPurple">
           //   <Image src="/delete.png" alt="" width={16} height={16} />
           // </button>
-          <FormModal table="teacher" type="delete" id={item.id}/>
-        )}
+          <FormContainer table="teacher" type="delete" id={item.id} />
+          )}
       </div>
     </td>
   </tr>
@@ -262,7 +263,7 @@ const renderRow = (item:TeacherList) => (
             </button>
             {role === "admin" && (
 
-              <FormModal table="teacher" type="create"/>
+              <FormContainer table="teacher" type="create"/>
             )}
           </div>
         </div>

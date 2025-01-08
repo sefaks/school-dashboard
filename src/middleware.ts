@@ -35,6 +35,20 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
+  const expiration_date = new Date((token.exp as number) * 1000);
+
+  const currentTime = Math.floor(Date.now() / 1000); // Şu anki zaman (saniye)
+
+  if (currentTime >= expiration_date.getTime()) {
+    console.log("Token süresi dolmuş.");
+  } else {
+    console.log("Token geçerli.");
+  }
+  if ((token.exp as number) && (token.exp as number) < currentTime) {
+    console.log('Token süresi dolmuş, kullanıcı login sayfasına yönlendiriliyor.');
+    return NextResponse.redirect(new URL('/login', request.url));
+  }
+
   const userRole = token.role;  // Token'dan role bilgisini alıyoruz
 
   // Ana sayfa yönlendirmesi

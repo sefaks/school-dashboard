@@ -1,5 +1,6 @@
 
 import { authOptions } from "@/app/auth";
+import FormContainer from "@/components/FormContainer";
 import FormModal from "@/components/FormModal";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
@@ -7,7 +8,7 @@ import TableSearch from "@/components/TableSearch";
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
 import { getRoleAndUserIdAndInstitutionId } from "@/lib/utils";
-import { Prisma, assignments, assignmentstatus, classes, subject_name, teachers } from "@prisma/client";
+import { Prisma, assignments, assignmentstatus, classes, students, subject_name, teachers } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import Image from "next/image";
 
@@ -18,9 +19,14 @@ type AssignmentList = assignments & {
   assignment_teacher: Array<{
     teachers: teachers;
   }>;
+  // get assignment student with student_institution and get institution_id
+  assignment_student: Array<{
+    students: students;
+  }>;
   subjects: {
     subject_name: string;
   };
+
     
  
 };
@@ -51,6 +57,10 @@ const columns = [
   {
     header: "Subject",
     accessor: "name",
+  },
+  {
+    header: "Student",
+    accessor: "student",
   },
   {
     header: "Class",
@@ -101,6 +111,14 @@ const renderRow = (item: AssignmentList, role:string) => (
       )}
     </td>  
     <td className="hidden md:table-cell">
+      {item.assignment_student?.map((student_item: { students: students }, index: number) => (
+        <span key={student_item.students.id}>
+          {student_item.students.name} {student_item.students.surname}
+          {index < item.assignment_student.length - 1 && ', '}
+        </span>
+      ))}
+    </td>
+    <td className="hidden md:table-cell">
       {item.assignment_class?.map((class_item: { classes: classes }, index: number) => (
         <span key={class_item.classes.id}>
           {class_item.classes.class_code}
@@ -117,7 +135,7 @@ const renderRow = (item: AssignmentList, role:string) => (
           {item.status}
         </span>
       ) : (
-        "No subject assigned"
+        "No status assigned"
       )}
     </td> 
     <td className="hidden md:table-cell">
@@ -152,38 +170,72 @@ const renderRow = (item: AssignmentList, role:string) => (
   const { page, ...queryParams } = searchParams as { [key: string]: string };
   const p = page ? parseInt(page) : 1; 
 
-  const query:Prisma.assignmentsWhereInput = {} // we define a query, which is an object, we will use it for getting the data. Its prisma feature for filtering the data
-
-  if(queryParams) {
-    for(const [key,value] of Object.entries(queryParams)){
+  // we define a query, which is an object, we will use it for getting the data. Its prisma feature for filtering the data
+  const query:Prisma.assignmentsWhereInput = {}
+  if (queryParams) {
+    for (const [key, value] of Object.entries(queryParams)) {
       if (value === "") continue;
-       switch(key){
-
+      
+      switch (key) {
         case "search":
+          // Boş string kontrolü
+          if (!value) break;
+          
           query.OR = [
+            // Header araması
             {
               header: {
                 contains: value,
                 mode: "insensitive",
-              },
+              }
             },
+           
+            // Class code araması
+            {
+              assignment_class: {
+                some: {
+                  classes: {
+                    class_code: {
+                      contains: value,
+                      mode: "insensitive",
+                    }
+                  }
+                }
+              }
+            }
           ];
-        break;
+           // Status araması sadece geçerli bir status değeri ise eklensin
+        if (Object.values(assignmentstatus).includes(value as assignmentstatus)) {
+          query.status = value as assignmentstatus;
         }
+  
+          // Eğer geçerli bir tarih ise, tarih araması da ekle
+          if (!isNaN(Date.parse(value))) {
+            query.OR.push({
+              start_date: {
+                gte: new Date(value)
+              }
+            });
+          }
+          
+          break;
+      }
     }
+  
   }
 
   // We filter the data according to the role of the user
   switch (role) {
     case "admin":
       // filter that institution_id is equal to all assignment class and assignment_student's student institution_id
-      query.assignment_class = {
-        some: {
-          classes: {
-            institution_id: parseInt(institution_id),
-          },
+      query.OR = [
+        {
+          assignment_class: { some: { classes: { institution_id: parseInt(institution_id) } } },
         },
-      };
+        {
+          assignment_student: { some: { students: { student_institution: { some: { institution_id: parseInt(institution_id) } } } } },
+        },
+      ];
       break;
   
     // If the user is a teacher, we filter the data according to the teacher's id
@@ -196,29 +248,46 @@ const renderRow = (item: AssignmentList, role:string) => (
   // transactions are used to execute multiple queries at once. We get the data and the count of the data together. We using studentsData for rendering the table data and count for pagination
     const [assignmentsData, count] = await prisma.$transaction([
       prisma.assignments.findMany({
-        where: query, // Burada query parametrelerinize göre filtreleme yapılır
+        where: {
+          ...query, // Include any other filters from your query
+          deadline_date: {
+            gte: new Date(), // Only include assignments with a deadline greater than or equal to the current date
+          },
+        },
         include: {
           subjects: true, // subjects ilişkisini dahil ediyoruz
           assignment_class: { // assignment_class ilişkisini dahil ediyoruz
             include: {
               classes: true, // classes ilişkisini dahil ediyoruz
             }
-          }
+          },
+          assignment_student: { // assignment_student ilişkisini dahil ediyoruz
+            include: {
+              students: true, // students ilişkisini dahil ediyoruz
+            }
+        },
+
         },
         take: ITEM_PER_PAGE, // Sayfa başına gösterilecek öğe sayısı
         skip: (p - 1) * ITEM_PER_PAGE, // Sayfalama işlemi için verileri atlamak
+        orderBy: {
+          deadline_date: "asc", // Sıralama işlemi
+        },
       }),
       
       // assignments tablosunun toplam sayısını alıyoruz
       prisma.assignments.count({
-        where: query, // Aynı filtreyle toplam sayıyı hesaplıyoruz
-      })
+        where: {
+          ...query, // Apply the same filtering criteria
+          deadline_date: {
+            gte: new Date(), // Same filter for counting future assignments
+          },
+        },
+      }),
     ]);
-    
+
     console.log(assignmentsData);
-
- 
-
+    
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
       {/* TOP */}
@@ -235,7 +304,9 @@ const renderRow = (item: AssignmentList, role:string) => (
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
-            {role === "admin" || role === "teacher" && <FormModal table="assignment" type="create" />}
+            {role === "admin" || role === "teacher" &&               
+            <FormContainer table="assignment" type="create" />
+}
           </div>
         </div>
       </div>

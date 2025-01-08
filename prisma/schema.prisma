@@ -95,7 +95,6 @@ model institutions {
   phone_number        String                @db.VarChar
   address             String?               @db.VarChar
   email               String?               @unique(map: "ix_institutions_email") @db.VarChar
-  password            String?               @db.VarChar
   admins              admins[]
   classes             classes[]
   lessons             lessons[]
@@ -203,22 +202,24 @@ model student_institution {
 }
 
 model students {
-  id                  Int                   @id @default(autoincrement())
-  name                String                @db.VarChar
-  surname             String                @db.VarChar
-  gender              String?               @db.VarChar
-  email               String                @unique @db.VarChar
-  password            String                @db.VarChar
-  birth_date          DateTime?             @db.Date
-  school_name         String?               @db.VarChar
-  grade               Int?
-  is_active           Boolean?
-  photo               String?               @db.VarChar
-  school_no           String?               @db.VarChar
-  assignment_student  assignment_student[]
-  parent_student      parent_student[]      
-  student_class       student_class[]
-  student_institution student_institution[]
+  id                         Int                   @id @default(autoincrement())
+  name                       String                @db.VarChar
+  surname                    String                @db.VarChar
+  gender                     String?               @db.VarChar
+  email                      String                @unique @db.VarChar
+  password                   String                @db.VarChar
+  birth_date                 DateTime?             @db.Date
+  school_name                String?               @db.VarChar
+  grade                      Int?
+  is_active                  Boolean?
+  photo                      String?               @db.VarChar
+  school_no                  String?               @db.VarChar
+  validation_code            String?               @db.VarChar
+  validation_code_expiration DateTime?             @db.Timestamp(6)
+  assignment_student         assignment_student[]
+  parent_student             parent_student[]      
+  student_class              student_class[]
+  student_institution        student_institution[]
 
   @@index([id], map: "ix_students_id")
 }
@@ -262,22 +263,24 @@ model teacher_lesson {
 }
 
 model teachers {
-  id                    Int                     @id @default(autoincrement())
-  name                  String?                 @db.VarChar
-  surname               String?                 @db.VarChar
-  email                 String                  @unique(map: "ix_teachers_email") @db.VarChar
-  password              String                  @db.VarChar
-  gender                String?                 @db.VarChar
-  title                 String?                 @db.VarChar
-  is_active             Boolean?
-  phone_number          String?                 @db.VarChar
-  photo                 String?                 @db.VarChar
-  announcement_teachers announcement_teachers[]
-  lesson_schedules      lesson_schedules[]
-  teacher_class         teacher_class[]
-  teacher_institution   teacher_institution[]
-  teacher_lesson        teacher_lesson[]
-  teacher_subject       teacher_subject[]
+  id                         Int                     @id @default(autoincrement())
+  name                       String?                 @db.VarChar
+  surname                    String?                 @db.VarChar
+  email                      String                  @unique(map: "ix_teachers_email") @db.VarChar
+  password                   String                  @db.VarChar
+  gender                     String?                 @db.VarChar
+  title                      String?                 @db.VarChar
+  is_active                  Boolean?
+  phone_number               String?                 @db.VarChar
+  photo                      String?                 @db.VarChar
+  validation_code            String?                 @db.VarChar
+  validation_code_expiration DateTime?               @db.Timestamp(6)
+  announcement_teachers      announcement_teachers[]
+  lesson_schedules           lesson_schedules[]
+  teacher_class              teacher_class[]
+  teacher_institution        teacher_institution[]
+  teacher_lesson             teacher_lesson[]
+  teacher_subject            teacher_subject[]
 
   @@index([gender], map: "ix_teachers_gender")
   @@index([id], map: "ix_teachers_id")
@@ -364,7 +367,7 @@ model announcement_classes {
   announcements   announcements? @relation(fields: [announcement_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   classes         classes?       @relation(fields: [class_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-  @@id([announcement_id, class_id])
+  @@id([announcement_id, class_id]) 
 
 }
 
@@ -390,8 +393,8 @@ model announcements {
   id                    Int                     @id @default(autoincrement())
   title                 String                  @db.VarChar
   content               String
-  created_at            DateTime?               @db.Timestamp(6)
-  updated_at            DateTime?               @db.Timestamp(6)
+  created_at            DateTime                @db.Timestamptz(6)
+  updated_at            DateTime?               @db.Timestamptz(6)
   is_active             Boolean?
   publisher_id          Int
   publisher_type        publishertype

@@ -11,7 +11,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { CgLogOut, CgProfile } from "react-icons/cg";
 import { authOptions } from '@/app/auth';
-import { getSession, useSession } from 'next-auth/react';
+import { getSession, signOut, useSession } from 'next-auth/react';
 
 
 const Navbar =  () => {
@@ -26,10 +26,14 @@ const Navbar =  () => {
 
 
     const handleLogout = () => {
-
-        // logout with next-auth
-        router.push('/auth/logout');
-
+        // NextAuth ile logout işlemi
+        signOut({
+            redirect: false,  // Yönlendirme yapılmasın
+            callbackUrl: '/auth/login',  // Çıkış yaptıktan sonra yönlendirilecek URL
+        }).then(() => {
+            // Logout işlemi başarılı ise yönlendirme yap
+            router.push('/auth/login');
+        });
     };
 
     // Dropdown menüsünü açıp kapatma fonksiyonu

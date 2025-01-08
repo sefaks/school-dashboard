@@ -1,10 +1,25 @@
 "use client";
-import { Calendar, momentLocalizer, View, Views } from "react-big-calendar";
+import { Calendar, dateFnsLocalizer, momentLocalizer, View, Views } from "react-big-calendar";
 import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { useState } from "react";
+import { format, parse, startOfWeek, getDay } from 'date-fns';
+import trTR from 'date-fns/locale/tr';
 
-const localizer = momentLocalizer(moment);
+
+const locales = {
+  'tr-TR': trTR,
+};
+
+const localizer = dateFnsLocalizer({
+  format,
+  parse,
+  startOfWeek,
+  getDay,
+  locales,
+});
+
+
 
 const BigCalendar = ({
   data,
@@ -12,6 +27,9 @@ const BigCalendar = ({
   data: { title: string; start: Date; end: Date }[];
 }) => {
   const [view, setView] = useState<View>(Views.WEEK);
+
+  
+
 
   const handleOnChangeView = (selectedView: View) => {
     setView(selectedView);
@@ -29,7 +47,6 @@ const BigCalendar = ({
       backgroundColor = 'lightyellow';
     } else if (lessonTitle === 'Türkçe') {
       backgroundColor = 'lightpink';
-  
     } else {
       backgroundColor = 'lightgray';
     }
@@ -53,6 +70,9 @@ const BigCalendar = ({
     );
   };
 
+
+  console.log("data" , data);
+
   return (
     <div className="bg-blue">
       <Calendar
@@ -62,10 +82,12 @@ const BigCalendar = ({
         endAccessor="end"
         views={["week", "day", "month"]}
         view={view}
+        step = {60}
+        timeslots={1}
         style={{ height: "98%" }}
         onView={handleOnChangeView}
-        min={new Date(2025, 1, 0, 8, 0, 0)}
-        max={new Date(2025, 1, 0, 17, 0, 0)}
+        min={new Date(0, 0, 0, 8, 0, 0)} // Sadece saat 8'i belirt
+        max={new Date(0, 0, 0, 17, 0, 0)} // Sadece saat 17'yi belirt
         eventPropGetter={eventStyleGetter}
         components={{
           event: eventRender,

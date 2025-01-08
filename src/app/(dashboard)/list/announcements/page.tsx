@@ -1,3 +1,4 @@
+import FormContainer from "@/components/FormContainer";
 import FormModal from "@/components/FormModal";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
@@ -158,16 +159,29 @@ const AnnouncementListPage =  async ({searchParams}:{searchParams:{[key:string]:
       }
     }
     
-
   switch(role){
     case "teacher":
-      query.announcement_teachers = {
-        some:{
-          teachers:{
-            id: parseInt(current_user_id),
+      query.OR = [
+        // Kendi Yayınladığı Duyurular
+        {
+          publisher_type: {
+            equals: "TEACHER",
+          },
+          publisher_id: {
+            equals: parseInt(current_user_id),
           },
         },
-      };
+        // Atanmış Olduğu Duyurular
+        {
+          announcement_teachers: {
+            some: {
+              teachers: {
+                id: parseInt(current_user_id),
+              },
+            },
+          },
+        },
+      ];
       break;
     case "parent":
       query.announcement_parents = {
@@ -179,34 +193,92 @@ const AnnouncementListPage =  async ({searchParams}:{searchParams:{[key:string]:
       };
       break;
     case "admin":
-      query.publisher_id = {
-        equals: parseInt(current_user_id),
-      };
-      query.publisher_type = {
-        equals: "ADMIN",
-      };
-
+     query.OR = [
+      {
+        publisher_type: {
+          equals: "ADMIN",
+        },
+        publisher_id: {
+          equals: parseInt(current_user_id),
+        },
+      },
+        {
+          announcement_classes: {
+            some: {
+              classes: {
+                institution_id: {
+                  equals: parseInt(institution_id),
+                },
+              },
+            },
+          },
+        },
+        
+        {
+          announcement_teachers: {
+            some: {
+              teachers: {
+                teacher_institution: {
+                  some: {
+                    institution_id: {
+                      equals: parseInt(institution_id),
+                    },
+                  },
+                },
+               
+              },
+            },
+          },
+        },
+        {
+          announcement_parents: {
+            some: {
+              parents: {
+               parent_student: {
+                  some: {
+                    students: {
+                      student_institution: {
+                        some: {
+                          institution_id: {
+                            equals: parseInt(institution_id),
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      ];
   }
 
 
-  const renderRow = (item: AnnouncementList) => (
+
+  const renderRow = (item: AnnouncementList) => {
+    let publisherName: string | null = null;
+  
+    const publisher = publisherMap[item.publisher_type]?.[item.publisher_id];
+  
+    if (publisher) {
+      publisherName = item.publisher_type === "ADMIN" ? publisher.name : `${publisher.name ?? ''} `;
+    } else {
+      publisherName = "Unknown Publisher";
+    }
+
+    return (
     <tr
       key={item.id}
       className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
     >
-      <td className="flex items-center gap-4 p-4">{item.announcement_teachers.map((teacher_item: { teachers: teachers }, index: number) => (
-        <span key={teacher_item.teachers.id}>
-          {teacher_item.teachers.name}
-          {index < item.announcement_teachers.length - 1 && ', '}
-        </span>
-      ))}
-      {item.announcement_parents.map((parent_item: { parents: parents }, index: number) => (
-        <span key={parent_item.parents.id}>
-          {parent_item.parents.name}
-          {index < item.announcement_parents.length - 1 && ', '}
-        </span>
-      ))}
-      {item.publisher_type === "ADMIN" && "Admin"}
+      <td className="flex items-center gap-4 p-4">
+        {item.publisher_type === "TEACHER" && (
+          <span>
+
+
+          </span>
+        )}
       </td>
       <td>{item.title}</td>
       <td>{item.content}</td>
@@ -221,51 +293,72 @@ const AnnouncementListPage =  async ({searchParams}:{searchParams:{[key:string]:
       <td>
         <div className="flex items-center gap-2">
             <>
-              <FormModal table="announcement" type="update" data={item} />
-              <FormModal table="announcement" type="delete" id={item.id} />
+              <FormContainer table="announcement" type="update" data={item} />
+              <FormContainer table="announcement" type="delete" id={item.id} />
             </>
         </div>
       </td>
     </tr>
   );
+  }
 
-
-  const[announcements_data,count] = await prisma.$transaction([ // we get the data and the count of the data together. We using studentsData for rendering the table data and count for pagination
-  prisma.announcements.findMany({
-   where: query, 
-  include: {
-    announcement_classes: { // we define in prisma table that teacher_subjects and teacher_classes are arrays
+  const [announcements_data, count] = await prisma.$transaction([
+    prisma.announcements.findMany({
+      where: query,
       include: {
-        classes: true
-      }
-    },
-    announcement_parents: {
-      include: {
-        parents: true
-      }
-    }
-    ,
-    announcement_teachers: {
-      include: {
-        teachers: true
-      }
-    }
+        announcement_classes: {
+          include: {
+            classes: true,
+          },
+        },
+        announcement_parents: {
+          include: {
+            parents: true,
+          },
+        },
+        announcement_teachers: {
+          include: {
+            teachers: true,
+          },
+        },
+      },
+      orderBy: {
+        created_at: "desc",
+      },
+      take: ITEM_PER_PAGE,
+      skip: (p - 1) * ITEM_PER_PAGE,
+    }),
+    prisma.announcements.count({
+      where: query,
+    }),
+  ]);
 
-  },
-  orderBy: {
-    created_at: "desc", // we order the data according to the created_at field
-  },
-  take: ITEM_PER_PAGE , 
-  skip: (p - 1) * ITEM_PER_PAGE, // we skip the data according to the page, if the page is 1, we skip 0, if the page is 2, we skip 10
-
-}),
-// we get the count of the data with filtered data
-prisma.announcements.count({
-  where: query,
-}),
-]); 
-console.log(current_user_id);
-console.log(announcements_data);
+  console.log("announcements_data:", announcements_data);
+  
+  // Ek olarak, admin ve teacher bilgilerini tek bir sorguda çekiyoruz:
+  const adminIds = announcements_data
+    .filter((a) => a.publisher_type === "ADMIN")
+    .map((a) => a.publisher_id);
+  
+  const teacherIds = announcements_data
+    .filter((a) => a.publisher_type === "TEACHER")
+    .map((a) => a.publisher_id);
+  
+  const [adminData, teacherData] = await Promise.all([
+    prisma.admins.findMany({
+      where: { id: { in: adminIds } },
+    }),
+    prisma.teachers.findMany({
+      where: { id: { in: teacherIds } },
+    }),
+  ]);
+  
+  // Publisher bilgilerini haritalayarak birleştiriyoruz:
+  const publisherMap = {
+    ADMIN: Object.fromEntries(adminData.map((admin) => [admin.id, admin])),
+    TEACHER: Object.fromEntries(teacherData.map((teacher) => [teacher.id, teacher])),
+  };
+  
 
 
   return (
@@ -284,9 +377,8 @@ console.log(announcements_data);
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
-            {role === "admin" && (
-              <FormModal table="announcement" type="create" />
-            )}
+      
+              <FormContainer table="announcement" type="create" />
           </div>
         </div>
       </div>
