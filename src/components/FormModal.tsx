@@ -77,6 +77,13 @@ const forms: {
     />
   ),
 };
+const FormModal = ({
+  table,
+  type,
+  data,
+  id,
+  relatedData,
+}: FormContainerProps & { relatedData?: any }) => {
 
 // Form component as a functional component
 const Form = ({
@@ -158,19 +165,14 @@ const Form = ({
       </button>
     </form>
   ) : type === "create" || type === "update" ? (
-    forms[table](setOpen, type, {}, {})
-  ) : (
+    forms[table](setOpen, type, data, relatedData)
+    ) : (
     "Form not found!"
   );
 };
 
-const FormModal = ({
-  table,
-  type,
-  data,
-  id,
-  relatedData,
-}: FormContainerProps & { relatedData?: any }) => {
+
+  console.log("FormModal", relatedData);
   const router = useRouter();
 
   const size = type === "create" ? "w-8 h-8" : "w-7 h-7";

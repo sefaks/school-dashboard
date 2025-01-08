@@ -332,8 +332,6 @@ const AnnouncementListPage =  async ({searchParams}:{searchParams:{[key:string]:
       where: query,
     }),
   ]);
-
-  console.log("announcements_data:", announcements_data);
   
   // Ek olarak, admin ve teacher bilgilerini tek bir sorguda çekiyoruz:
   const adminIds = announcements_data

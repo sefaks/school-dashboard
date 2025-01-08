@@ -159,157 +159,156 @@ const AnnouncementForm = ({
       console.log("AnnouncementForm data:", formData);
 
       formAction(JSON.stringify(formData));
-    };
 
+
+    };
   
     const isValid = Object.keys(errors).length === 0;
     return (
         <form className="flex flex-col gap-8" onSubmit={handleSubmit(onSubmit)}>
-        <h1 className="text-xl font-semibold">
-          {type === "create" ? "Create Announcement" : "Update Announcement"}
-        </h1>
-      
-        {/* Title Input */}
-        <div>
-          <label className="block mb-2 text-sm font-medium">Title</label>
-          <input
-            {...register("title", { required: "Title is required" })}
-            className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
-          />
-          {errors.title && <span className="text-red-500 text-sm">{errors.title.message}</span>}
-        </div>
-      
-        {/* Content Input */}
-        <div>
-          <label className="block mb-2 text-sm font-medium">Content</label>
-          <textarea
-            {...register("content", { required: "Content is required" })}
-            className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
-          />
-          {errors.content && <span className="text-red-500 text-sm">{errors.content.message}</span>}
-        </div>
-      
-        {/* Teachers Selection */}
-        <div>
-          <label className="block mb-2 text-sm font-medium">Select Teachers</label>
-          <select
-            {...register("teacher_ids", { required: "Please select at least one teacher", valueAsNumber: true })}
-            className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
-            multiple
-          >
-            {relatedData?.teachers?.map((teacher: any) => (
-              <option key={teacher.id} value={teacher.id}>
-                {`${teacher.name} ${teacher.surname}`}
-              </option>
-            ))}
-          </select>
-          {errors.teacher_ids && <span className="text-red-500 text-sm">{errors.teacher_ids.message}</span>}
-          
-          <div className="mt-2 flex gap-2 flex-wrap">
-            {selectedTeachers.map((teacherId) => {
-              const teacher = relatedData?.teachers?.find((t: any) => t.id === teacherId);
-              return (
-                teacher && (
-                  <span key={teacherId} className="p-1 bg-blue-200 rounded-md flex items-center gap-2">
-                    {teacher.name} {teacher.surname}
-                    <button
-                      type="button"
-                      onClick={() => handleTeacherRemove(teacherId)}
-                      className="text-red-500"
-                    >
-                      X
-                    </button>
-                  </span>
-                )
-              );
-            })}
+          <h1 className="text-xl font-semibold">
+            {type === "create" ? "Create Announcement" : "Update Announcement"}
+          </h1>
+    
+          {/* Title Input */}
+          <div>
+            <label className="block mb-2 text-sm font-medium">Title</label>
+            <input
+              {...register("title", { required: "Title is required" })}
+              className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
+            />
+            {errors.title && <span className="text-red-500 text-sm">{errors.title.message}</span>}
           </div>
-        </div>
-      
-        {/* Parents Selection */}
-        <div>
-          <label className="block mb-2 text-sm font-medium">Select Parents</label>
-          <select
-            {...register("parent_ids", { required: "Please select at least one parent", valueAsNumber: true })}
-            className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
-            multiple
-          >
-            {relatedData?.parents?.map((parent: any) => (
-              <option key={parent.id} value={parent.id}>
-                {`${parent.name} ${parent.surname}`}
-              </option>
-            ))}
-          </select>
-          {errors.parent_ids && <span className="text-red-500 text-sm">{errors.parent_ids.message}</span>}
-          
-          <div className="mt-2 flex gap-2 flex-wrap">
-            {selectedParents.map((parentId) => {
-              const parent = relatedData?.parents?.find((p: any) => p.id === parentId);
-              return (
-                parent && (
-                  <span key={parentId} className="p-1 bg-blue-200 rounded-md flex items-center gap-2">
-                    {parent.name} {parent.surname}
-                    <button
-                      type="button"
-                      onClick={() => handleParentRemove(parentId)}
-                      className="text-red-500"
-                    >
-                      X
-                    </button>
-                  </span>
-                )
-              );
-            })}
+    
+          {/* Content Input */}
+          <div>
+            <label className="block mb-2 text-sm font-medium">Content</label>
+            <textarea
+              {...register("content", { required: "Content is required" })}
+              className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
+            />
+            {errors.content && <span className="text-red-500 text-sm">{errors.content.message}</span>}
           </div>
-        </div>
-      
-        {/* Classes Selection */}
-        <div>
-          <label className="block mb-2 text-sm font-medium">Select Classes</label>
-          <select
-            {...register("class_ids", { required: "Please select at least one class", valueAsNumber: true })}
-            className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
-            multiple
-          >
-            {relatedData?.announcementClasses?.map((classItem: any) => (
-              <option key={classItem.id} value={classItem.id}>
-                {classItem.class_code}
-              </option>
-            ))}
-          </select>
-          {errors.class_ids && <span className="text-red-500 text-sm">{errors.class_ids.message}</span>}
-          
-          <div className="mt-2 flex gap-2 flex-wrap">
-            {selectedClasses.map((classId) => {
-              const cls = relatedData?.announcementClasses?.find((c: any) => c.id === classId);
-              return (
-                cls && (
-                  <span key={classId} className="p-1 bg-blue-200 rounded-md flex items-center gap-2">
-                    {cls.class_code}
-                    <button
-                      type="button"
-                      onClick={() => handleClassRemove(classId)}
-                      className="text-red-500"
-                    >
-                      X
-                    </button>
-                  </span>
-                )
-              );
-            })}
+    
+          {/* Teachers Selection */}
+          <div>
+            <label className="block mb-2 text-sm font-medium">Select Teachers</label>
+            <select
+              className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
+              multiple
+              onChange={(e) => handleTeacherSelect(parseInt(e.target.value))}
+            >
+              {relatedData?.teachers?.map((teacher: any) => (
+                <option key={teacher.id} value={teacher.id}>
+                  {`${teacher.name} ${teacher.surname}`}
+                </option>
+              ))}
+            </select>
+            {errors.teacher_ids && <span className="text-red-500 text-sm">{errors.teacher_ids.message}</span>}
+
+            <div className="mt-2 flex gap-2 flex-wrap">
+              {selectedTeachers.map((teacherId) => {
+                const teacher = relatedData?.teachers?.find((t: any) => t.id === teacherId);
+                return (
+                  teacher && (
+                    <span key={teacherId} className="p-1 bg-blue-200 rounded-md flex items-center gap-2">
+                      {teacher.name} {teacher.surname}
+                      <button
+                        type="button"
+                        onClick={() => handleTeacherRemove(teacherId)}
+                        className="text-red-500"
+                      >
+                        X
+                      </button>
+                    </span>
+                  )
+                );
+              })}
+            </div>
           </div>
-        </div>
-      
-        {/* Submit Button */}
-        <button
-          type="submit"
-          className="bg-blue-400 text-white p-2 rounded-md disabled:opacity-50 mt-4"
-          disabled={!isValid}
-        >
-          {type === "create" ? "Create" : "Update"}
-        </button>
-      </form>
-      
+    
+          {/* Parents Selection */}
+          <div>
+            <label className="block mb-2 text-sm font-medium">Select Parents</label>
+            <select
+              className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
+              multiple
+              onChange={(e) => handleParentSelect(parseInt(e.target.value))}
+            >
+              {relatedData?.parents?.map((parent: any) => (
+                <option key={parent.id} value={parent.id}>
+                  {`${parent.name} ${parent.surname}`}
+                </option>
+              ))}
+            </select>
+            {errors.parent_ids && <span className="text-red-500 text-sm">{errors.parent_ids.message}</span>}
+
+            <div className="mt-2 flex gap-2 flex-wrap">
+              {selectedParents.map((parentId) => {
+                const parent = relatedData?.parents?.find((p: any) => p.id === parentId);
+                return (
+                  parent && (
+                    <span key={parentId} className="p-1 bg-blue-200 rounded-md flex items-center gap-2">
+                      {parent.name} {parent.surname}
+                      <button
+                        type="button"
+                        onClick={() => handleParentRemove(parentId)}
+                        className="text-red-500"
+                      >
+                        X
+                      </button>
+                    </span>
+                  )
+                );
+              })}
+            </div>
+          </div>
+    
+          {/* Classes Selection */}
+          <div>
+            <label className="block mb-2 text-sm font-medium">Select Classes</label>
+            <select
+              className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
+              multiple
+              onChange={(e) => handleClassSelect(parseInt(e.target.value))}
+            >
+              {relatedData?.announcementClasses?.map((classItem: any) => (
+                <option key={classItem.id} value={classItem.id}>
+                  {classItem.class_code}
+                </option>
+              ))}
+            </select>
+            {errors.class_ids && <span className="text-red-500 text-sm">{errors.class_ids.message}</span>}
+            <div className="mt-2 flex gap-2 flex-wrap">
+              {selectedClasses.map((classId) => {
+                const cls = relatedData?.announcementClasses?.find((c: any) => c.id === classId);
+                return (
+                  cls && (
+                    <span key={classId} className="p-1 bg-blue-200 rounded-md flex items-center gap-2">
+                      {cls.class_code}
+                      <button
+                        type="button"
+                        onClick={() => handleClassRemove(classId)}
+                        className="text-red-500"
+                      >
+                        X
+                      </button>
+                    </span>
+                  )
+                );
+              })}
+            </div>
+          </div>
+    
+          {/* Submit Button */}
+          <button
+            type="submit"
+            className="bg-blue-400 text-white p-2 rounded-md disabled:opacity-50 mt-4"
+            disabled={!isValid}
+          >
+            {type === "create" ? "Create" : "Update"}
+          </button>
+        </form>
       );
     };
     
