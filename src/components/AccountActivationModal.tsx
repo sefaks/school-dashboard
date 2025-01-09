@@ -1,4 +1,4 @@
-"use client";
+"use client"
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -8,47 +8,60 @@ import { toast } from "react-toastify";
 import { X } from "lucide-react";
 
 const SUBJECTS = [
-  { id: 0, name: "TURKCE" },
-  { id: 1, name: "MATEMATIK" },
-  { id: 2, name: "FEN_B_LG_S_" },
-  { id: 3, name: "SOSYAL_BILGILER" },
-  { id: 4, name: "INGILIZCE" },
-  { id: 5, name: "DIN_BILGISI" },
-  { id: 6, name: "COGRAFYA" },
-  { id: 7, name: "TAR_H" }
+  { id: 0, name: "TURKCE", displayName: "Türkçe" },
+  { id: 1, name: "MATEMATIK", displayName: "Matematik" },
+  { id: 2, name: "FEN_BILIMLERI", displayName: "Fen Bilimleri" },
+  { id: 3, name: "SOSYAL_BILGILER", displayName: "Sosyal Bilgiler" },
+  { id: 4, name: "INGILIZCE", displayName: "İngilizce" },
 ];
 
 const AccountActivationModal = () => {
-  const { data: session } = useSession();
+  const { data: session, update } = useSession(); // update'i ekledik
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [selectedSubjects, setSelectedSubjects] = useState<number[]>([]);
+  const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-    setValue
+    setValue,
+    watch,
   } = useForm({
     resolver: zodResolver(TeacherActivateSchema),
+    defaultValues: {
+      gender: "",
+      subjects: [],
+      title: ""
+    }
   });
 
+  // Watch subjects field for validation
+  const watchedSubjects = watch("subjects");
+
   useEffect(() => {
-    if (session?.user?.is_active === false) {
+    console.log(session?.user.is_active)
+    if (session?.user?.is_active === false && session?.user?.role === "teacher") {
       setIsModalVisible(true);
     }
   }, [session?.user?.is_active]);
+
+  // Update form value when subjects change
+  useEffect(() => {
+    setValue('subjects', selectedSubjects as any);
+  }, [selectedSubjects, setValue]);
 
   const handleCloseModal = () => {
     setIsModalVisible(false);
   };
 
-  const handleSubjectToggle = (id: number) => {
-    setSelectedSubjects(prev => 
-      prev.includes(id) 
-        ? prev.filter(subjectId => subjectId !== id)
-        : [...prev, id]
-    );
+  const handleSubjectToggle = (subjectName: string) => {
+    setSelectedSubjects(prev => {
+      const newSubjects = prev.includes(subjectName)
+        ? prev.filter(name => name !== subjectName)
+        : [...prev, subjectName];
+      return newSubjects;
+    });
   };
 
   const onSubmit = async (formData: any) => {
@@ -57,20 +70,39 @@ const AccountActivationModal = () => {
       return;
     }
 
+    if (selectedSubjects.length === 0) {
+      toast.error("En az bir ders seçmelisiniz");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const dataToSubmit = {
-        ...formData,
-        token: session.user.accessToken,
+        gender: formData.gender,
         subjects: selectedSubjects,
+        title: formData.title,
       };
 
       const response = await fetch("http://127.0.0.1:8000/auth/teacher/activate", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.user.accessToken}`,
+        },
         body: JSON.stringify(dataToSubmit),
       });
 
+      if (!response.ok) {
+        throw new Error("Aktivasyon başarısız");
+      }
+
+      await update({
+        ...session,
+        user: {
+          ...session.user,
+          is_active: true
+        }
+      });
 
       toast.success("Hesabınız başarıyla aktifleştirildi!");
       setTimeout(() => {
@@ -109,6 +141,7 @@ const AccountActivationModal = () => {
             <input
               {...register("title")}
               className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Örn: Fen Bilimleri Öğretmeni"
             />
             {errors.title && (
               <span className="text-red-500 text-sm">{errors.title.message as string}</span>
@@ -137,14 +170,14 @@ const AccountActivationModal = () => {
                 <button
                   key={subject.id}
                   type="button"
-                  onClick={() => handleSubjectToggle(subject.id)}
+                  onClick={() => handleSubjectToggle(subject.name)}
                   className={`p-2 text-sm rounded-md border transition-colors ${
-                    selectedSubjects.includes(subject.id)
+                    selectedSubjects.includes(subject.name)
                       ? 'bg-blue-500 text-white border-blue-500'
                       : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
                   }`}
                 >
-                  {subject.name}
+                  {subject.displayName}
                 </button>
               ))}
             </div>

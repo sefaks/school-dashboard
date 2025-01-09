@@ -282,14 +282,18 @@ const AnnouncementListPage =  async ({searchParams}:{searchParams:{[key:string]:
       </td>
       <td>{item.title}</td>
       <td>{item.content}</td>
-      <td className="hidden md:table-cell">{item.created_at ? new Date(item.created_at).toLocaleDateString("tr-TR", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        hour: "numeric",
-        minute: "numeric",
-      }) : null}
-      </td>
+          <td className="hidden md:table-cell">
+      {item.created_at ? (
+        new Date(new Date(item.created_at).setHours(new Date(item.created_at).getHours() - 3)).toLocaleDateString("tr-TR", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+          hour: "numeric",
+          minute: "numeric",
+        })
+      ) : null}
+    </td>
+
       <td>
         <div className="flex items-center gap-2">
             <>

@@ -89,12 +89,9 @@ export type AnnouncementSchema = z.infer<typeof announcementSchema>;
 const SubjectEnum = z.enum([
   "TURKCE",
   "MATEMATIK",
-  "FEN_B_LG_S_", // "FEN_BİLGİSİ" için backend mapping olacak
+  "FEN_BILIMLERI", // "FEN_BİLGİSİ" için backend mapping olacak
   "SOSYAL_BILGILER",
   "INGILIZCE",
-  "DIN_BILGISI",
-  "COGRAFYA",
-  "TAR_H", // "TARİH" için backend mapping olacak
 ]);
 
 export const TeacherActivateSchema = z.object({

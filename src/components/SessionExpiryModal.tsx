@@ -12,13 +12,15 @@ const SessionExpiryModal = () => {
   const router = useRouter();
   const pathname = usePathname();
 
+  const isAuthPage = pathname === '/login' || pathname === '/new-user';
+
+
   useEffect(() => { // burada use effect hookunu kullanıyoruz çünkü sayfa yüklendiğinde oturum süresi kontrolü yapmak istiyoruz.
     // Login sayfasındaysa modal'ı gösterme
-    if (pathname === '/login' || pathname === '/new-user') {
+    if (isAuthPage || status === 'loading') {
       setShowModal(false);
       return;
     }
-
     const checkSessionExpiry = () => {
       if (!session || status !== 'authenticated') { // Oturum yoksa veya oturum açılmamışsa modal'ı gösterme
         setShowModal(true);
@@ -64,7 +66,7 @@ const SessionExpiryModal = () => {
   };
 
   // Modal'ı gösterme koşulları
-  if (!showModal || pathname === '/login' || status === 'loading') { // Login sayfasında veya yüklenirken modal'ı gösterme
+  if (!showModal || isAuthPage || status === 'loading') {
     return null;
   }
 
