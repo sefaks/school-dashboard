@@ -71,6 +71,8 @@ const AssignmentForm = ({
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [documents, setDocuments] = useState<any[]>(data?.documents || []);
 
+  
+
   // Handle student selection and removal
   const handleStudentSelect = (studentId: number) => {
     // Prevent adding duplicates
@@ -95,20 +97,31 @@ const AssignmentForm = ({
     setSelectedClasses((prev) => prev.filter((id) => id !== classId));
   };
 
-  const handleUploadDocument = (file: File) => {
+  const handleUploadDocument = async (file: File) => {
     const documentName = file.name;
     const uploadedAt = new Date().toISOString();
     const url = URL.createObjectURL(file); // Mock URL for demo purposes (Replace with actual URL after uploading)
-  
+    const content = await convertFileToBase64(file);
+
     const newDocument = {
       name: documentName,
-      content: null, // You can add content if needed
+      content: content,
       uploaded_at: uploadedAt,
       url: url,
+
     };
   
     setDocuments((prevDocuments) => [...prevDocuments, newDocument]);
     setSelectedFiles((prevFiles) => prevFiles.filter((f) => f !== file)); // Remove file from selected files
+  };
+
+  const convertFileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file); // File'ı Base64 formatında okur
+    });
   };
   
 
@@ -139,7 +152,6 @@ const AssignmentForm = ({
   const onSubmit = async (data: AssignmentSchema) => {
 
     console.log(errors);
-    console.log("Form Dataaa:", data);
 
     if (!session?.user.accessToken) {
         toast.error("No authentication token found");
@@ -165,21 +177,53 @@ const AssignmentForm = ({
   const subjects = relatedData?.subjects || [];
   const students = relatedData?.students || [];
 
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files) {
-      const filesArray = Array.from(event.target.files);
-      setSelectedFiles((prevFiles) => [...prevFiles, ...filesArray]);
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files.length > 0) {
+      const newFiles = Array.from(event.target.files);
+  
+      setSelectedFiles((prevFiles) => [...prevFiles, ...newFiles]);
+  
+      // Her bir dosyayı Base64 formatına dönüştürüp ekliyoruz
+      for (const file of newFiles) {
+        try {
+          const content = await convertFileToBase64(file);
+  
+          // 'data:application/pdf;base64,' kısmını çıkar
+          const base64Data = content.split(",")[1];  // Verinin geri kalan kısmı
+  
+          const newDocument = {
+            name: file.name,
+            content: base64Data,  // Base64 string'i veritabanına bu şekilde göndereceğiz
+            uploaded_at: new Date().toISOString(),
+            url: URL.createObjectURL(file),
+          };
+  
+          setDocuments(prevDocs => [...prevDocs, newDocument]);
+        } catch (error) {
+          console.error('Error processing file:', error);
+          toast.error(`Failed to process file: ${file.name}`);
+        }
+      }
     }
-
-    // Clear the input value after selecting files
-    event.target.value = "";
+    // Reset the input
+    event.target.value = '';
   };
   
   // Dosya kaldırma
   const handleRemoveFile = (index: number) => {
-    setSelectedFiles((prevFiles) => prevFiles.filter((_, i) => i !== index));
+    setSelectedFiles(prevFiles => {
+      const newFiles = [...prevFiles];
+      newFiles.splice(index, 1);
+      return newFiles;
+    });
+
+    setDocuments(prevDocs => {
+      const newDocs = [...prevDocs];
+      newDocs.splice(index, 1);
+      return newDocs;
+    });
   };
+
 
   const isValid = Object.keys(errors).length === 0;
 
@@ -358,24 +402,25 @@ const AssignmentForm = ({
 
       {/* Yüklenen Dosyalar */}
       {selectedFiles.length > 0 && (
-        <div className="mt-4">
-          <h2 className="text-lg font-semibold">Uploaded Documents:</h2>
-          <ul className="list-disc pl-6">
-            {selectedFiles.map((file, index) => (
-              <li key={index} className="flex justify-between items-center text-sm">
-                <span>{file.name}</span>
-                <button
-                  type="button"
-                  onClick={() => handleRemoveFile(index)}
-                  className="text-red-500 hover:text-red-700"
-                >
-                  Remove
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+      <div className="mt-4">
+        <h2 className="text-lg font-semibold">Uploaded Documents:</h2>
+        <ul className="list-disc pl-6">
+          {selectedFiles.map((file, index) => (
+            <li key={index} className="flex justify-between items-center text-sm">
+              <span>{file.name}</span>
+              <button
+                type="button"
+                onClick={() => handleRemoveFile(index)}
+                className="text-red-500 hover:text-red-700"
+              >
+                Remove
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+    )}
+
 
       <button
         type="submit"

@@ -8,9 +8,14 @@ import TableSearch from "@/components/TableSearch";
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
 import { getRoleAndUserIdAndInstitutionId } from "@/lib/utils";
-import { Prisma, assignments, assignmentstatus, classes, students, subject_name, teachers } from "@prisma/client";
+import { Prisma, assignments, assignmentstatus, classes, documents, students, subject_name, teachers } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import Image from "next/image";
+import { FaFilePdf } from "react-icons/fa";  // FontAwesome PDF ikonu kullanıyoruz
+
+
+
+global.Buffer = global.Buffer || require('buffer').Buffer;
 
 type AssignmentList = assignments & {
   assignment_class: Array<{
@@ -23,6 +28,10 @@ type AssignmentList = assignments & {
   assignment_student: Array<{
     students: students;
   }>;
+  assignment_document: Array<{
+    documents: documents;
+  }>;
+  
   subjects: {
     subject_name: string;
   };
@@ -47,6 +56,12 @@ type AssignmentList = assignments & {
     [subject_name.DIN_BILGISI]: "text-purple-500",
     [subject_name.COGRAFYA]: "text-indigo-500",
     [subject_name.TAR_H]: "text-orange-500",
+    [subject_name.F_Z_K]: "text-pink-500",
+    [subject_name.K_MYA]: "text-gray-500",
+    [subject_name.B_YOLOJ_]: "text-lime-500",
+    [subject_name.EDEB_YAT]: "text-cyan-500",
+    [subject_name.GEOMETR_]: "text-rose-500",
+
   };
 
 const AssignmentListPage = async ({searchParams}:{searchParams:{[key:string]:string} |undefined }) => {
@@ -57,10 +72,6 @@ const columns = [
   {
     header: "Subject",
     accessor: "name",
-  },
-  {
-    header: "Student",
-    accessor: "student",
   },
   {
     header: "Class",
@@ -81,6 +92,12 @@ const columns = [
     accessor: "dueDate",
     className: "hidden md:table-cell",
   },
+  {
+    header:"Document",
+    accessor:"documents",
+    className: "hidden md:table-cell",
+  }
+  ,
   // actions for teacher, not
   ...(role === "teacher" ? 
   [{
@@ -90,7 +107,6 @@ const columns = [
 
 
 ];
-
 
 
 const renderRow = (item: AssignmentList, role:string) => (
@@ -110,14 +126,6 @@ const renderRow = (item: AssignmentList, role:string) => (
         "No subject assigned"
       )}
     </td>  
-    <td className="hidden md:table-cell">
-      {item.assignment_student?.map((student_item: { students: students }, index: number) => (
-        <span key={student_item.students.id}>
-          {student_item.students.name} {student_item.students.surname}
-          {index < item.assignment_student.length - 1 && ', '}
-        </span>
-      ))}
-    </td>
     <td className="hidden md:table-cell">
       {item.assignment_class?.map((class_item: { classes: classes }, index: number) => (
         <span key={class_item.classes.id}>
@@ -145,24 +153,55 @@ const renderRow = (item: AssignmentList, role:string) => (
         day: "numeric",
       })}
     </td>    
-  <td className="hidden md:table-cell"> {new Date(item.deadline_date).toLocaleDateString("tr-TR", {
+       <td className="hidden md:table-cell"> {new Date(item.deadline_date).toLocaleDateString("tr-TR", {
           year: "numeric",
           month: "long",
           day: "numeric",
         })}
       </td>
-    <td>
+      <td className="hidden md:table-cell">
+  {item.assignment_document?.map((document_item: { documents: documents }) => (
+    <div className="flex items-center gap-2" key={document_item.documents.id}>
+      {document_item.documents.content ? (
+        (() => {
+          // Uint8Array'yi Base64 string'e dönüştür
+          const base64String = Buffer.from(document_item.documents.content).toString();
+          console.log(base64String);
+          const href = `data:application/pdf;base64,${base64String}`;
+
+          return (
+            <>
+              <span>{document_item.documents.name}</span>
+              <a
+                href={href}
+                download={document_item.documents.name}
+                className="text-red-500 hover:text-red-700 flex items-center"
+              >
+                <FaFilePdf size={24} />
+              </a>
+            </>
+          );
+        })()
+      ) : (
+        <span>No content available</span>
+      )}
+    </div>
+  ))}
+</td>
+
+
+
       <div className="flex items-center gap-2">
         {role === "teacher"  && (
           <>
-            <FormModal table="assignment" type="update" data={item} />
-            <FormModal table="assignment" type="delete" id={item.id} />
+              <FormContainer table="assignment" type="update" data={item} />
+              <FormContainer table="assignment" type="delete" id={item.id} />
           </>
         )}
       </div>
-    </td>
   </tr>
 );
+
 
 
 
@@ -266,6 +305,11 @@ const renderRow = (item: AssignmentList, role:string) => (
               students: true, // students ilişkisini dahil ediyoruz
             }
         },
+        assignment_document: {
+          include: {
+            documents: true,
+          }
+        }
 
         },
         take: ITEM_PER_PAGE, // Sayfa başına gösterilecek öğe sayısı

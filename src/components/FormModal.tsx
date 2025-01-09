@@ -135,7 +135,7 @@ const Form = ({
         throw new Error("Invalid role for deleting announcement");
       }
     },
-    class: deleteClass
+    class: deleteClass,
   }; 
 
   const handleDelete = async () => {

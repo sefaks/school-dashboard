@@ -67,30 +67,30 @@ export default async function TeacherProfilePage() {
           {/* Sağ Kolon - Detaylı Bilgiler */}
           <div className="md:col-span-2 space-y-6">
             <div className="bg-white p-6 rounded-lg shadow-md">
-              <h3 className="text-lg font-semibold text-gray-800">Kişisel Bilgiler</h3>
+              <h3 className="text-lg font-semibold text-gray-800">Personal Informations</h3>
               <dl className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                 <div>
-                  <dt className="font-medium text-gray-700">Ad</dt>
+                  <dt className="font-medium text-gray-700">Name</dt>
                   <dd className="text-gray-600">{teacher.name || "Belirtilmemiş"}</dd>
                 </div>
                 <div>
-                  <dt className="font-medium text-gray-700">Soyad</dt>
+                  <dt className="font-medium text-gray-700">Surname</dt>
                   <dd className="text-gray-600">{teacher.surname || "Belirtilmemiş"}</dd>
                 </div>
                 <div>
-                  <dt className="font-medium text-gray-700">E-posta</dt>
+                  <dt className="font-medium text-gray-700">E-mail</dt>
                   <dd className="text-gray-600">{teacher.email || "Belirtilmemiş"}</dd>
                 </div>
                 <div>
-                  <dt className="font-medium text-gray-700">Telefon</dt>
+                  <dt className="font-medium text-gray-700">Phone Number</dt>
                   <dd className="text-gray-600">{teacher.phone_number || "Belirtilmemiş"}</dd>
                 </div>
                 <div>
-                  <dt className="font-medium text-gray-700">Cinsiyet</dt>
+                  <dt className="font-medium text-gray-700">Gender</dt>
                   <dd className="text-gray-600">{teacher.gender || "Belirtilmemiş"}</dd>
                 </div>
                 <div>
-                  <dt className="font-medium text-gray-700">Ünvan</dt>
+                  <dt className="font-medium text-gray-700">Title</dt>
                   <dd className="text-gray-600">{teacher.title || "Belirtilmemiş"}</dd>
                 </div>
               </dl>
@@ -99,9 +99,9 @@ export default async function TeacherProfilePage() {
             {/* Doğrulama Bilgisi */}
             {teacher.validation_code && (
               <div className="bg-white p-6 rounded-lg shadow-md">
-                <h3 className="text-lg font-semibold text-gray-800">Doğrulama Bilgisi</h3>
+                <h3 className="text-lg font-semibold text-gray-800">Validation Information</h3>
                 <p className="text-sm text-gray-600 mt-4">
-                  Doğrulama Kodu: <span className="font-bold">{teacher.validation_code}</span>
+                  Validation Code: <span className="font-bold text-lg text-green-600">{teacher.validation_code}</span>
                 </p>
               </div>
             )}

@@ -13,6 +13,13 @@ const SUBJECTS = [
   { id: 2, name: "FEN_BILIMLERI", displayName: "Fen Bilimleri" },
   { id: 3, name: "SOSYAL_BILGILER", displayName: "Sosyal Bilgiler" },
   { id: 4, name: "INGILIZCE", displayName: "İngilizce" },
+  {id: 5, name:"COĞRAFYA", displayName: "Coğrafya"},
+  {id: 6, name:"TARİH", displayName: "Tarih"},
+  {id: 7, name:"FİZİK", displayName: "Fizik"},
+  {id: 8, name:"KİMYA", displayName: "Kimya"},
+  {id: 9, name:"BİYOLOJİ", displayName: "Biyoloji"}
+
+
 ];
 
 const AccountActivationModal = () => {

@@ -30,19 +30,20 @@ model assignment_student {
 }
 
 model assignments {
-  id                 Int                  @id @default(autoincrement())
-  start_date         DateTime             @db.Timestamp(6)
-  deadline_date      DateTime             @db.Timestamp(6)
-  assignee_id        Int?
-  assignee_type      assigneetype
-  description        String?              @db.VarChar
-  status             assignmentstatus
-  header             String?              @db.VarChar
-  subject_id         Int?
-  assignment_class   assignment_class[]
-  assignment_student assignment_student[]
-  subjects           subjects?            @relation(fields: [subject_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  comments           comments[]
+  id                  Int                   @id @default(autoincrement())
+  start_date          DateTime              @db.Timestamp(6)
+  deadline_date       DateTime              @db.Timestamp(6)
+  assignee_id         Int?
+  assignee_type       assigneetype
+  description         String?               @db.VarChar
+  status              assignmentstatus
+  header              String?               @db.VarChar
+  subject_id          Int?
+  assignment_class    assignment_class[]
+  assignment_document assignment_document[]
+  assignment_student  assignment_student[]
+  subjects            subjects?             @relation(fields: [subject_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  comments            comments[]
 
   @@index([id], map: "ix_assignments_id")
 }
@@ -75,16 +76,17 @@ model comments {
 }
 
 model contents {
-  id            Int      @id @default(autoincrement())
-  unit_id       Int
-  content_count Int?
-  lesson_id     Int?
-  content_name  String?  @db.VarChar
-  level         Int?
-  content_id    String   @db.Uuid
-  unit_no       Int
-  lessons       lessons? @relation(fields: [lesson_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  units         units    @relation(fields: [unit_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id              Int               @id @default(autoincrement())
+  unit_id         Int
+  content_count   Int?
+  lesson_id       Int?
+  content_name    String?           @db.VarChar
+  level           Int?
+  content_id      String            @unique @db.Uuid
+  unit_no         Int
+  lessons         lessons?          @relation(fields: [lesson_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  units           units             @relation(fields: [unit_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  student_content student_content[]
 
   @@index([id], map: "ix_contents_id")
 }
@@ -148,7 +150,6 @@ model parent_student {
   students   students @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@id([parent_id, student_id])
-
 }
 
 model parents {
@@ -158,7 +159,7 @@ model parents {
   email                String                 @db.VarChar
   phone                String                 @db.VarChar
   announcement_parents announcement_parents[]
-  parent_student       parent_student[]       
+  parent_student       parent_student[]      
 
   @@index([id], map: "ix_parents_id")
 }
@@ -217,8 +218,9 @@ model students {
   validation_code            String?               @db.VarChar
   validation_code_expiration DateTime?             @db.Timestamp(6)
   assignment_student         assignment_student[]
-  parent_student             parent_student[]      
+  parent_student             parent_student[]     
   student_class              student_class[]
+  student_content            student_content[]
   student_institution        student_institution[]
 
   @@index([id], map: "ix_students_id")
@@ -367,7 +369,7 @@ model announcement_classes {
   announcements   announcements? @relation(fields: [announcement_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   classes         classes?       @relation(fields: [class_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-  @@id([announcement_id, class_id]) 
+  @@id([announcement_id, class_id])
 
 }
 
@@ -403,6 +405,50 @@ model announcements {
   announcement_teachers announcement_teachers[]
 
   @@index([id], map: "ix_announcements_id")
+}
+
+model assignment_document {
+  assignment_id Int
+  document_id   Int
+  assignments   assignments @relation(fields: [assignment_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  documents     documents   @relation(fields: [document_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([assignment_id, document_id])
+}
+
+model documents {
+  id                  Int                   @id @default(autoincrement())
+  name                String                @db.VarChar
+  url                 String?               @db.VarChar
+  uploaded_at         DateTime              @db.Timestamp(6)
+  content             Bytes?
+  assignment_document assignment_document[]
+
+  @@index([id], map: "ix_documents_id")
+}
+
+model notes {
+  id                 Int             @id @default(autoincrement())
+  student_content_id Int
+  note               String
+  created_at         DateTime?       @db.Timestamp(6)
+  updated_at         DateTime?       @db.Timestamp(6)
+  student_content    student_content @relation(fields: [student_content_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([id], map: "ix_notes_id")
+}
+
+model student_content {
+  id         Int       @id @default(autoincrement())
+  student_id Int
+  content_id String    @db.Uuid
+  created_at DateTime? @db.Timestamp(6)
+  updated_at DateTime? @db.Timestamp(6)
+  notes      notes[]
+  contents   contents  @relation(fields: [content_id], references: [content_id], onDelete: NoAction, onUpdate: NoAction)
+  students   students  @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([id], map: "ix_student_content_id")
 }
 
 enum assigneetype {
@@ -470,6 +516,11 @@ enum subject_name {
   DIN_BILGISI
   COGRAFYA
   TAR_H           @map("TARİH")
+  B_YOLOJ_        @map("BİYOLOJİ")
+  F_Z_K           @map("FİZİK")
+  K_MYA           @map("KİMYA")
+  GEOMETR_        @map("GEOMETRİ")
+  EDEB_YAT        @map("EDEBİYAT")
 }
 
 enum publishertype {
