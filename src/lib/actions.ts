@@ -248,9 +248,10 @@ export const addAssignment = async (formData: AssignmentSchema, token: string) =
   }
 }
 
-export const updateAssignment = async (formData: AssignmentSchema, token: string) => {
+export const updateAssignment = async (formData: AssignmentSchema, token: string, assignment_id:number) => {
   try {
-    const response = await axios.put(`${API_BASE_URL}/admins/update-assignment`, formData, {
+   
+    const response = await axios.post(`${API_BASE_URL}/teachers/me/update-assignment/${assignment_id}`, formData, {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
@@ -421,6 +422,32 @@ export const activateTeacher = async (formData: any, token: string) => {
     if (error.response) {
       console.error("API Error:", error.response.data);
       throw new Error(error.response.data.detail || "Failed to activate teacher!");
+    } else if (error.request) {
+      console.error("No response received from server:", error.request);
+      throw new Error("No response from server.");
+    } else {
+      console.error("Error during setup:", error.message);
+      throw new Error("An unexpected error occurred!");
+    }
+  }
+}
+
+export const updateAnnouncementTeacher = async (formData: AnnouncementSchema, token: string, announcementId: number) => {
+  try {
+    const response = await axios.patch(`${API_BASE_URL}/teachers/me/update-announcement/${announcementId}`, formData, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return response.data;
+  } catch (error: any) {
+    console.error("Error details:", error);
+
+    if (error.response) {
+      console.error("API Error:", error.response.data);
+      throw new Error(error.response.data.detail || "Failed to update announcement!");
     } else if (error.request) {
       console.error("No response received from server:", error.request);
       throw new Error("No response from server.");

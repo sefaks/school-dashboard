@@ -45,7 +45,7 @@ const AssignmentForm = ({
       const parsedData = JSON.parse(formData);
       const response = type === "create"
         ? await addAssignment(parsedData, parsedData.token)
-        : await updateAssignment(parsedData, parsedData.token);
+        : await updateAssignment(parsedData, parsedData.token, data.id);
       
       // Return the response data along with success status
       return { 
@@ -66,10 +66,67 @@ const AssignmentForm = ({
     data: null,
   });
 
-  const [selectedStudents, setSelectedStudents] = useState<number[]>(data?.student_ids || []);
-  const [selectedClasses, setSelectedClasses] = useState<number[]>(data?.class_ids || []);
+  const [selectedStudents, setSelectedStudents] = useState<number[]>(() => {
+    if (type === "update" && data?.assignment_student) {
+      // assignment_student array'inden student_id'leri çıkarıyoruz
+      return data.assignment_student.map((as: any) => as.student_id);
+    }
+    return [];
+  });  
+  const [selectedClasses, setSelectedClasses] = useState<number[]>(() => {
+    if (type === "update" && data?.assignment_class) {
+      // assignment_class array'inden class_id'leri çıkarıyoruz
+      return data.assignment_class.map((ac: any) => ac.class_id);
+    }
+    return [];
+  });  
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [documents, setDocuments] = useState<any[]>(data?.documents || []);
+
+  const startDateValue = watch("start_date");
+  const deadlineDateValue = watch("deadline_date");
+
+  // Tarih formatı fonksiyonu
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+  };
+
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>, field: "start_date" | "deadline_date") => {
+    setValue(field, e.target.value);
+  };
+
+  // Saat ve dakika seçenekleri için fonksiyon
+  const generateTimeOptions = () => {
+    const options = [];
+    for (let i = 0; i < 24; i++) {
+      for (let j = 0; j < 60; j += 60) { // Sadece saat başlarını al
+        const hour = i < 10 ? `0${i}` : `${i}`;
+        const minute = j < 10 ? `0${j}` : `${j}`;
+        options.push(`${hour}:${minute}`);
+      }
+    }
+    return options;
+  };
+
+  const timeOptions = generateTimeOptions();
+
+  React.useEffect(() => {
+    if (data) {
+      const startDate = data.start_date ? new Date(data.start_date) : null;
+      const deadlineDate = data.deadline_date ? new Date(data.deadline_date) : null;
+
+      // Tarihleri setValue ile form state'ine manuel olarak yerleştiriyoruz
+      if (startDate && !isNaN(startDate.getTime())) {
+        setValue("start_date", startDate.toISOString().slice(0, 16)); // 'YYYY-MM-DDTHH:MM' formatında
+      }
+
+      if (deadlineDate && !isNaN(deadlineDate.getTime())) {
+        setValue("deadline_date", deadlineDate.toISOString().slice(0, 16)); // Aynı formatta
+      }
+    }
+  }, [data, setValue]);
 
   
 
@@ -166,6 +223,8 @@ const AssignmentForm = ({
       documents: documents.length > 0 ? documents : undefined // undefined olarak gönderirsek optional alan boş geçilebilir
     };
 
+    console.log("Full Form Data:", fullFormData);
+
     formAction(JSON.stringify(fullFormData));
 
     console.log("Full Form Data:", fullFormData);
@@ -240,25 +299,60 @@ const AssignmentForm = ({
 
         <div className='flex flex-row w-full '>
           {/* Start Date */}
-          <div className="w-1/2">
-            <InputField
-              label="Start Date"
-              name="start_date"
-              type="datetime-local"
-              register={register}
-              error={errors.start_date}
-            />
-          </div>
+          <div className="w-1/2 space-y-2">
+        <label className="block text-sm font-medium text-gray-700">Start Date</label>
+        <div className="flex flex-col space-y-2">
+          <input
+            type="datetime-local"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            {...register("start_date")}
+            onChange={(e) => handleDateChange(e, "start_date")}
+          />
 
-          {/* Deadline Date */}
-          <div className="w-1/2">
-            <InputField
-              label="Deadline Date"
-              name="deadline_date"
-              type="datetime-local"
-              register={register}
-              error={errors.deadline_date}
-            />
+          {startDateValue && (
+            <p className="text-sm text-gray-500">
+              {new Date(startDateValue).toLocaleString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              })}
+            </p>
+          )}
+          {errors.start_date && (
+            <p className="text-sm text-red-600">{errors.start_date.message}</p>
+          )}
+        </div>
+      </div>
+
+      {/* Deadline Date */}
+      <div className="w-1/2 space-y-2">
+        <label className="block text-sm font-medium text-gray-700">Deadline Date</label>
+        <div className="flex flex-col space-y-2">
+          <input
+            type="datetime-local"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            {...register("deadline_date")}
+            onChange={(e) => handleDateChange(e, "deadline_date")}
+          />
+          {deadlineDateValue && (
+            <p className="text-sm text-gray-500">
+              {new Date(deadlineDateValue).toLocaleString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              })}
+            </p>
+          )}
+          {errors.deadline_date && (
+            <p className="text-sm text-red-600">{errors.deadline_date.message}</p>
+          )}
+        </div>
           </div>
         </div>
 
@@ -296,17 +390,18 @@ const AssignmentForm = ({
         <div className="w-full">
           <label className="block mb-2 text-sm font-medium">Select Students</label>
           <select
-          {...register("student_ids", { valueAsNumber: true })}  // valueAsNumber özelliği ile string'i number'a dönüştür
-          className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
-          multiple
-          onChange={(e) => handleStudentSelect(parseInt(e.target.value))}
-        >
-          {students.map((student: any) => (
-            <option key={student.id} value={student.id}>
-              {`${student.name} ${student.surname}`}
-            </option>
-          ))}
-        </select>
+            {...register("student_ids", { valueAsNumber: true })}
+            className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
+            multiple
+            value={selectedStudents.map(String)} // Convert numbers to strings
+            onChange={(e) => handleStudentSelect(parseInt(e.target.value))}
+                                  >
+            {students.map((student: any) => (
+              <option key={student.id} value={student.id}>
+                {`${student.name} ${student.surname}`}
+              </option>
+            ))}
+          </select>
 
           {errors.student_ids && (
             <span className="text-red-500 text-sm">{errors.student_ids.message}</span>
@@ -344,8 +439,9 @@ const AssignmentForm = ({
           {...register("class_ids", { valueAsNumber: true })}  // valueAsNumber özelliği ile string'i number'a dönüştür
           className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
           multiple
+          value={selectedClasses.map(String)} // Convert numbers to strings
           onChange={(e) => handleClassSelect(parseInt(e.target.value))}
-        >
+                >
           {classes.map((classItem: any) => (
             <option key={classItem.id} value={classItem.id}>
               {`${classItem.class_code}`}

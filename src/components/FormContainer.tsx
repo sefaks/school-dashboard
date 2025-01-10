@@ -108,50 +108,81 @@ const FormContainer = async ({ table, type, data, id }: FormContainerProps) => {
         break;
       case "announcement":
         // get teacher's teacher_classes and assign to announcementClasses with id and class_code
-        const announcementClasses = await prisma.classes.findMany({
-          where: {
-            teacher_class: {
-              some: {
-                teacher_id: parseInt(current_user_id),
+
+        if (role === "admin") {
+          const announcementClasses = await prisma.classes.findMany({
+            where: {
+              institution_id: parseInt(institution_id),
+            },
+            select: { id: true, class_code: true },
+          });
+
+          const teachers = await prisma.teachers.findMany({
+            where: {
+              teacher_institution: {
+                some: {
+                  institution_id: parseInt(institution_id),
+                },
               },
             },
-          },
-          select: { id: true, class_code: true },
-        });
-        const teachers = await prisma.teachers.findMany({
-          where: {
-            teacher_class: {
-              some: {
-                teacher_id: parseInt(current_user_id),
+            select: { id: true, name: true, surname: true },
+          });
+
+          const parents = await prisma.parents.findMany({
+            where:{
+              parent_student: {
+                some: {
+                  students: {
+                    student_institution: {
+                      some: {
+                        institution_id: parseInt(institution_id),
+                      },
+                    },
+                  },
+                },
+              },
+            }
+          });
+
+          relatedData = { announcementClasses, teachers, parents };
+        }
+        else if (role === "teacher") {
+          const announcementClasses = await prisma.classes.findMany({
+            where: {
+              teacher_class: {
+                some: {
+                  teacher_id: parseInt(current_user_id),
+                },
               },
             },
-          },
-          select: { id: true, name: true, surname: true },
-        });
-        const parents = await prisma.parents.findMany({
-          where: {
-          parent_student: {
-            some: {
-             students: {
-               student_class: {
-                 some: {
-                   classes: {
-                     teacher_class: {
-                       some: {
-                         teacher_id: parseInt(current_user_id),
-                       },
-                     },
-                   },
-                 },
-               },
-             },
-            },
-          },
-        },
-        select: { id: true, name: true, surname: true },
-        });
-        relatedData = { announcementClasses, teachers, parents };
-        console.log("related_data",relatedData);
+            select: { id: true, class_code: true },
+          });            
+
+          const parents = await prisma.parents.findMany({
+            where:{
+              parent_student: {
+                some: {
+                  students: {
+                    student_class: {
+                      some: {
+                        classes: {
+                          teacher_class: {
+                            some: {
+                              teacher_id: parseInt(current_user_id),
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            }
+          });
+
+
+          relatedData = { announcementClasses, parents };
+        }
         break;
 
     case "activate":

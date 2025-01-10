@@ -166,7 +166,6 @@ const renderRow = (item: AssignmentList, role:string) => (
         (() => {
           // Uint8Array'yi Base64 string'e dönüştür
           const base64String = Buffer.from(document_item.documents.content).toString();
-          console.log(base64String);
           const href = `data:application/pdf;base64,${base64String}`;
 
           return (
@@ -330,7 +329,6 @@ const renderRow = (item: AssignmentList, role:string) => (
       }),
     ]);
 
-    console.log(assignmentsData);
     
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">

@@ -1,9 +1,9 @@
-import React, { Dispatch, SetStateAction } from 'react';
+import React, { Dispatch, SetStateAction, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useFormState } from 'react-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { AnnouncementSchema, TeacherSchema, announcementSchema, teacherSchema } from '@/lib/formValidationSchemas';
-import { addTeacherToInstitution, createAnnouncementAdmin, createAnnouncementTeacher, updateTeacher } from '@/lib/actions';
+import { addTeacherToInstitution, createAnnouncementAdmin, createAnnouncementTeacher, updateAnnouncementTeacher, updateTeacher } from '@/lib/actions';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
 import InputField from '../InputField';
@@ -39,15 +39,13 @@ const AnnouncementForm = ({
         try {
           const parsedData = JSON.parse(formData);
 
-          console.log("parsedData", parsedData);
-          console.log("parsedData.token", errors);
   
           // Kullanıcı rolüne göre uygun endpoint'i çağırıyoruz
           if (session?.user.role === "teacher") {
             const response =
               type === "create"
                 ? await createAnnouncementTeacher(parsedData, parsedData.token)
-                : await updateTeacher(parsedData);
+                : await updateAnnouncementTeacher(parsedData, parsedData.token, data.id);
   
             // Başarı durumunu dönüyoruz
             return {
@@ -104,39 +102,62 @@ const AnnouncementForm = ({
       }
     }, [state, type, setOpen, router]);
 
-  const [selectedTeachers, setSelectedTeachers] = React.useState<number[]>(data?.teacher_ids || []);
-  const [selectedParents, setSelectedParents] = React.useState<number[]>(data?.parent_ids || []);
-  const [selectedClasses, setSelectedClasses] = React.useState<number[]>(data?.class_ids || []);
+  const [selectedTeachers, setSelectedTeachers] = useState<number[]>(() => {
+      if (type === "update" && data?.announcement_teachers) {
+        // assignment_class array'inden class_id'leri çıkarıyoruz
+        return data.announcement_teachers.map((ac: any) => ac.teacher_id);
+      }
+      return [];
+    });  
 
-  const handleTeacherSelect = (id: number) => {
-    if (!selectedTeachers.includes(id)) {
-      setSelectedTeachers([...selectedTeachers, id]);
+  const [selectedParents, setSelectedParents] = useState<number[]>(() => {
+    console.log("selectedParents", data);
+      if (type === "update" && data?.announcement_parents) {
+        // assignment_class array'inden class_id'leri çıkarıyoruz
+        return data.announcement_parents.map((ac: any) => ac.parent_id);
+      }
+      return [];
+    });    
+  const [selectedClasses, setSelectedClasses] = useState<number[]>(() => {
+    if (type === "update" && data?.announcement_classes) {
+      // assignment_class array'inden class_id'leri çıkarıyoruz
+      return data.announcement_classes.map((ac: any) => ac.class_id);
+    }
+    return [];
+  });  
+
+  const handleTeacherSelect = (teacherId: number) => {
+    // Prevent adding duplicates
+    if (!selectedTeachers.includes(teacherId)) {
+      setSelectedTeachers((prev) => [...prev, teacherId]);
+    }
+  };
+  const handleParentSelect = (parentId: number) => {
+    // Prevent adding duplicates
+    if (!selectedParents.includes(parentId)) {
+      setSelectedParents((prev) => [...prev, parentId]);
     }
   };
 
-  const handleParentSelect = (id: number) => {
-    if (!selectedParents.includes(id)) {
-      setSelectedParents([...selectedParents, id]);
+  const handleClassSelect = (classId: number) => {
+    // Prevent adding duplicates
+    if (!selectedClasses.includes(classId)) {
+      setSelectedClasses((prev) => [...prev, classId]);
     }
   };
 
-  const handleClassSelect = (id: number) => {
-    if (!selectedClasses.includes(id)) {
-      setSelectedClasses([...selectedClasses, id]);
-    }
+  const handleTeacherRemove = (teacherId: number) => {
+    setSelectedTeachers((prev) => prev.filter((id) => id !== teacherId));
   };
 
-  const handleTeacherRemove = (id: number) => {
-    setSelectedTeachers(selectedTeachers.filter((teacherId) => teacherId !== id));
+  const handleParentRemove = (parentId: number) => {
+    setSelectedParents((prev) => prev.filter((id) => id !== parentId));
   };
 
-  const handleParentRemove = (id: number) => {
-    setSelectedParents(selectedParents.filter((parentId) => parentId !== id));
+  const handleClassRemove = (classId: number) => {
+    setSelectedClasses((prev) => prev.filter((id) => id !== classId));
   };
 
-  const handleClassRemove = (id: number) => {
-    setSelectedClasses(selectedClasses.filter((classId) => classId !== id));
-  };
   
     const onSubmit = async (data: AnnouncementSchema) => {
     
@@ -147,6 +168,11 @@ const AnnouncementForm = ({
         toast.error("No authentication token found");
         return;
       }
+
+      console.log("selectedTeachers", selectedTeachers);
+      console.log("selectedParents", selectedParents);
+      console.log("selectedClasses", selectedClasses);
+
   
       const formData = {
         ...data,
@@ -194,8 +220,11 @@ const AnnouncementForm = ({
           <div>
             <label className="block mb-2 text-sm font-medium">Select Teachers</label>
             <select
+              {...register("teacher_ids", { valueAsNumber: true })}  // valueAsNumber özelliği ile string'i number'a dönüştür
+
               className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
               multiple
+              value={selectedTeachers.map(String)}
               onChange={(e) => handleTeacherSelect(parseInt(e.target.value))}
             >
               {relatedData?.teachers?.map((teacher: any) => (
@@ -231,8 +260,10 @@ const AnnouncementForm = ({
           <div>
             <label className="block mb-2 text-sm font-medium">Select Parents</label>
             <select
+              {...register("parent_ids", { valueAsNumber: true })}  // valueAsNumber özelliği ile string'i number'a dönüştür
               className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
               multiple
+              value = {selectedParents.map(String)}
               onChange={(e) => handleParentSelect(parseInt(e.target.value))}
             >
               {relatedData?.parents?.map((parent: any) => (
@@ -268,8 +299,10 @@ const AnnouncementForm = ({
           <div>
             <label className="block mb-2 text-sm font-medium">Select Classes</label>
             <select
+              {...register("class_ids", { valueAsNumber: true })}  // valueAsNumber özelliği ile string'i number'a dönüştür
               className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
               multiple
+              value = {selectedClasses.map(String)}
               onChange={(e) => handleClassSelect(parseInt(e.target.value))}
             >
               {relatedData?.announcementClasses?.map((classItem: any) => (
