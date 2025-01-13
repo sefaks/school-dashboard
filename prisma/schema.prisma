@@ -67,7 +67,7 @@ model comments {
   id            Int         @id @default(autoincrement())
   assignment_id Int
   user_id       Int
-  user_type     String      @db.VarChar
+  user_type     usertype
   content       String      @db.VarChar
   created_at    DateTime?   @db.Timestamp(6)
   assignments   assignments @relation(fields: [assignment_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -84,6 +84,7 @@ model contents {
   level           Int?
   content_id      String            @unique @db.Uuid
   unit_no         Int
+  order           Int?
   lessons         lessons?          @relation(fields: [lesson_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   units           units             @relation(fields: [unit_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   student_content student_content[]
@@ -150,6 +151,7 @@ model parent_student {
   students   students @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@id([parent_id, student_id])
+
 }
 
 model parents {
@@ -159,8 +161,7 @@ model parents {
   email                String                 @db.VarChar
   phone                String                 @db.VarChar
   announcement_parents announcement_parents[]
-  parent_student       parent_student[]      
-
+  parent_student       parent_student[]       
   @@index([id], map: "ix_parents_id")
 }
 
@@ -218,7 +219,7 @@ model students {
   validation_code            String?               @db.VarChar
   validation_code_expiration DateTime?             @db.Timestamp(6)
   assignment_student         assignment_student[]
-  parent_student             parent_student[]     
+  parent_student             parent_student[]      
   student_class              student_class[]
   student_content            student_content[]
   student_institution        student_institution[]
@@ -370,7 +371,6 @@ model announcement_classes {
   classes         classes?       @relation(fields: [class_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@id([announcement_id, class_id])
-
 }
 
 model announcement_parents {
@@ -525,5 +525,10 @@ enum subject_name {
 
 enum publishertype {
   ADMIN
+  TEACHER
+}
+
+enum usertype {
+  STUDENT
   TEACHER
 }

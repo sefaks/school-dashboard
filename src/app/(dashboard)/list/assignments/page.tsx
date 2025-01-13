@@ -11,6 +11,7 @@ import { getRoleAndUserIdAndInstitutionId } from "@/lib/utils";
 import { Prisma, assignments, assignmentstatus, classes, documents, students, subject_name, teachers } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import Image from "next/image";
+import Link from "next/link";
 import { FaFilePdf } from "react-icons/fa";  // FontAwesome PDF ikonu kullanıyoruz
 
 
@@ -187,10 +188,13 @@ const renderRow = (item: AssignmentList, role:string) => (
     </div>
   ))}
 </td>
-
-
-
       <div className="flex items-center gap-2">
+
+        <Link href={`/list/assignments/${item.id}`}>
+            <button className="w-7 h-7 flex items-center justify-center rounded-full bg-lamaSky">
+              <Image src="/view.png" alt="" width={16} height={16} />
+            </button>
+          </Link>
         {role === "teacher"  && (
           <>
               <FormContainer table="assignment" type="update" data={item} />
@@ -348,7 +352,7 @@ const renderRow = (item: AssignmentList, role:string) => (
             </button>
             {role === "admin" || role === "teacher" &&               
             <FormContainer table="assignment" type="create" />
-}
+            }
           </div>
         </div>
       </div>

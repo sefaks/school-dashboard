@@ -2,7 +2,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache';
-import { AnnouncementSchema, AssignmentSchema, ClassSchema, StudentSchema, TeacherSchema, studentSchema } from './formValidationSchemas';
+import { AnnouncementSchema, AssignmentSchema, ClassSchema, CommentSchema, StudentSchema, TeacherSchema, studentSchema, } from './formValidationSchemas';
 import { toast } from 'react-toastify';
 import axios from "axios";
 
@@ -457,6 +457,36 @@ export const updateAnnouncementTeacher = async (formData: AnnouncementSchema, to
     }
   }
 }
+
+
+export const teacherAddComment = async (formData: CommentSchema, token: string, assignment_id: number) => {
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}/teachers/me/assignments/${assignment_id}/add-comment`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    console.log("API Response:", response.data);
+    return { success: true, data: response.data };
+  } catch (error: any) {
+    console.error("Error details:", error);
+
+    if (error.response) {
+      return { success: false, message: error.response.data.detail || "Failed to add comment!" };
+    } else if (error.request) {
+      return { success: false, message: "No response from server." };
+    } else {
+      return { success: false, message: "An unexpected error occurred!" };
+    }
+  }
+};
+
 
 
 

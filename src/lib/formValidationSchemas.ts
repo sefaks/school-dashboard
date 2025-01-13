@@ -103,6 +103,13 @@ export const TeacherActivateSchema = z.object({
 export type TeacherActivateSchema = z.infer<typeof TeacherActivateSchema>;
 
 
+export const CommentSchema = z.object({
+  content: z.string().min(1, { message: "Comment content is required!" }),
+});
+
+export type CommentSchema = z.infer<typeof CommentSchema>;
+
+
 
     
 
