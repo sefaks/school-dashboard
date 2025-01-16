@@ -11,6 +11,7 @@ import { ITEM_PER_PAGE } from "@/lib/settings";
 import { FieldRef } from "@prisma/client/runtime/library";
 import { getRoleAndUserIdAndInstitutionId, subjectNameMap } from "@/lib/utils";
 import FormContainer from "@/components/FormContainer";
+import { parse } from "path";
 
 type TeacherList = teachers & {
   teacher_subject: Array<{  // in here, we define with array because a teacher can have multiple subjects
@@ -121,129 +122,129 @@ const renderRow = (item:TeacherList) => (
   const TeacherListPage = async ({searchParams}:{searchParams:{[key:string]:string} | undefined;
   }) => {
 
-    const { role, current_user_id, institution_id} = await getRoleAndUserIdAndInstitutionId();
-    
-    const { page, ...queryParams } = searchParams as { [key: string]: string };
-    const p = page ? parseInt(page) : 1; 
-    const whereClause: any = {}; // we define a whereClause, which is an object, we will use it for filtering the data
+    const { role, current_user_id, institution_id } = await getRoleAndUserIdAndInstitutionId();
 
-    const query:Prisma.teachersWhereInput = {} // we define a query, which is an object, we will use it for getting the data. Its prisma feature for filtering the data
+const { page, ...queryParams } = searchParams as { [key: string]: string };
+const p = page ? parseInt(page) : 1;
+const query: Prisma.teachersWhereInput = {}; // Ana filtreleme sorgusu
 
-    // we check if there is any query params, if there is, we will filter the data
-    if (queryParams){
-      for(const [key,value] of Object.entries(queryParams)){
-      if (value === "") continue;
-       switch(key){
-        case "subject_name":
-          query.teacher_subject = {
-            some:{
-              subjects:{
-                subject_name: {
-                  equals: value as subject_name, // we set the value to the query, equals means the value should be equal to the value that we set
-                },
-              },
-            },
-          }
-        
-        case "class_code":
-          query.teacher_class = {
-            some:{
-              classes:{
-                class_code: {
-                  contains: value,
-                  mode: "insensitive",
-                },
-              },
-            },
-          };
-          break;
-        case "search":
-          query.OR = [
-            {
-              name: {
-                contains: value,
-                mode: "insensitive",
-              },
-            },
-            {
-              surname: {
-                contains: value,
-                mode: "insensitive",
-              },
-            },
-            {
-              title: {
-                contains: value,
-                mode: "insensitive",
-              },
-            },
-            {
-              phone_number: {
-                contains: value,
-                mode: "insensitive",
-              },
-            },
-          ];
-          break;
-        case "id":
-          query.id = {
-            equals: parseInt(value),
-          };
-          break;
+// Filtreleme işlemi
+if (queryParams) {
+  for (const [key, value] of Object.entries(queryParams)) {
+    if (value === "") continue;
 
-        case "lessonId":
-          query.teacher_lesson = {
-            some:{
-              lessons:{
-                id: parseInt(value)
-              }
-            }
-          }
-        }
-      }
-    }
-
-    switch(role){
-      case "admin":
-        // get teachers wih current institution id. firstly get all teachers, then filter them by teacher_institution
-        query.teacher_institution = {
-          some:{
-            institution_id: parseInt(institution_id)
-          }
-        }
-        break;
-        
-      case "teacher":
-        query.teacher_institution = {
-          some:{
-            institution_id: parseInt(institution_id)
-          }
-        }  
-      break;
-    }
-
-    const [teachersData, count] = await prisma.$transaction([ 
-      prisma.teachers.findMany({
-        where: query,
-        include: {
-          teacher_subject: {
-            include: {
-              subjects: true,
+    switch (key) {
+      case "subject_name":
+        query.teacher_subject = {
+          some: {
+            subjects: {
+              subject_name: {
+                equals: value as subject_name,
+              },
             },
           },
-          teacher_class: {
-            include: {
-              classes: true,
+        };
+        break;
+
+      case "class_code":
+        query.teacher_class = {
+          some: {
+            classes: {
+              class_code: {
+                contains: value,
+                mode: "insensitive",
+              },
             },
+          },
+        };
+        break;
+
+      case "search":
+        query.OR = [
+          { name: { contains: value, mode: "insensitive" } },
+          { surname: { contains: value, mode: "insensitive" } },
+          { title: { contains: value, mode: "insensitive" } },
+          { phone_number: { contains: value, mode: "insensitive" } },
+        ];
+        break;
+
+      case "id":
+        query.id = { equals: parseInt(value) };
+        break;
+
+      case "lessonId":
+        query.teacher_lesson = {
+          some: {
+            lessons: {
+              id: parseInt(value),
+            },
+          },
+        };
+        break;
+
+      case "classId":
+        query.teacher_class = {
+          some: {
+            classes: {
+              id: parseInt(value),
+            },
+          },
+        };
+        break;
+
+      default:
+        break;
+    }
+  }
+}
+
+switch (role) {
+  case "admin":
+    query.teacher_institution = {
+      some: {
+        institution_id: parseInt(institution_id),
+      },
+    };
+    break;
+    case "teacher":
+      const teacherInstitutionIds = await prisma.teacher_institution.findMany({
+        where: { teacher_id: parseInt(current_user_id) },
+        select: { institution_id: true },
+      }).then((results) => results.map((item) => item.institution_id));
+
+      query.teacher_institution = {
+        some: {
+          institution_id: {
+            in: teacherInstitutionIds,
           },
         },
-        take: ITEM_PER_PAGE,
-        skip: (p - 1) * ITEM_PER_PAGE,
-      }),
-      prisma.teachers.count({
-        where: whereClause, // Sayı sorgusunda da aynı filtreleri kullanıyoruz
-      }),
-    ]);
+      };
+      break;
+   
+
+
+
+  default:
+    break;
+}
+
+
+// Veritabanı işlemleri
+const [teachersData, count] = await prisma.$transaction([
+  prisma.teachers.findMany({
+    where: query,
+    include: {
+      teacher_subject: { include: { subjects: true } },
+      teacher_class: { include: { classes: true } },
+    },
+    take: ITEM_PER_PAGE,
+    skip: (p - 1) * ITEM_PER_PAGE,
+  }),
+  prisma.teachers.count({
+    where: query, // Sadece query kullanıyoruz
+  }),
+]);
+
     
 
 

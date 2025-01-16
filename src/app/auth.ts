@@ -48,7 +48,7 @@ export const authOptions: NextAuthOptions = {
       
           if (teacher) {
             // Öğretmen bulunduysa, öğretmen girişi için API'yi çağırıyoruz
-            let backendResponse = await fetch("https://base-service-ua14.onrender.com/auth/teacher/login", {
+            let backendResponse = await fetch("http://127.0.0.1:8000/auth/teacher/login", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ email, password }),
@@ -74,7 +74,7 @@ export const authOptions: NextAuthOptions = {
             }
           } else if (admin) {
             // Eğer admin bulunduysa, admin girişi için API'yi çağırıyoruz
-            let backendResponse = await fetch("https://base-service-ua14.onrender.com/auth/institution_admin/login", {
+            let backendResponse = await fetch("http://127.0.0.1:8000/auth/institution_admin/login", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ email, password }),

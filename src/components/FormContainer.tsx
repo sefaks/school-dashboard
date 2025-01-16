@@ -10,6 +10,7 @@ export type FormContainerProps = {
     | "assignment"
     | "announcement"
     | "activate"
+    | "schedule"
            ;
   type: "create" | "update" | "delete";
   data?: any;
@@ -198,9 +199,78 @@ const FormContainer = async ({ table, type, data, id }: FormContainerProps) => {
 
     default:
       break;
-     
+
+    case "schedule":
+      
+    if (role === "admin") {
+      const classes = await prisma.classes.findMany({
+        where: {
+          institution_id: parseInt(institution_id),
+        },
+        select: { id: true, class_code: true, grade: true },
+      });
+
+      const teachers = await prisma.teachers.findMany({
+        where: {
+          teacher_institution: {
+            some: {
+              institution_id: parseInt(institution_id),
+            },
+          },
+        },
+        select: {
+          id: true,
+          name: true,
+          surname: true,
+          teacher_subject: {
+            select: {
+              subjects: {
+                select: {
+                  id: true
+                }
+              }
+            }
+          }
+        }
+      });
+
+      const lessonSchedules = await prisma.lesson_schedules.findMany({
+        where: {
+          schedules: {
+            classes: {
+              institution_id: parseInt(institution_id),
+            },
+          },
+        },
+      });
+
+    const lessons = await prisma.lessons.findMany({
+      where: {
+       institution_id: parseInt(institution_id),
+      },
+      // subject of lesson
+      select: {
+        id: true,
+        name: true,
+        grade: true,
+        subject_id: true,
+        subjects: {
+          select: {
+            id: true,
+            subject_name: true,
+          },
+        },
+      
+      },
     }
+    );
+
+      relatedData = { classes, teachers, lessonSchedules, lessons };
+    }
+  
+    break;
   }
+}
 
   return (
     <div className="form-container">

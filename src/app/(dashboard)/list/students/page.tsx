@@ -146,6 +146,13 @@ const columns = [
             },
           }
         break;
+
+        case "classId":
+          query.student_class = {
+            some:{
+              class_id: parseInt(value)
+            }
+          }
         
         case "search":
           query.OR = [
@@ -190,19 +197,30 @@ const columns = [
       };
       break; // Admin case'i burada bitiyor
   
-    case "teacher":
-      query.student_class = {
-        some: {
-          classes: {
-            teacher_class: {
-              some: {
-                teacher_id: parseInt(current_user_id),
-              },
+      case "teacher":
+        query.student_class = {
+          some: {
+            classes: {
+              AND: [
+                {
+                  teacher_class: {
+                    some: {
+                      teacher_id: parseInt(current_user_id),
+                    },
+                  },
+                },
+                ...(queryParams.classId
+                  ? [
+                      {
+                        id: parseInt(queryParams.classId),
+                      },
+                    ]
+                  : []),
+              ],
             },
           },
-        },
-      };
-      break; // Teacher case'i burada bitiyor
+        };
+        break;
   }
   
 

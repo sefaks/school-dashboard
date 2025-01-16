@@ -6,21 +6,7 @@ import { TeacherActivateSchema } from "@/lib/formValidationSchemas";
 import { useSession } from "next-auth/react";
 import { toast } from "react-toastify";
 import { X } from "lucide-react";
-
-const SUBJECTS = [
-  { id: 0, name: "TURKCE", displayName: "Türkçe" },
-  { id: 1, name: "MATEMATIK", displayName: "Matematik" },
-  { id: 2, name: "FEN_BILIMLERI", displayName: "Fen Bilimleri" },
-  { id: 3, name: "SOSYAL_BILGILER", displayName: "Sosyal Bilgiler" },
-  { id: 4, name: "INGILIZCE", displayName: "İngilizce" },
-  {id: 5, name:"COĞRAFYA", displayName: "Coğrafya"},
-  {id: 6, name:"TARİH", displayName: "Tarih"},
-  {id: 7, name:"FİZİK", displayName: "Fizik"},
-  {id: 8, name:"KİMYA", displayName: "Kimya"},
-  {id: 9, name:"BİYOLOJİ", displayName: "Biyoloji"}
-
-
-];
+import { SUBJECTS } from "@/lib/utils";
 
 const AccountActivationModal = () => {
   const { data: session, update } = useSession(); // update'i ekledik
@@ -138,8 +124,10 @@ const AccountActivationModal = () => {
         <div className="mb-6">
           <h2 className="text-xl font-semibold mb-2">Hesabınızı Aktifleştirin</h2>
           <p className="text-sm text-gray-500">
-            Hesabınız henüz aktif değil, lütfen gerekli bilgileri doldurun
+            Hesabınız henüz aktif değil, lütfen gerekli bilgileri doldurun. Bu size daha doğru hizmet verebilmemiz için gerekli.
+            Anlayışınız için teşekkür ederiz.
           </p>
+
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">

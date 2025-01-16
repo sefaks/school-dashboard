@@ -139,7 +139,7 @@ const renderRow = (item: AssignmentList, role:string) => (
     <td className="hidden md:table-cell">
       {item.subjects ? (
         <span
-        className={`${statusColors[item.status as assignmentstatus]} text-white py-1 px-3 rounded-full`}
+        className={`${statusColors[item.status as keyof typeof statusColors] || 'bg-gray-500'} text-white py-1 px-3 rounded-full`}
         >
           {item.status}
         </span>
@@ -246,6 +246,7 @@ const renderRow = (item: AssignmentList, role:string) => (
               }
             }
           ];
+          
            // Status araması sadece geçerli bir status değeri ise eklensin
         if (Object.values(assignmentstatus).includes(value as assignmentstatus)) {
           query.status = value as assignmentstatus;
@@ -261,6 +262,14 @@ const renderRow = (item: AssignmentList, role:string) => (
           }
           
           break;
+
+      case "classId":
+        query.assignment_class = {
+          some: {
+            class_id: parseInt(value)
+          }
+        }
+        break;
       }
     }
   

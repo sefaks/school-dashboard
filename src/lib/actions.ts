@@ -2,7 +2,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache';
-import { AnnouncementSchema, AssignmentSchema, ClassSchema, CommentSchema, StudentSchema, TeacherSchema, studentSchema, } from './formValidationSchemas';
+import { AnnouncementSchema, AssignmentSchema, ClassSchema, CommentSchema, ScheduleCreateSchema, StudentSchema, TeacherRegisterSchema, TeacherSchema, TeacherUpdateSchema, studentSchema, } from './formValidationSchemas';
 import { toast } from 'react-toastify';
 import axios from "axios";
 
@@ -486,6 +486,106 @@ export const teacherAddComment = async (formData: CommentSchema, token: string, 
     }
   }
 };
+
+export const teacherUpdateProfile = async (formData: TeacherUpdateSchema, token: string) => {
+  try {
+    const response = await axios.patch(
+      `${API_BASE_URL}/teachers/me/update-profile`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+  
+    console.log("API Response:", response.data);
+    return { success: true, data: response.data };
+  } catch (error: any) {
+    console.error("Error details:", error);
+
+    if (error.response) {
+      return { success: false, message: error.response.data.detail || "Failed to add comment!" };
+    } else if (error.request) {
+      return { success: false, message: "No response from server." };
+    } else {
+      return { success: false, message: "An unexpected error occurred!" };
+    }
+  }
+};
+
+export const forgetPassword = async (email: string) => {
+  try {
+    const response = await axios.post(`${API_BASE_URL}/auth/forget-password`, { email });
+    return response.data;
+  } catch (error: any) {
+    if (error.response) {
+      console.error("API Response Error:", error.response);  // Yanıtı logluyoruz
+      throw new Error(error.response.data.detail || "Failed to reset password!");
+    }
+    console.error("Network Error:", error);  // Ağıt hatalarını logluyoruz
+    throw new Error("An unexpected error occurred!");
+  }
+};
+
+export const resetPassword = async (formData: any) => {
+  try {
+    const response = await axios.post(`${API_BASE_URL}/auth/reset-password`, formData);
+    return response.data;  // Yanıtın tamamını döndürür
+  } catch (error: any) {
+    if (error.response) {
+      console.error("API Response Error:", error.response);  // Yanıtı logluyoruz
+      // Hata mesajını doğrudan alıyoruz
+      throw new Error(error.response.data?.detail || "Failed to reset password!");
+    } else if (error.request) {
+      console.error("No response received:", error.request);  // Yanıt alınamadıysa
+      throw new Error("No response received from the server.");
+    } else {
+      console.error("Error:", error.message);  // Diğer hata türlerini yakalıyoruz
+      throw new Error("An unexpected error occurred!");
+    }
+  }
+};
+
+
+export const teacherRegister = async (formData: TeacherRegisterSchema) => {
+  try {
+    const response = await axios.post(`${API_BASE_URL}/auth/teacher/register`, formData);
+    return response.data;
+  } catch (error: any) {
+    if (error.response) {
+      console.error("API Response Error:", error.response);  // Yanıtı logluyoruz
+      throw new Error(error.response.data.detail || "Failed to register teacher!");
+    }
+    console.error("Network Error:", error);  // Ağıt hatalarını logluyoruz
+    throw new Error("An unexpected error occurred!");
+  }
+}
+
+export const createSchedule = async (formData: ScheduleCreateSchema, token: string) => {
+  try {
+    const response = await axios.post(`${API_BASE_URL}/admins/create-schedule`, formData, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return response.data;
+  } catch (error: any) {
+    if (error.response) {
+      console.error("API Response Error:", error.response);
+      throw new Error(error.response.data.detail || "Failed to create schedule!");
+    }
+    console.error("Network Error:", error);
+    throw new Error("An unexpected error occurred!");
+  }
+}
+
+
+    
 
 
 

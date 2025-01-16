@@ -56,7 +56,7 @@ const CommentForm = ({ assignmentId, userId }: { assignmentId: string; userId: s
 
     return (
         <div className="bg-white p-6 rounded-lg shadow-lg mt-4">
-            <h2 className="text-2xl font-semibold text-lamaPurple">Add Comment</h2>
+            <h2 className="text-lg font-semibold text-lamaPurple">Add Comment</h2>
             {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
             <form onSubmit={handleSubmit} className="mt-4 flex items-center gap-3">
                 <textarea

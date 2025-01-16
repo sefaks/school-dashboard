@@ -92,7 +92,7 @@ const Navbar =  () => {
                 {isDropdownOpen && (
                     <div  className="absolute right-0 mt-2 w-40 bg-white shadow-md rounded-lg z-10">
                         <ul className="flex flex-col items-center justify-start">
-                            <li className=" py-2 text-sm text-gray-700 hover:bg-gray-200 cursor-pointer flex jusfify-start flex-row items-center gap-2" onClick={() => router.push('/profile')}>
+                            <li className=" py-2 text-sm text-gray-700 hover:bg-gray-200 cursor-pointer flex jusfify-start flex-row items-center gap-2" onClick={() => router.push('/my-profile')}>
                                 Profile
                                 <CgProfile color='bg-Purple' size={20}/>
                             </li>

@@ -122,7 +122,7 @@ const LoginPage = () => {
   
         {/* Link to reset password or register */}
         <div className="flex flex-col gap-2 text-center">
-          <a href="/reset-password" className="text-sm text-blue-500 hover:underline">Forgot Password?</a>
+          <a href="/forget-password" className="text-sm text-blue-500 hover:underline">Forgot Password?</a>
           <a href="/new-user" className="text-sm text-purple-600 hover:underline">Don't have an account?</a>
 
         </div>

@@ -1,53 +1,63 @@
 "use client";
 import React from "react";
 import { signIn } from "next-auth/react"; // NextAuth için gerekli import
+import { ZodError } from "zod";
+import { TeacherRegisterSchema } from "@/lib/formValidationSchemas";
+import { teacherRegister } from "@/lib/actions";
+import { toast } from "react-toastify";
 
 function RegisterPage() {
   const [name, setName] = React.useState("");
   const [surname, setSurname] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
+  const [confirmPassword, setConfirmPassword] = React.useState("");
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState("");
 
-  const handleRegister = async (e: any) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
-  
+
     try {
-      // API'ye POST isteği göndererek kaydı yapıyoruz
-      const response = await fetch("http://127.0.0.1:8000/auth/teacher/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: name.trim(),
-          surname: surname.trim(),
-          email: email.trim(),
-          password: password,
-        }),
+      // Zod şeması ile form verilerini doğrulama
+      const formData = TeacherRegisterSchema.parse({
+        name: name.trim(),
+        surname: surname.trim(),
+        email: email.trim(),
+        password,
+        confirmPassword,
       });
-  
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("API Error:", errorData);
-        throw new Error(errorData.message || "Registration failed!");
-      }
-  
-      // Kaydın başarılı olması durumunda
+
+      // teacherRegister fonksiyonu ile API isteği gönder
+      await teacherRegister(formData);
+
       console.log("Registration successful!");
-  
-      // Kullanıcıyı bir başarı sayfasına yönlendirebiliriz
-      window.location.href = "/signIn"; // veya /dashboard gibi bir yönlendirme yapılabilir
-  
-    } catch (err: any) {
-      setError(err.message || "Registration failed!");
+      toast.success("Registration successful! Welcome to the best platform for education.");
+
+      // redirect to login page with 2 seconds delay
+      setTimeout(() => {
+        signIn("credentials", {
+          email: formData.email,
+          password: formData.password,
+          callbackUrl: "/",
+        });
+      }, 2000);
+    } catch (err) {
+      if (err instanceof ZodError) {
+        const firstError = err.errors[0]?.message || "Invalid input!";
+        setError(firstError);
+        toast.error(firstError);
+      } else {
+        setError((err as Error).message || "Registration failed!");
+        toast.error((err as Error).message || "Registration failed!");
+      }
     } finally {
       setLoading(false);
     }
   };
+  
     return (
       <div className="h-screen flex items-center justify-center bg-gradient-to-r from-green-400 via-teal-500 to-blue-500 p-4">
         <div className="flex flex-col md:flex-row items-center bg-white rounded-xl shadow-lg overflow-hidden w-full max-w-4xl">
@@ -109,6 +119,18 @@ function RegisterPage() {
                   required
                 />
               </div>
+
+              <div className="flex flex-col">
+              <label className="text-sm font-medium text-gray-700">Confirm Password</label>
+              <input
+                type="password"
+                className="p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 transition-all"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+              />
+            </div>
+              
   
               {/* Error Message */}
               {error && <div className="text-red-600 text-sm font-medium">{error}</div>}

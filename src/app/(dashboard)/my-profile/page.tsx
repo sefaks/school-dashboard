@@ -1,16 +1,19 @@
-import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
-import { getRoleAndUserIdAndInstitutionId } from "@/lib/utils";
-import prisma from "@/lib/prisma";
 import { User } from "lucide-react"; // Profil fotoğrafı için icon
+import TeacherProfileForm from "@/components/forms/TeacherProfileForm";
+import prisma from "@/lib/prisma";
+import { getRoleAndUserIdAndInstitutionId } from "@/lib/utils";
 
+// Server-side veri çekme işlemi
 export default async function TeacherProfilePage() {
   const { role, current_user_id, institution_id } = await getRoleAndUserIdAndInstitutionId();
 
   if (!current_user_id) {
+    // Kullanıcı giriş yapmamışsa yönlendirme
     redirect("/login");
   }
 
+  // Öğretmenin bilgilerini ve derslerini çekiyoruz
   const teacher = await prisma.teachers.findUnique({
     where: {
       id: parseInt(current_user_id),
@@ -24,12 +27,33 @@ export default async function TeacherProfilePage() {
       phone_number: true,
       photo: true,
       validation_code: true,
+      teacher_subject: {
+        select: {
+          subjects: {
+            select: {
+              subject_name: true, // Ders ismi
+            },
+          },
+        },
+      },
     },
   });
 
+  // prop teacher is teacher with subjects array
+
+  const propTeacher =  {
+    ...teacher,
+    subjects: teacher?.teacher_subject.map((item) => item.subjects.subject_name),
+  };
+
+
+
   if (!teacher) {
-    redirect("/404");
+    // Eğer öğretmen bulunamazsa 404 sayfasına yönlendir
+    redirect("/unauthorized");
   }
+
+  
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -37,7 +61,7 @@ export default async function TeacherProfilePage() {
         {/* Profil Başlığı */}
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-gray-800">Profil Bilgileri</h1>
-          <p className="text-gray-600">Kişisel bilgilerinizi buradan görüntüleyebilirsiniz.</p>
+          <p className="text-gray-600">Kişisel bilgilerinizi buradan görüntüleyebilir ve güncelleyebilirsiniz.</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -64,47 +88,10 @@ export default async function TeacherProfilePage() {
             </div>
           </div>
 
-          {/* Sağ Kolon - Detaylı Bilgiler */}
-          <div className="md:col-span-2 space-y-6">
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <h3 className="text-lg font-semibold text-gray-800">Personal Informations</h3>
-              <dl className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                <div>
-                  <dt className="font-medium text-gray-700">Name</dt>
-                  <dd className="text-gray-600">{teacher.name || "Belirtilmemiş"}</dd>
-                </div>
-                <div>
-                  <dt className="font-medium text-gray-700">Surname</dt>
-                  <dd className="text-gray-600">{teacher.surname || "Belirtilmemiş"}</dd>
-                </div>
-                <div>
-                  <dt className="font-medium text-gray-700">E-mail</dt>
-                  <dd className="text-gray-600">{teacher.email || "Belirtilmemiş"}</dd>
-                </div>
-                <div>
-                  <dt className="font-medium text-gray-700">Phone Number</dt>
-                  <dd className="text-gray-600">{teacher.phone_number || "Belirtilmemiş"}</dd>
-                </div>
-                <div>
-                  <dt className="font-medium text-gray-700">Gender</dt>
-                  <dd className="text-gray-600">{teacher.gender || "Belirtilmemiş"}</dd>
-                </div>
-                <div>
-                  <dt className="font-medium text-gray-700">Title</dt>
-                  <dd className="text-gray-600">{teacher.title || "Belirtilmemiş"}</dd>
-                </div>
-              </dl>
-            </div>
-
-            {/* Doğrulama Bilgisi */}
-            {teacher.validation_code && (
-              <div className="bg-white p-6 rounded-lg shadow-md">
-                <h3 className="text-lg font-semibold text-gray-800">Validation Information</h3>
-                <p className="text-sm text-gray-600 mt-4">
-                  Validation Code: <span className="font-bold text-lg text-green-600">{teacher.validation_code}</span>
-                </p>
-              </div>
-            )}
+          {/* Sağ Kolon - Form */}
+          <div className="md:col-span-2">
+            {/* Profil Güncelleme Formu */}
+            <TeacherProfileForm initialData={propTeacher} />
           </div>
         </div>
       </div>

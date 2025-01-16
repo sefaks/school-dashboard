@@ -4,16 +4,6 @@ import { getRoleAndUserIdAndInstitutionId } from "@/lib/utils";
 import { assignments, classes, comments, documents } from "@prisma/client";
 import Image from "next/image";
 
-type User = {
-    id: number;
-    name: string;
-    surname: string;
-} | null;
-
-type CommentWithUser = comments & {
-    user: User | null; // Kullanıcı verisi burada olabilir veya null olabilir
-};
-
 const SingleAssignmentPage = async ({
     params: { id },
 }: {
@@ -172,29 +162,22 @@ const SingleAssignmentPage = async ({
                             <p className="text-md text-gray-500 mt-2">{assignment.description}</p>
                         </div>
 
-                        {/* Dokümanlar */}
                         <div className="bg-white p-6 rounded-md shadow">
-                            <h2 className="text-lg font-semibold text-lamaRed">Documents</h2>
-                            {assignment.assignment_document.length > 0 ? (
-                                <ul className="mt-4 space-y-2">
-                                    {assignment.assignment_document.map((docItem) => (
-                                        <li
-                                            key={docItem.documents.id}
-                                            className="flex items-center gap-2 text-gray-700 text-sm"
-                                        >
-                                            <i className="fas fa-file text-gray-500"></i>
-                                            <span>{docItem.documents.name}</span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            ) : (
-                                <p className="text-gray-500 mt-2">Bu ödev için doküman yok.</p>
-                            )}
+                            <h2 className="text-lg font-semibold">Assigned Classes</h2>
+                            <ul className="mt-4 space-y-2">
+                                {assignment.assignment_class.map((classItem) => (
+                                    <li key={classItem.classes.id} className="text-sm text-gray-700">
+                                        {classItem.classes.class_code}
+                                    </li>
+                                ))}
+                            </ul>
                         </div>
+
+                      
 
                         {/* Yorumlar */}
                         <div className="bg-white p-6 rounded-lg shadow-lg mt-4">
-    <h2 className="text-2xl font-semibold text-lamaPurple">Comments</h2>
+    <h2 className="text-xl font-semibold text-lamaPurple">Comments</h2>
     {assignment.comments.length > 0 ? (
         <ul className="mt-4 space-y-4">
             {assignment.comments.map((comment) => (
@@ -254,16 +237,27 @@ const SingleAssignmentPage = async ({
 
                     {/* Sağ Kısım */}
                     <div className="w-full xl:w-1/3">
-                        <div className="bg-white p-6 rounded-md shadow">
-                            <h2 className="text-lg font-semibold">Assigned Classes</h2>
-                            <ul className="mt-4 space-y-2">
-                                {assignment.assignment_class.map((classItem) => (
-                                    <li key={classItem.classes.id} className="text-sm text-gray-700">
-                                        {classItem.classes.class_code}
-                                    </li>
-                                ))}
-                            </ul>
+
+                          {/* Dokümanlar */}
+                          <div className="bg-white p-6 rounded-md shadow">
+                            <h2 className="text-lg font-semibold text-lamaRed">Documents</h2>
+                            {assignment.assignment_document.length > 0 ? (
+                                <ul className="mt-4 space-y-2">
+                                    {assignment.assignment_document.map((docItem) => (
+                                        <li
+                                            key={docItem.documents.id}
+                                            className="flex items-center gap-2 text-gray-700 text-sm"
+                                        >
+                                            <i className="fas fa-file text-gray-500"></i>
+                                            <span>{docItem.documents.name}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            ) : (
+                                <p className="text-gray-500 mt-2">No document has been assigned for this assignment.</p>
+                            )}
                         </div>
+                        
                     </div>
                 </>
             ) : (

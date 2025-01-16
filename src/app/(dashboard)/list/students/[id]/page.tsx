@@ -72,14 +72,9 @@ const SingleStudentPage = async ({
           },
         },
       });
-
-
   }
 
-  
-  
   const firstClass = student?.student_class?.[0]?.classes;
-
 
   if (!student) {
     return notFound();
@@ -115,7 +110,6 @@ const SingleStudentPage = async ({
                 )}
               </div>
               <p className="text-sm text-gray-500">
-                Lorem ipsum, dolor sit amet consectetur adipisicing elit.
               </p>
               <div className="flex items-center justify-start gap-2 flex-wrap text-xs font-medium">
                

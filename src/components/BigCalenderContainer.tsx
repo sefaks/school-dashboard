@@ -63,7 +63,6 @@ const BigCalendarContainer = async ({
   // Veriyi mevcut aya göre düzenle
   const schedule = adjustScheduleToCurrentMonth(data);
 
-  console.log("schedule", schedule);
 
   return (
     <div className="bg-blue">

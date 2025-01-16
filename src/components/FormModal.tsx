@@ -31,6 +31,12 @@ const ActivateForm = dynamic(() => import("./forms/ActivateForm"), {
   loading: () => <h1>Loading...</h1>,
 });
 
+const ScheduleForm = dynamic(() => import("./forms/ScheduleForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
+
+
+
 // Dynamically map forms
 const forms: {
   [key: string]: (
@@ -88,7 +94,15 @@ const forms: {
       setOpen={setOpen}
       relatedData={relatedData}
     />
-  )
+  ),
+  schedule: (setOpen, type, data, relatedData) => (
+    <ScheduleForm
+      type={type}
+      data={data}
+      setOpen={setOpen}
+      relatedData={relatedData}
+    />
+  ),
 };
 const FormModal = ({
   table,
@@ -136,6 +150,7 @@ const Form = ({
       }
     },
     class: deleteClass,
+    schedule : deleteClass,
   }; 
 
   const handleDelete = async () => {
