@@ -5,7 +5,7 @@ import {  DayOfWeek, ScheduleCreateSchema, scheduleCreateSchema } from '@/lib/fo
 import { toast } from 'react-toastify';
 import { z } from 'zod';
 import TimePicker from "react-time-picker";
-import { createSchedule, updateClass } from '@/lib/actions';
+import { createSchedule, updateClass, updateSchedule } from '@/lib/actions';
 import { useSession } from 'next-auth/react';
 import { useFormState } from 'react-dom';
 import { useRouter } from 'next/navigation';
@@ -22,6 +22,8 @@ const ScheduleForm = ({
     setOpen: Dispatch<SetStateAction<boolean>>;
     relatedData?: any;
   }) => {
+
+    
     const {
       register,
       handleSubmit,
@@ -32,8 +34,8 @@ const ScheduleForm = ({
       resolver: zodResolver(scheduleCreateSchema),
       defaultValues: {
         ...data,
-        lesson_schedules: [],  // Ensure this is initialized as an empty array
-      },
+        lesson_schedules: data?.lesson_schedules || []
+      }
         });
 
     const { data: session } = useSession(); // Get the session (which includes the token)
@@ -41,7 +43,11 @@ const ScheduleForm = ({
     const watchedClassId = watch('class_id');
     const watchedLessonId = watch('lesson_id');
 
-    console.log("Form errors:", errors);
+   // console errors if there is any
+   console.log("Form Errors", errors);
+   // console lesson_schedules
+
+   
   
     const [gradeFilter, setGradeFilter] = useState<number | string>(""); // Grade filtresi durumu
     const [subjectFilter,setSubjectFilter] = useState<number | string>(""); // Subject filtresi durumu
@@ -52,6 +58,93 @@ const ScheduleForm = ({
       end_time: string;
       day_of_week: DayOfWeek;
     }>>({});
+
+    React.useEffect(() => {
+      if (type === "update" && data?.lesson_schedules) {
+
+        console.log(data.lesson_schedules);
+
+
+        const dayOfWeekMap: Record<string, string> = {
+          Monday: "Pazartesi",
+          Tuesday: "Salı",
+          Wednesday: "Çarşamba",
+          Thursday: "Perşembe",
+          Friday: "Cuma",
+          Saturday: "Cumartesi",
+          Sunday: "Pazar",
+        };
+        const formattedSchedules = data.lesson_schedules.map((schedule: any) => {
+
+          let startTime = schedule.start_time;
+          let endTime = schedule.end_time;
+    
+          // Eğer Date objesi ise string'e dönüştür
+          if (schedule.start_time instanceof Date) {
+            startTime = `${schedule.start_time.getHours().toString().padStart(2, '0')}:${schedule.start_time.getMinutes().toString().padStart(2, '0')}`;
+          }
+          if (schedule.end_time instanceof Date) {
+            endTime = `${schedule.end_time.getHours().toString().padStart(2, '0')}:${schedule.end_time.getMinutes().toString().padStart(2, '0')}`;
+          }
+        
+          
+          const dayOfWeek = dayOfWeekMap[schedule.day_of_week] || schedule.day_of_week;
+    
+          return {
+            id: schedule.id,
+            ...schedule,
+            start_time: startTime,
+            end_time: endTime,
+            day_of_week: dayOfWeek
+          };
+        });
+       
+        setLessonSchedules(formattedSchedules);
+        setValue("lesson_schedules", formattedSchedules);
+        
+        // Mevcut dersleri selectedLessons state'ine yükle
+        const lessonsMap: Record<string, any> = {};
+        data.lesson_schedules.forEach((schedule: any) => {
+          // Start ve end saatlerini dönüştür
+          const startTime = new Date(schedule.start_time);
+          const endTime = new Date(schedule.end_time);
+    
+          // Saat ve dakika bilgilerini HH:MM formatında al
+          const formattedStartTime = `${startTime.getHours().toString().padStart(2, '0')}:${startTime.getMinutes().toString().padStart(2, '0')}`;
+          const formattedEndTime = `${endTime.getHours().toString().padStart(2, '0')}:${endTime.getMinutes().toString().padStart(2, '0')}`;
+    
+          // Gün ismini Türkçe'ye çevir
+          const dayOfWeek = dayOfWeekMap[schedule.day_of_week] || schedule.day_of_week; // Eğer bulunamazsa orijinalini kullan
+    
+          // lessonsMap'ye uygun formatta ekle
+          lessonsMap[dayOfWeek] = {
+            id: schedule.id,
+            lesson_id: schedule.lesson_id,
+            teacher_id: schedule.teacher_id,
+            start_time: formattedStartTime,
+            end_time: formattedEndTime,
+            day_of_week: dayOfWeek,
+          };
+        });
+  
+        console.log("selected lessons", lessonsMap);
+    
+        // Sınıf seçildiğinde grade filtresini ayarla
+        if (data.class_id) {
+          const selectedClass = relatedData?.classes.find(
+            (cls: { id: number }) => cls.id === data.class_id
+          );
+          setGradeFilter(selectedClass?.grade || "");
+        }
+    
+        // Status'u ayarla
+        if (data.status) {
+          // status with lowercase
+          setStatus(data.status.toLowerCase());
+        }
+      }
+    }, [type, data, relatedData?.classes]);
+
 
     const handleTeacherChange = useCallback((day: string, e: React.ChangeEvent<HTMLSelectElement>) => {
       const selectedTeacherId = Number(e.target.value);
@@ -74,9 +167,10 @@ const ScheduleForm = ({
         end_time: string;
       }>>([]);
       
+    console.log("Lesson Schedules", lessonSchedules);
       
     const [openDays, setOpenDays] = useState<Record<string, boolean>>({});
-    const [status, setStatus] = useState<string>("DRAFT");
+    const [status, setStatus] = useState<string>("draft");
     const days = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"];
    
     const [state, formAction] = useFormState(async (prevState: any, formData: string) => {
@@ -95,7 +189,7 @@ const ScheduleForm = ({
           response = await createSchedule(finalData, session?.user.accessToken || "");
           toast.success('Program başarıyla oluşturuldu');
         } else if (type === "update") {
-          response = await updateClass(finalData, session?.user.accessToken || "", data.id);
+          response = await updateSchedule(finalData, session?.user.accessToken || "", data.id);
           toast.success('Program başarıyla güncellendi');
         }
     
@@ -136,10 +230,7 @@ const ScheduleForm = ({
     const handleRemoveLesson = (index: number) => {
         setLessonSchedules(prev => prev.filter((_, i) => i !== index));
       };
-      
-
-    console.log("Lesson Schedules:", lessonSchedules);
-  
+        
     const toggleDay = (day: string) => {
       setOpenDays(prev => ({
         ...prev,
@@ -179,31 +270,45 @@ const ScheduleForm = ({
           });
         }
       }, [relatedData?.lessons]);
-      const handleTimeChange = useCallback((day: string, field: 'start_time' | 'end_time', value: string) => {
-        const otherField = field === "start_time" ? "end_time" : "start_time";
-        const otherTime = selectedLessons[day]?.[otherField];
-      
-        if (otherTime) {
-          const [hour, minute] = value.split(":").map(Number);
-          const [otherHour, otherMinute] = otherTime.split(":").map(Number);
-          const isInvalid =
-            (field === "start_time" && hour * 60 + minute >= otherHour * 60 + otherMinute) ||
-            (field === "end_time" && hour * 60 + minute <= otherHour * 60 + otherMinute);
-      
-          if (isInvalid) {
-            toast.error("Başlangıç saati bitiş saatinden önce olmalıdır.");
-            return;
-          }
-        }
-      
-        setSelectedLessons(prev => ({
-          ...prev,
-          [day]: {
-            ...prev[day],
-            [field]: value,
-          },
-        }));
-      }, [selectedLessons]);
+     const handleTimeChange = useCallback(
+  (day: string, field: 'start_time' | 'end_time', value: string) => {
+    // Saat string'ini iki saat geri alan yardımcı fonksiyon
+    const adjustTime = (timeStr: string): string => {
+      const [hour, minute] = timeStr.split(':').map(Number);
+      const adjustedHour = (hour + 24) % 24; // Burada
+      return `${adjustedHour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+    };
+
+    // Yeni zaman değeri
+    const adjustedValue = adjustTime(value);
+
+    const otherField = field === 'start_time' ? 'end_time' : 'start_time';
+    const otherTime = selectedLessons[day]?.[otherField];
+
+    if (otherTime) {
+      const [hour, minute] = adjustedValue.split(':').map(Number);
+      const [otherHour, otherMinute] = otherTime.split(':').map(Number);
+      const isInvalid =
+        (field === 'start_time' && hour * 60 + minute >= otherHour * 60 + otherMinute) ||
+        (field === 'end_time' && hour * 60 + minute <= otherHour * 60 + otherMinute);
+
+      if (isInvalid) {
+        toast.error('Başlangıç saati bitiş saatinden önce olmalıdır.');
+        return;
+      }
+    }
+
+    setSelectedLessons((prev) => ({
+      ...prev,
+      [day]: {
+        ...prev[day],
+        [field]: adjustedValue,
+      },
+    }));
+  },
+  [selectedLessons]
+);
+
 
       const DaySchedule = ({ day }: { day: string }) => {
         const lessonData = selectedLessons[day] || {
@@ -418,8 +523,9 @@ return (
           İptal
         </button>
         <button type="submit" className="p-2 border rounded-md bg-blue-500 text-white">
-            {type === "create" ? "Takvim Oluştur" : "Takvimi Güncelle"}
-            </button>
+        {type === "create" ? "Takvim Oluştur" : "Takvimi Güncelle"}
+      </button>
+
 
       </div>
     </form>

@@ -172,6 +172,7 @@ export const scheduleCreateSchema = z.object({
   status: z.nativeEnum(ScheduleStatus),
   lesson_schedules: z.array(
     z.object({
+      id: z.number().optional(),
       lesson_id: z.number().min(1, "Ders ID'si zorunludur."),
       teacher_id: z.number().min(1, "Öğretmen ID'si zorunludur."),
       day_of_week: z.string().refine((day) => day.includes(day), {

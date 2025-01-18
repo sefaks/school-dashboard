@@ -584,8 +584,50 @@ export const createSchedule = async (formData: ScheduleCreateSchema, token: stri
   }
 }
 
+export const updateSchedule = async (formData: ScheduleCreateSchema, token: string, scheduleId: number) => {
+  try {
+    const response = await axios.patch(`${API_BASE_URL}/admins/update-schedule/${scheduleId}`, formData, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-    
+    return response.data;
+  } catch (error: any) {
+    if (error.response) {
+      console.error("API Response Error:", error.response);
+      throw new Error(error.response.data.detail || "Failed to update schedule!");
+    }
+    console.error("Network Error:", error);
+    throw new Error("An unexpected error occurred!");
+  }
+}
+
+export const teacherUpdateComment = async (content: string, token: string, commentId: number) => {
+  try {
+    const response = await axios.patch(`${API_BASE_URL}/teachers/me/update-comment/${commentId}`, 
+      { content: content }, // content burada comment anahtarıyla gönderilmeli
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    // Başarı durumunda success: true döner
+    return { success: true, message: "Yorum başarıyla güncellendi!", data: response.data };
+  } catch (error: any) {
+    if (error.response) {
+      console.error("API Response Error:", error.response);
+      return { success: false, message: error.response.data.detail || "Yorum düzenlenemedi!" };
+    }
+    console.error("Network Error:", error);
+    throw new Error("An unexpected error occurred!");
+  }
+}
+
 
 
 
