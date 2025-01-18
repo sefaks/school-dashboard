@@ -3,7 +3,7 @@ import Table from "@/components/Table";
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
 import { getRoleAndUserIdAndInstitutionId } from "@/lib/utils";
-import { Prisma, classes, schedules, schedulestatus } from "@prisma/client";
+import { Prisma, classes, lesson_schedules, schedules, schedulestatus } from "@prisma/client";
 import { title } from "process";
 import Image from "next/image";
 import FormContainer from "@/components/FormContainer";
@@ -12,9 +12,12 @@ import Link from "next/link";
 
 type ScheduleList = schedules & {
 
-    classes: classes
-
+    classes: classes,
+    lesson_schedules: Array<{
+      lesson_schedules:lesson_schedules
+    }>;
 }
+
 
 const statusColors: { [key in schedulestatus]: string } = {
     ACTIVE: "bg-green-500",
@@ -22,7 +25,10 @@ const statusColors: { [key in schedulestatus]: string } = {
     DRAFT: "bg-red-500",
 };
 
+
 const renderRow = (item: ScheduleList, role: string) => (
+
+  
     <tr
         key={item.id}
         className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
@@ -48,7 +54,7 @@ const renderRow = (item: ScheduleList, role: string) => (
                 </Link>
                 {role === "admin" && (
                     <>
-                        <FormContainer table="class" type="update" data={item} />
+                        <FormContainer table="schedule" type="update" data={item} />
                         <FormContainer table="class" type="delete" id={item.id} />
                     </>
                 )}
@@ -160,6 +166,7 @@ const ScheduleListPage = async ({searchParams}:{searchParams:{[key:string]:strin
         where: query,
         include: {
           classes: true,
+          lesson_schedules: true
         },
         take: ITEM_PER_PAGE,
         skip: (p - 1) * ITEM_PER_PAGE,
@@ -169,6 +176,18 @@ const ScheduleListPage = async ({searchParams}:{searchParams:{[key:string]:strin
       }),
     ]);
 
+    
+
+    // change lesson_schedules start and end time to -2 hours
+    schedulesData.forEach((schedule) => {
+        schedule.lesson_schedules.forEach((lesson_schedule) => {
+          lesson_schedule.start_time = new Date(lesson_schedule.start_time);
+          lesson_schedule.end_time = new Date(lesson_schedule.end_time);
+          lesson_schedule.start_time.setHours(lesson_schedule.start_time.getHours() - 2);
+          lesson_schedule.end_time.setHours(lesson_schedule.end_time.getHours() - 2);
+        });
+      });
+   
 
 
     return (

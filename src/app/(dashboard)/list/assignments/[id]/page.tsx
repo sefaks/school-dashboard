@@ -1,4 +1,5 @@
 import CommentForm from "@/components/forms/CommentForm";
+import EditCommentForm from "@/components/forms/EditCommentForm";
 import prisma from "@/lib/prisma";
 import { getRoleAndUserIdAndInstitutionId } from "@/lib/utils";
 import { assignments, classes, comments, documents } from "@prisma/client";
@@ -213,9 +214,17 @@ const SingleAssignmentPage = async ({
                             {comment.created_at ? new Date(comment.created_at).toLocaleString("tr-TR") : ""}
                             </span>
                         </div>
+                                                        <EditCommentForm
+                                                            commentId={comment.id}
+                                                            initialContent={comment.content}
+                                                            isOwner={comment.user_id === Number(current_user_id) && comment.user_type === "TEACHER"}
+                                                           
+                                                        />
 
                         {/* Yorum İçeriği */}
                         <p className="text-gray-700 text-sm">{comment.content}</p>
+
+                        
                     </div>
 
                 </li>
@@ -232,7 +241,6 @@ const SingleAssignmentPage = async ({
         )}
     </div>
 </div>
-
                     </div>
 
                     {/* Sağ Kısım */}
