@@ -242,6 +242,14 @@ const FormContainer = async ({ table, type, data, id }: FormContainerProps) => {
             },
           },
         },
+        select: {
+          id: true,
+          day_of_week: true,
+          start_time: true,
+          end_time: true,
+          teacher_id: true,
+          lesson_id: true
+        },
       });
 
     const lessons = await prisma.lessons.findMany({
@@ -264,6 +272,7 @@ const FormContainer = async ({ table, type, data, id }: FormContainerProps) => {
       },
     }
     );
+    
 
       relatedData = { classes, teachers, lessonSchedules, lessons };
     }
