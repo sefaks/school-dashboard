@@ -10,7 +10,13 @@ import { useSession } from 'next-auth/react';
 import { useFormState } from 'react-dom';
 import { Trash2, Upload, File } from 'lucide-react';
 
-
+interface FileWithBase64 {
+  name: string;
+  type: string;
+  size: number;
+  lastModified: number;
+  base64: string;
+}
 
 const AssignmentForm = ({
   type,
@@ -41,11 +47,15 @@ const AssignmentForm = ({
   const [state, formAction] = useFormState(async (prevState: any, formData: string) => {
     try {
       console.log("Form Action Triggered"); // Form action'ın tetiklendiğini kontrol et
-
       const parsedData = JSON.parse(formData);
+      const { token, selectedFiles, ...restData } = parsedData;
+
+
+
       const response = type === "create"
-        ? await addAssignment(parsedData, parsedData.token)
-        : await updateAssignment(parsedData, parsedData.token, data.id);
+      ? await addAssignment(restData, selectedFiles, token)
+      : await updateAssignment(restData, selectedFiles, token);
+
       
       // Return the response data along with success status
       return { 
@@ -80,7 +90,8 @@ const AssignmentForm = ({
     }
     return [];
   });  
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<FileWithBase64[]>([]);
+
   const [documents, setDocuments] = useState<any[]>(data?.documents || []);
 
   const startDateValue = watch("start_date");
@@ -154,23 +165,7 @@ const AssignmentForm = ({
     setSelectedClasses((prev) => prev.filter((id) => id !== classId));
   };
 
-  const handleUploadDocument = async (file: File) => {
-    const documentName = file.name;
-    const uploadedAt = new Date().toISOString();
-    const url = URL.createObjectURL(file); // Mock URL for demo purposes (Replace with actual URL after uploading)
-    const content = await convertFileToBase64(file);
 
-    const newDocument = {
-      name: documentName,
-      content: content,
-      uploaded_at: uploadedAt,
-      url: url,
-
-    };
-  
-    setDocuments((prevDocuments) => [...prevDocuments, newDocument]);
-    setSelectedFiles((prevFiles) => prevFiles.filter((f) => f !== file)); // Remove file from selected files
-  };
 
   const convertFileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -205,32 +200,35 @@ const AssignmentForm = ({
   }, [state, type, setOpen, router]);
 
 
-
   const onSubmit = async (data: AssignmentSchema) => {
-
-    console.log(errors);
-
     if (!session?.user.accessToken) {
-        toast.error("No authentication token found");
-        return;
-      }
-
-    const fullFormData = {
-      ...data,  // Contains the form data (start_date, deadline_date, etc.)
-      token: session?.user.accessToken,  // Add the token to the data
-      student_ids: selectedStudents,    // Include the selected students
-      class_ids: selectedClasses,       // Include the selected classes
-      documents: documents.length > 0 ? documents : undefined // undefined olarak gönderirsek optional alan boş geçilebilir
-    };
-
-    console.log("Full Form Data:", fullFormData);
-
-    formAction(JSON.stringify(fullFormData));
-
-    console.log("Full Form Data:", fullFormData);
-
+      toast.error("No authentication token found");
+      return;
+    }
+  
+    try {
+      const result = await addAssignment(
+        data,
+        selectedFiles, // Use selectedFiles directly
+        session.user.accessToken
+      );
+      console.log("Assignment created successfully:", result);
+    } catch (err) {
+      console.error("Error creating assignment:", err);
+    }
   };
-
+  
+  // Utility function to convert file to base64
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+  
+  
 
   const classes = relatedData?.classes || [];
   const subjects = relatedData?.subjects || [];
@@ -238,36 +236,19 @@ const AssignmentForm = ({
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
-      const newFiles = Array.from(event.target.files);
-  
-      setSelectedFiles((prevFiles) => [...prevFiles, ...newFiles]);
-  
-      // Her bir dosyayı Base64 formatına dönüştürüp ekliyoruz
-      for (const file of newFiles) {
-        try {
-          const content = await convertFileToBase64(file);
-  
-          // 'data:application/pdf;base64,' kısmını çıkar
-          const base64Data = content.split(",")[1];  // Verinin geri kalan kısmı
-  
-          const newDocument = {
-            name: file.name,
-            content: base64Data,  // Base64 string'i veritabanına bu şekilde göndereceğiz
-            uploaded_at: new Date().toISOString(),
-            url: URL.createObjectURL(file),
-          };
-  
-          setDocuments(prevDocs => [...prevDocs, newDocument]);
-        } catch (error) {
-          console.error('Error processing file:', error);
-          toast.error(`Failed to process file: ${file.name}`);
-        }
-      }
+      const newFiles = await Promise.all(
+        Array.from(event.target.files).map(async (file) => ({
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          lastModified: file.lastModified,
+          base64: await fileToBase64(file)
+        }))
+      );
+      setSelectedFiles(newFiles);
     }
-    // Reset the input
     event.target.value = '';
   };
-  
   // Dosya kaldırma
   const handleRemoveFile = (index: number) => {
     setSelectedFiles(prevFiles => {
@@ -302,7 +283,7 @@ const AssignmentForm = ({
           <div className="w-1/2 space-y-2">
         <label className="block text-sm font-medium text-gray-700">Start Date</label>
         <div className="flex flex-col space-y-2">
-          <input
+                <input
             type="datetime-local"
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             {...register("start_date")}
@@ -311,16 +292,18 @@ const AssignmentForm = ({
 
           {startDateValue && (
             <p className="text-sm text-gray-500">
-              {new Date(startDateValue).toLocaleString('en-US', {
+              {new Date(startDateValue).toLocaleString('tr-TR', {
                 weekday: 'long',
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',
                 hour: '2-digit',
-                minute: '2-digit'
+                minute: '2-digit',
+                hour12: false, // 24 saat formatında göstermek için
               })}
             </p>
           )}
+
           {errors.start_date && (
             <p className="text-sm text-red-600">{errors.start_date.message}</p>
           )}
@@ -331,24 +314,27 @@ const AssignmentForm = ({
       <div className="w-1/2 space-y-2">
         <label className="block text-sm font-medium text-gray-700">Deadline Date</label>
         <div className="flex flex-col space-y-2">
-          <input
+              <input
             type="datetime-local"
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             {...register("deadline_date")}
             onChange={(e) => handleDateChange(e, "deadline_date")}
           />
+
           {deadlineDateValue && (
             <p className="text-sm text-gray-500">
-              {new Date(deadlineDateValue).toLocaleString('en-US', {
+              {new Date(deadlineDateValue).toLocaleString('tr-TR', {
                 weekday: 'long',
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',
                 hour: '2-digit',
-                minute: '2-digit'
+                minute: '2-digit',
+                hour12: false, // 24 saat formatında göstermek için
               })}
             </p>
           )}
+
           {errors.deadline_date && (
             <p className="text-sm text-red-600">{errors.deadline_date.message}</p>
           )}

@@ -47,7 +47,15 @@ const ScheduleForm = ({
    console.log("Form Errors", errors);
    // console lesson_schedules
 
-   
+
+   //set status to lower case when initialize the form
+   useEffect(() => {
+    if (data?.status) {
+      const lowerCaseStatus = data.status.toLowerCase();
+      setValue("status", lowerCaseStatus);
+    }
+  }, [data?.status]);
+  
   
     const [gradeFilter, setGradeFilter] = useState<number | string>(""); // Grade filtresi durumu
     const [subjectFilter,setSubjectFilter] = useState<number | string>(""); // Subject filtresi durumu
@@ -270,6 +278,7 @@ const ScheduleForm = ({
           });
         }
       }, [relatedData?.lessons]);
+
      const handleTimeChange = useCallback(
   (day: string, field: 'start_time' | 'end_time', value: string) => {
     // Saat string'ini iki saat geri alan yardımcı fonksiyon

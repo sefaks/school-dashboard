@@ -18,42 +18,68 @@ export async function getRoleAndUserIdAndInstitutionId() {
   return { role, current_user_id, institution_id };
 }
 
-export const adjustScheduleToCurrentMonth = (
-  lessons: { title: string; start: Date | string; end: Date | string }[]
-): { title: string; start: Date; end: Date }[] => {
-  const now = new Date();
-  const currentMonth = now.getMonth(); // Geçerli ay
-  const currentYear = now.getFullYear(); // Geçerli yıl
+export const adjustScheduleToCurrentMonth = (data: {
+  day: string;
+  start: { getHours: () => number; getMinutes: () => number | undefined };
+  end: { getHours: () => number; getMinutes: () => number | undefined };
+  title: any;
+}[]) => {
+  const currentDate = new Date();
+  const currentYear = currentDate.getFullYear();
+  const currentMonth = currentDate.getMonth();
+  
+  const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
+  const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0);
+  
+  const dayOfWeekMap: { [key: string]: number } = {
+    Sunday: 0,
+    Monday: 1,
+    Tuesday: 2,
+    Wednesday: 3,
+    Thursday: 4,
+    Friday: 5,
+    Saturday: 6,
+  };
 
-  return lessons.map((lesson) => {
-    // Başlangıç ve bitiş zamanlarını Date nesnesine çevir
-    const lessonStart = new Date(lesson.start);
-    const lessonEnd = new Date(lesson.end);
+  // Manuel saat düzeltme miktarı
+  const hourAdjustment = -2;
 
-    // UTC'den İstanbul'a dönüştürmek için 3 saat geri alıyoruz
-    lessonStart.setHours(lessonStart.getHours() - 3);
-    lessonEnd.setHours(lessonEnd.getHours() - 3);
+  let allEvents: any[] = [];
 
-    // Yeni başlangıç tarihini oluştur, gün ve saati koruyarak
-    const adjustedStart = new Date(lessonStart);
-    adjustedStart.setFullYear(currentYear); // Geçerli yılı ayarla
-    adjustedStart.setMonth(currentMonth); // Geçerli ayı ayarla
+  data.forEach((lesson) => {
+    const dayOfWeek = dayOfWeekMap[lesson.day];
+    let currentDay = new Date(firstDayOfMonth);
+    
+    while (currentDay <= lastDayOfMonth) {
+      if (currentDay.getDay() === dayOfWeek) {
+        const startDateTime = new Date(currentDay);
+        const endDateTime = new Date(currentDay);
+        
+        // Saatleri manuel olarak ayarla
+        startDateTime.setHours(
+          lesson.start.getHours() + hourAdjustment,
+          lesson.start.getMinutes() || 0,
+          0,
+          0
+        );
+        endDateTime.setHours(
+          lesson.end.getHours() + hourAdjustment,
+          lesson.end.getMinutes() || 0,
+          0,
+          0
+        );
 
-    // Yeni bitiş tarihini oluştur, gün ve saati koruyarak
-    const adjustedEnd = new Date(lessonEnd);
-    adjustedEnd.setFullYear(currentYear); // Geçerli yılı ayarla
-    adjustedEnd.setMonth(currentMonth); // Geçerli ayı ayarla
-
-    // Başlangıç ve bitiş saatini aynı bırak
-    adjustedStart.setHours(lessonStart.getHours(), lessonStart.getMinutes(), lessonStart.getSeconds());
-    adjustedEnd.setHours(lessonEnd.getHours(), lessonEnd.getMinutes(), lessonEnd.getSeconds());
-
-    return {
-      title: lesson.title,
-      start: adjustedStart,
-      end: adjustedEnd,
-    };
+        allEvents.push({
+          title: lesson.title,
+          start: startDateTime,
+          end: endDateTime,
+        });
+      }
+      currentDay.setDate(currentDay.getDate() + 1);
+    }
   });
+
+  return allEvents.sort((a, b) => a.start.getTime() - b.start.getTime());
 };
 
 

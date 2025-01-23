@@ -173,12 +173,7 @@ const singleClassPage = async ({
                                 >
                                     Class&apos;s Assignments
                                 </Link>
-                                <Link
-                                    className="p-3 rounded-md bg-lamaYellowLight"
-                                    href={`/list/schedule?classId=${classModel?.id}`}
-                                >
-                                    Class&apos;s Schedules
-                                </Link>
+                             
                             </div>
                         </div>
                         {/* PERFORMANCE */}

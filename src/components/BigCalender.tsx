@@ -28,6 +28,8 @@ const BigCalendar = ({
 }) => {
   const [view, setView] = useState<View>(Views.WEEK);
 
+  console.log("dataaaa" , data); 
+
   
 
 

@@ -190,13 +190,25 @@ const columns = [
   // if we have teacher role, we filter the data according to the teacher id from teacher_classes to student_classes
   switch (role) {
     case "admin":
-      query.student_institution = {
+  query.AND = [
+    {
+      student_institution: {
         some: {
           institution_id: parseInt(institution_id),
         },
-      };
-      break; // Admin case'i burada bitiyor
-  
+      }
+    },
+    {
+      student_class: {
+        some: {
+          classes: {
+            institution_id: parseInt(institution_id),
+          },
+        },
+      }
+    }
+  ];
+  break;
       case "teacher":
         query.student_class = {
           some: {
@@ -231,7 +243,16 @@ const columns = [
       student_class: { // we define in prisma table that teacher_subjects and teacher_classes are arrays
         include: {
           classes: true
-        }
+        },
+        ...(role === "admin"
+          ? {
+              where: {
+                classes: {
+                  institution_id: parseInt(institution_id), // Admin için institution_id filtresi
+                },
+              },
+            }
+          : {}),
       },
       parent_student: {
         include: {
@@ -248,6 +269,7 @@ const columns = [
     where: query,
   }),
   ]);
+
 
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">

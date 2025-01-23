@@ -110,237 +110,273 @@ const columns = [
 ];
 
 
-const renderRow = (item: AssignmentList, role:string) => (
-  <tr
-    key={item.id}
-    className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
-  >
 
-    <td className="hidden md:table-cell">
-      {item.subjects ? (
-        <span
-        className={`${subjectColors[item.subjects.subject_name as subject_name]} py-1 px-3 rounded-full`}
-        >
-          {item.subjects.subject_name}
-        </span>
-      ) : (
-        "No subject assigned"
-      )}
-    </td>  
-    <td className="hidden md:table-cell">
-      {item.assignment_class?.map((class_item: { classes: classes }, index: number) => (
-        <span key={class_item.classes.id}>
-          {class_item.classes.class_code}
-          {index < item.assignment_class.length - 1 && ', '}
-        </span>
-      ))}
-    </td>  
+const renderRow = (item: AssignmentList, role: string) => {
+  // Şu anki tarihi alalım
+  const currentDate = new Date();
+  
+  // Deadline tarihini karşılaştırma için Date objesine çevirelim
+  const deadlineDate = new Date(item.deadline_date);
 
-    <td className="hidden md:table-cell">
-      {item.subjects ? (
-        <span
-        className={`${statusColors[item.status as keyof typeof statusColors] || 'bg-gray-500'} text-white py-1 px-3 rounded-full`}
-        >
-          {item.status}
-        </span>
-      ) : (
-        "No status assigned"
-      )}
-    </td> 
-    <td className="hidden md:table-cell">
-      {new Date(item.start_date).toLocaleDateString("tr-TR", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      })}
-    </td>    
-       <td className="hidden md:table-cell"> {new Date(item.deadline_date).toLocaleDateString("tr-TR", {
+  // Deadline tarihi geçmişse kırmızı, değilse normal stil
+  const deadlineStyle = deadlineDate < currentDate ? "text-red-500" : "text-green-600"; // Kırmızı ya da normal
+
+  return (
+    <tr
+      key={item.id}
+      className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
+    >
+      <td className="hidden md:table-cell">
+        {item.subjects ? (
+          <span
+            className={`${subjectColors[item.subjects.subject_name as subject_name]} py-1 px-3 rounded-full`}
+          >
+            {item.subjects.subject_name}
+          </span>
+        ) : (
+          "No subject assigned"
+        )}
+      </td>
+
+      <td className="hidden md:table-cell">
+        {item.assignment_class?.map((class_item: { classes: classes }, index: number) => (
+          <span key={class_item.classes.id}>
+            {class_item.classes.class_code}
+            {index < item.assignment_class.length - 1 && ', '}
+          </span>
+        ))}
+      </td>
+
+      <td className="hidden md:table-cell">
+        {item.subjects ? (
+          <span
+            className={`${statusColors[item.status as keyof typeof statusColors] || 'bg-gray-500'} text-white py-1 px-3 rounded-full`}
+          >
+            {item.status}
+          </span>
+        ) : (
+          "No status assigned"
+        )}
+      </td>
+
+      <td className="hidden md:table-cell">
+        {new Date(item.start_date).toLocaleDateString("tr-TR", {
           year: "numeric",
           month: "long",
           day: "numeric",
         })}
       </td>
+
+      <td className={`hidden md:table-cell ${deadlineStyle}`}>
+        {new Date(item.deadline_date).toLocaleDateString("tr-TR", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        })}
+      </td>
+
       <td className="hidden md:table-cell">
-  {item.assignment_document?.map((document_item: { documents: documents }) => (
-    <div className="flex items-center gap-2" key={document_item.documents.id}>
-      {document_item.documents.content ? (
-        (() => {
-          // Uint8Array'yi Base64 string'e dönüştür
-          const base64String = Buffer.from(document_item.documents.content).toString();
-          const href = `data:application/pdf;base64,${base64String}`;
+        {item.assignment_document?.map((document_item: { documents: documents }) => (
+          <div className="flex items-center gap-2" key={document_item.documents.id}>
+            {document_item.documents.content ? (
+              (() => {
+                // Uint8Array'yi Base64 string'e dönüştür
+                const base64String = Buffer.from(document_item.documents.content).toString();
+                const href = `data:application/pdf;base64,${base64String}`;
 
-          return (
-            <>
-              <span>{document_item.documents.name}</span>
-              <a
-                href={href}
-                download={document_item.documents.name}
-                className="text-red-500 hover:text-red-700 flex items-center"
-              >
-                <FaFilePdf size={24} />
-              </a>
-            </>
-          );
-        })()
-      ) : (
-        <span>No content available</span>
-      )}
-    </div>
-  ))}
-</td>
+                return (
+                  <>
+                    <span>{document_item.documents.name}</span>
+                    <a
+                      href={href}
+                      download={document_item.documents.name}
+                      className="text-red-500 hover:text-red-700 flex items-center"
+                    >
+                      <FaFilePdf size={24} />
+                    </a>
+                  </>
+                );
+              })()
+            ) : (
+              <span>No content available</span>
+            )}
+          </div>
+        ))}
+      </td>
+
       <div className="flex items-center gap-2">
-
         <Link href={`/list/assignments/${item.id}`}>
-            <button className="w-7 h-7 flex items-center justify-center rounded-full bg-lamaSky">
-              <Image src="/view.png" alt="" width={16} height={16} />
-            </button>
-          </Link>
-        {role === "teacher"  && (
+          <button className="w-7 h-7 flex items-center justify-center rounded-full bg-lamaSky">
+            <Image src="/view.png" alt="" width={16} height={16} />
+          </button>
+        </Link>
+        {role === "teacher" && (
           <>
-              <FormContainer table="assignment" type="update" data={item} />
-              <FormContainer table="assignment" type="delete" id={item.id} />
+            <FormContainer table="assignment" type="update" data={item} />
+            <FormContainer table="assignment" type="delete" id={item.id} />
           </>
         )}
       </div>
-  </tr>
-);
+    </tr>
+  );
+};
 
 
 
 
-  // we get the page number from the searchParams, if there is no page number, we set it to 1
-  const { page, ...queryParams } = searchParams as { [key: string]: string };
-  const p = page ? parseInt(page) : 1; 
 
-  // we define a query, which is an object, we will use it for getting the data. Its prisma feature for filtering the data
-  const query:Prisma.assignmentsWhereInput = {}
-  if (queryParams) {
-    for (const [key, value] of Object.entries(queryParams)) {
-      if (value === "") continue;
-      
-      switch (key) {
-        case "search":
-          // Boş string kontrolü
-          if (!value) break;
-          
-          query.OR = [
-            // Header araması
-            {
-              header: {
-                contains: value,
-                mode: "insensitive",
-              }
-            },
-           
-            // Class code araması
-            {
-              assignment_class: {
-                some: {
-                  classes: {
-                    class_code: {
-                      contains: value,
-                      mode: "insensitive",
-                    }
-                  }
-                }
-              }
+const { page, ...queryParams } = searchParams as { [key: string]: string };
+const p = page ? parseInt(page) : 1;
+
+const query: Prisma.assignmentsWhereInput = {};
+let searchConditions: any[] = [];
+let roleConditions: any[] = [];
+
+// Handle search conditions
+if (queryParams.search) {
+  searchConditions = [
+    {
+      header: {
+        contains: queryParams.search,
+        mode: "insensitive",
+      }
+    },
+    {
+      assignment_class: {
+        some: {
+          classes: {
+            class_code: {
+              equals: queryParams.search.trim(), // Changed from contains to equals
+              mode: "insensitive",
             }
-          ];
-          
-           // Status araması sadece geçerli bir status değeri ise eklensin
-        if (Object.values(assignmentstatus).includes(value as assignmentstatus)) {
-          query.status = value as assignmentstatus;
-        }
-  
-          // Eğer geçerli bir tarih ise, tarih araması da ekle
-          if (!isNaN(Date.parse(value))) {
-            query.OR.push({
-              start_date: {
-                gte: new Date(value)
-              }
-            });
-          }
-          
-          break;
-
-      case "classId":
-        query.assignment_class = {
-          some: {
-            class_id: parseInt(value)
           }
         }
-        break;
       }
     }
-  
+  ];
+
+  // Status araması sadece geçerli bir status değeri ise
+  if (Object.values(assignmentstatus).includes(queryParams.search as assignmentstatus)) {
+    searchConditions.push({
+      status: queryParams.search as assignmentstatus
+    });
   }
 
-  // We filter the data according to the role of the user
-  switch (role) {
-    case "admin":
-      // filter that institution_id is equal to all assignment class and assignment_student's student institution_id
-      query.OR = [
-        {
-          assignment_class: { some: { classes: { institution_id: parseInt(institution_id) } } },
-        },
-        {
-          assignment_student: { some: { students: { student_institution: { some: { institution_id: parseInt(institution_id) } } } } },
-        },
-      ];
-      break;
-  
-    // If the user is a teacher, we filter the data according to the teacher's id
-    case "teacher":
-      query.assignee_type = "TEACHER"; // Öğretmenlerin atadığı ödevler
-      query.assignee_id = parseInt(current_user_id); // Giriş yapan öğretmenin id'si
-      break;
+  // Tarih araması için geçerli tarih kontrolü
+  if (!isNaN(Date.parse(queryParams.search))) {
+    searchConditions.push({
+      start_date: {
+        gte: new Date(queryParams.search)
+      }
+    });
   }
-            
-  // transactions are used to execute multiple queries at once. We get the data and the count of the data together. We using studentsData for rendering the table data and count for pagination
-    const [assignmentsData, count] = await prisma.$transaction([
-      prisma.assignments.findMany({
-        where: {
-          ...query, // Include any other filters from your query
-          deadline_date: {
-            gte: new Date(), // Only include assignments with a deadline greater than or equal to the current date
-          },
+}
+
+// Handle other query parameters
+if (queryParams.classId) {
+  query.assignment_class = {
+    some: {
+      class_id: parseInt(queryParams.classId)
+    }
+  };
+}
+
+// Role based conditions
+switch (role) {
+  case "admin":
+    roleConditions = [
+      {
+        assignment_class: { 
+          some: { 
+            classes: { 
+              institution_id: parseInt(institution_id) 
+            } 
+          } 
         },
+      },
+      {
+        assignment_student: { 
+          some: { 
+            students: { 
+              student_institution: { 
+                some: { 
+                  institution_id: parseInt(institution_id) 
+                } 
+              } 
+            } 
+          } 
+        },
+      },
+    ];
+    break;
+
+  case "teacher":
+    query.assignee_type = "TEACHER";
+    query.assignee_id = parseInt(current_user_id);
+    break;
+}
+
+// Combine conditions
+if (searchConditions.length > 0 && roleConditions.length > 0) {
+  // Both search and role conditions exist
+  query.AND = [
+    { OR: searchConditions },
+    { OR: roleConditions }
+  ];
+} else if (searchConditions.length > 0) {
+  // Only search conditions exist
+  query.OR = searchConditions;
+} else if (roleConditions.length > 0) {
+  // Only role conditions exist
+  query.AND = roleConditions;
+}
+
+// Add date filter
+const currentDate = new Date();
+const oneMonthAgo = new Date(currentDate.setMonth(currentDate.getMonth() - 1));
+
+// Use the query in transaction
+const [assignmentsData, count] = await prisma.$transaction([
+  prisma.assignments.findMany({
+    where: {
+      ...query,
+      deadline_date: {
+        gte: oneMonthAgo,
+      },
+    },
+    include: {
+      subjects: true,
+      assignment_class: {
         include: {
-          subjects: true, // subjects ilişkisini dahil ediyoruz
-          assignment_class: { // assignment_class ilişkisini dahil ediyoruz
-            include: {
-              classes: true, // classes ilişkisini dahil ediyoruz
-            }
-          },
-          assignment_student: { // assignment_student ilişkisini dahil ediyoruz
-            include: {
-              students: true, // students ilişkisini dahil ediyoruz
-            }
-        },
-        assignment_document: {
-          include: {
-            documents: true,
-          }
+          classes: true,
         }
-
-        },
-        take: ITEM_PER_PAGE, // Sayfa başına gösterilecek öğe sayısı
-        skip: (p - 1) * ITEM_PER_PAGE, // Sayfalama işlemi için verileri atlamak
-        orderBy: {
-          deadline_date: "asc", // Sıralama işlemi
-        },
-      }),
-      
-      // assignments tablosunun toplam sayısını alıyoruz
-      prisma.assignments.count({
-        where: {
-          ...query, // Apply the same filtering criteria
-          deadline_date: {
-            gte: new Date(), // Same filter for counting future assignments
-          },
-        },
-      }),
-    ]);
+      },
+      assignment_student: {
+        include: {
+          students: true,
+        }
+      },
+      assignment_document: {
+        include: {
+          documents: true,
+        }
+      }
+    },
+    take: ITEM_PER_PAGE,
+    skip: (p - 1) * ITEM_PER_PAGE,
+    orderBy: {
+      deadline_date: "asc",
+    },
+  }),
+  prisma.assignments.count({
+    where: {
+      ...query,
+      deadline_date: {
+        gte: oneMonthAgo,
+      },
+    },
+  }),
+]);
 
     
   return (

@@ -158,6 +158,11 @@ const handleRemoveParent = (index: number) => {
         {errors.class_id?.message && <p className="text-xs text-red-400">{errors.class_id.message}</p>}
       </div>
 
+      {/* Student School No */}
+      <InputField label="School No" name="school_no" register={register} error={errors?.school_no} />
+
+      {/* Student Information */}
+
       {/* Parent Information */}
       <span className="text-sm text-gray-400 font-medium">Add Parents</span>
       {formParents.map((parent, index) => (

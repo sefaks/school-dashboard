@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { useFormState } from 'react-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { AnnouncementSchema, TeacherSchema, announcementSchema, teacherSchema } from '@/lib/formValidationSchemas';
-import { addTeacherToInstitution, createAnnouncementAdmin, createAnnouncementTeacher, updateAnnouncementTeacher, updateTeacher } from '@/lib/actions';
+import { addTeacherToInstitution, createAnnouncementAdmin, createAnnouncementTeacher, updateAnnouncementAdmin, updateAnnouncementTeacher, updateTeacher } from '@/lib/actions';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
 import InputField from '../InputField';
@@ -57,7 +57,7 @@ const AnnouncementForm = ({
             const response =
               type === "create"
                 ? await createAnnouncementAdmin(parsedData, parsedData.token)
-                : await updateTeacher(parsedData);
+                : await updateAnnouncementAdmin(parsedData, parsedData.token, data.id);
   
             // Başarı durumunu dönüyoruz
             return {

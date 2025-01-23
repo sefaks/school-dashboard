@@ -19,6 +19,7 @@ type AnnouncementList =announcements & {
   announcement_teachers: Array<{  // in here, we define with array because a teacher can have multiple classes
     teachers: teachers 
   }>; // its defining teacher's classes
+ // its defining teacher's subjects
   
 };
 
@@ -231,25 +232,7 @@ const AnnouncementListPage =  async ({searchParams}:{searchParams:{[key:string]:
           },
         },
         {
-          announcement_parents: {
-            some: {
-              parents: {
-               parent_student: {
-                  some: {
-                    students: {
-                      student_institution: {
-                        some: {
-                          institution_id: {
-                            equals: parseInt(institution_id),
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
+      
         },
       ];
   }
@@ -262,49 +245,52 @@ const AnnouncementListPage =  async ({searchParams}:{searchParams:{[key:string]:
     const publisher = publisherMap[item.publisher_type]?.[item.publisher_id];
   
     if (publisher) {
-      publisherName = item.publisher_type === "ADMIN" ? publisher.name : `${publisher.name ?? ''} `;
+      publisherName = item.publisher_type === "ADMIN" 
+        ? publisher.name 
+        : `${publisher.name ?? ''}`; // Teacher için ismi kontrol ediyoruz
     } else {
-      publisherName = "Unknown Publisher";
+      publisherName = "Unknown Publisher"; // Eğer bulunamazsa
     }
-
+  
     return (
-    <tr
-      key={item.id}
-      className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
-    >
-      <td className="flex items-center gap-4 p-4">
-        {item.publisher_type === "TEACHER" && (
-          <span>
-
-
-          </span>
-        )}
-      </td>
-      <td>{item.title}</td>
-      <td>{item.content}</td>
-          <td className="hidden md:table-cell">
-      {item.created_at ? (
-        new Date(new Date(item.created_at).setHours(new Date(item.created_at).getHours() - 3)).toLocaleDateString("tr-TR", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-          hour: "numeric",
-          minute: "numeric",
-        })
-      ) : null}
-    </td>
-
-      <td>
-        <div className="flex items-center gap-2">
+      <tr
+        key={item.id}
+        className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
+      >
+        <td className="flex items-center gap-4 p-4">
+          {item.publisher_type === "TEACHER" && (
+            <span>{publisherName}</span> 
+          )}
+          {item.publisher_type === "ADMIN" && (
+            <span>{publisherName}</span>  
+          )}
+        </td>
+        <td>{item.title}</td>
+        <td>{item.content}</td>
+        <td className="hidden md:table-cell">
+          {item.created_at ? (
+            new Date(new Date(item.created_at).setHours(new Date(item.created_at).getHours() - 3)).toLocaleDateString("tr-TR", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+              hour: "numeric",
+              minute: "numeric",
+            })
+          ) : null}
+        </td>
+  
+        <td>
+          <div className="flex items-center gap-2">
             <>
               <FormContainer table="announcement" type="update" data={item} />
               <FormContainer table="announcement" type="delete" id={item.id} />
             </>
-        </div>
-      </td>
-    </tr>
-  );
-  }
+          </div>
+        </td>
+      </tr>
+    );
+  };
+  
 
   const [announcements_data, count] = await prisma.$transaction([
     prisma.announcements.findMany({

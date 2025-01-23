@@ -11,19 +11,42 @@ const BigCalendarContainer = async ({
   type: "teacher_id" | "class_id";
   id: number;
 }) => {
-  let whereCondition;
+  
+  let activeSchedules: any[] = [];
 
-  if (type === "teacher_id") {
-    // Eğer teacher_id üzerinden erişiyorsak
-    whereCondition = { teacher_id: id };
-  } else if (type === "class_id") {
-    // Eğer class_id üzerinden erişiyorsak
-    const activeSchedules = await prisma.schedules.findMany({
+  if (type === "class_id") {
+    activeSchedules = await prisma.schedules.findMany({
       where: {
-        class_id: id, // class_id eşleşmesi
-        status: "ACTIVE", // Sadece aktif schedule'lar
+        class_id: id,
+        status: "ACTIVE",
       },
     });
+  }  else if (type === "teacher_id") {
+    // teacher_id ile ilgili işlem
+    // 1. İlk önce teacher'a ait sınıfları buluyoruz.
+    const teacherClasses = await prisma.teacher_class.findMany({
+      where: {
+        teacher_id: id, // Belirli bir öğretmene ait sınıflar
+      },
+      include: {
+       classes: true,
+      },
+    });
+
+    const classIds = teacherClasses.map((teacherClass) => teacherClass.class_id);
+
+    // 2. Sınıflara ait aktif schedule'ları buluyoruz
+    activeSchedules = await prisma.schedules.findMany({
+      where: {
+        class_id: {
+          in: classIds,
+        },
+        status: "ACTIVE",
+      },
+    });
+
+  }
+
 
     // Eğer aktif schedule yoksa lesson_schedules sorgusu yapmayacağız
     if (activeSchedules.length === 0) {
@@ -37,12 +60,11 @@ const BigCalendarContainer = async ({
     // Aktif schedule ID'lerini al
     const scheduleIds = activeSchedules.map((schedule) => schedule.id);
 
-    whereCondition = {
-      schedule_id: {
-        in: scheduleIds, // Sadece aktif schedule'lara ait lesson_schedules
-      },
-    };
-  }
+   const whereCondition = {
+  schedule_id: {
+    in: scheduleIds, // Sadece aktif schedule'lara ait lesson_schedules
+  },
+};
 
   // Lesson schedules verisini getir
   const dataRes = await prisma.lesson_schedules.findMany({
@@ -50,6 +72,7 @@ const BigCalendarContainer = async ({
     include: {
       lessons: true,
       teachers: true,
+      schedules: true,
     },
   });
   
@@ -57,11 +80,14 @@ const BigCalendarContainer = async ({
     title: lesson_schedule.lessons.name,
     start: lesson_schedule.start_time,
     end: lesson_schedule.end_time,
+    day: lesson_schedule.day_of_week,
   }));
+
 
 
   // Veriyi mevcut aya göre düzenle
   const schedule = adjustScheduleToCurrentMonth(data);
+
 
 
   return (

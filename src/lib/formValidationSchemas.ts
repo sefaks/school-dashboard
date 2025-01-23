@@ -8,6 +8,8 @@ export const studentSchema = z.object({
       z.string().transform(val => Number(val)),
       z.number()
     ]),
+    // school_no is optional
+    school_no: z.string().optional(),
     parents: z
       .array(
         z.object({

@@ -10,6 +10,14 @@ import axios from "axios";
 
 const API_BASE_URL = "http://127.0.0.1:8000";
 
+interface FileWithBase64 {
+  name: string;
+  type: string;
+  size: number;
+  lastModified: number;
+  base64: string;
+}
+
 
 export const addStudentToInstitution = async (formData: StudentSchema, token: string) => {
     try {
@@ -221,32 +229,77 @@ export const updateClass = async (formData: ClassSchema, token: string, class_id
 }
 
 
-export const addAssignment = async (formData: AssignmentSchema, token: string) => {
-
-  try {
-    const response = await axios.post(`${API_BASE_URL}/teachers/create-assignment`, formData, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    return response.data;
-  } catch (error: any) {
-    console.error("Error details:", error);
-
-    if (error.response) {
-      console.error("API Error:", error.response.data);
-      throw new Error(error.response.data.detail || "Failed to add assignment!");
-    } else if (error.request) {
-      console.error("No response received from server:", error.request);
-      throw new Error("No response from server.");
-    } else {
-      console.error("Error during setup:", error.message);
-      throw new Error("An unexpected error occurred!");
+export const addAssignment = async (
+  formData: Omit<AssignmentSchema, 'documents'>,
+  files: FileWithBase64[] | null,
+  token: string
+) => {
+  const requestData = new FormData();
+  
+  requestData.append('start_date', new Date(formData.start_date).toISOString().split('.')[0]);
+  requestData.append('deadline_date', new Date(formData.deadline_date).toISOString().split('.')[0]);
+  
+  
+  if (formData.description) {
+      requestData.append('description', formData.description);
+  }
+  
+  if (formData.subject_id) {
+      requestData.append('subject_id', formData.subject_id.toString());
+  }
+  
+  if (formData.class_ids && formData.class_ids.length > 0) {
+      requestData.append('class_ids', formData.class_ids.join(','));
+  }
+  
+  if (formData.student_ids && formData.student_ids.length > 0) {
+      requestData.append('student_ids', formData.student_ids.join(','));
+  }
+  
+  // Dosya varsa ekle
+  if (files && files.length > 0) {
+    for (const file of files) {
+      // Convert base64 to Blob
+      const blob = base64ToBlob(file.base64);
+      requestData.append('files', blob, file.name);
     }
   }
+
+  console.log("files",files);
+
+  try {
+      const response = await axios.post(
+          `${API_BASE_URL}/teachers/create-assignment`,
+          requestData,
+          {
+              headers: {
+                  "Content-Type": "multipart/form-data",
+                  Authorization: `Bearer ${token}`,
+              }
+          }
+      );
+      return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.error("API Error:", error.response?.data);
+      throw error.response?.data || error;
+    }
+    console.error("Non-API Error:", error);
+    throw error;
+  }
+
 }
+
+const base64ToBlob = (base64: string): Blob => {
+  const byteCharacters = atob(base64.split(',')[1]);
+  const byteNumbers = new Array(byteCharacters.length);
+  for (let i = 0; i < byteCharacters.length; i++) {
+    byteNumbers[i] = byteCharacters.charCodeAt(i);
+  }
+  const byteArray = new Uint8Array(byteNumbers);
+  return new Blob([byteArray], { type: 'application/octet-stream' });
+};
+
 
 export const updateAssignment = async (formData: AssignmentSchema, token: string, assignment_id:number) => {
   try {
@@ -435,6 +488,34 @@ export const activateTeacher = async (formData: any, token: string) => {
 export const updateAnnouncementTeacher = async (formData: AnnouncementSchema, token: string, announcementId: number) => {
   try {
     const response = await axios.patch(`${API_BASE_URL}/teachers/me/update-announcement/${announcementId}`, formData, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return response.data;
+  } catch (error: any) {
+    console.error("Error details:", error);
+
+    if (error.response) {
+      console.error("API Error:", error.response.data);
+      throw new Error(error.response.data.detail || "Failed to update announcement!");
+    } else if (error.request) {
+      console.error("No response received from server:", error.request);
+      throw new Error("No response from server.");
+    } else {
+      console.error("Error during setup:", error.message);
+      throw new Error("An unexpected error occurred!");
+    }
+  }
+}
+
+
+export const updateAnnouncementAdmin = async (formData: AnnouncementSchema, token: string, announcementId: number) => {
+
+  try {
+    const response = await axios.patch(`${API_BASE_URL}/admins/me/update-announcement/${announcementId}`, formData, {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,

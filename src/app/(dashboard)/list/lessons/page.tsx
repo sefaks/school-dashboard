@@ -32,21 +32,17 @@ const renderRow = (item: LessonsList, role:string) => (
           day: "numeric",
         })}</td>
     <td className="hidden md:table-cell">
+     {/* comment 
       {item.teacher_lesson.map((teacher_item: { teachers: teachers }, index: number) => (
         <span key={teacher_item.teachers.id}>
           {teacher_item.teachers.name}
           {index < item.teacher_lesson.length - 1 && ', '}
         </span>
-      ))}
+      ))} */}
     </td>    
     <td>
       <div className="flex items-center gap-2">
-        {role === "admin" && (
-          <>
-            <FormModal table="lesson" type="update" data={item} />
-            <FormModal table="lesson" type="delete" id={item.id} />
-          </>
-        )}
+     
       </div>
     </td>
   </tr>
@@ -73,19 +69,8 @@ const columns = [
     header: "Curriculum Year",
     accessor: "year",
   },
- 
-  {
-    header: "Teachers",
-    accessor: "teacher",
-    className: "hidden md:table-cell",
-  },
   // actions for admin role
-  {
-    ...role === "admin" && {
-      header: "Actions",
-      accessor: "action",
-    },
-  }  
+
 
 
 ];

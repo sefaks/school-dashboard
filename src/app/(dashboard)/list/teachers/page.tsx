@@ -165,6 +165,18 @@ if (queryParams) {
           { surname: { contains: value, mode: "insensitive" } },
           { title: { contains: value, mode: "insensitive" } },
           { phone_number: { contains: value, mode: "insensitive" } },
+          {teacher_class: {
+            some: {
+              classes: {
+                class_code: {
+                  contains: value,
+                  mode: "insensitive",
+                },
+              },
+            },
+          }
+        },
+
         ];
         break;
 
@@ -200,6 +212,7 @@ if (queryParams) {
 
 switch (role) {
   case "admin":
+   // Eğer admin ise, sadece kendi kurumundaki öğretmenleri getir.
     query.teacher_institution = {
       some: {
         institution_id: parseInt(institution_id),
@@ -220,9 +233,6 @@ switch (role) {
         },
       };
       break;
-   
-
-
 
   default:
     break;
@@ -235,7 +245,20 @@ const [teachersData, count] = await prisma.$transaction([
     where: query,
     include: {
       teacher_subject: { include: { subjects: true } },
-      teacher_class: { include: { classes: true } },
+      teacher_class: { // we define in prisma table that teacher_subjects and teacher_classes are arrays
+        include: {
+          classes: true
+        },
+        ...(role === "admin"
+          ? {
+              where: {
+                classes: {
+                  institution_id: parseInt(institution_id), // Admin için institution_id filtresi
+                },
+              },
+            }
+          : {}),
+      }
     },
     take: ITEM_PER_PAGE,
     skip: (p - 1) * ITEM_PER_PAGE,
@@ -244,6 +267,9 @@ const [teachersData, count] = await prisma.$transaction([
     where: query, // Sadece query kullanıyoruz
   }),
 ]);
+
+
+  console.log(teachersData);
 
     
 
