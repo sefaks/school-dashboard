@@ -31,24 +31,24 @@ const AnnouncementListPage =  async ({searchParams}:{searchParams:{[key:string]:
 
   const columns = [
     {
-      header : "Publisher",
+      header : "Yayınlayan",
       accessor: "publisher",
     },
     {
-      header:"Title",
+      header:"Başlık",
       accessor: "title",
     },
   {
-    header: "Content",
+    header: "İçerik",
     accessor: "content",
   },
   {
-    header: "Date",
+    header: "Tarih",
     accessor: "date",
     className: "hidden md:table-cell",
   },
   {
-    header: "Actions",
+    header: "Aksiyonlar",
     accessor: "actions",
   },
 ];
@@ -354,7 +354,7 @@ const AnnouncementListPage =  async ({searchParams}:{searchParams:{[key:string]:
       {/* TOP */}
       <div className="flex items-center justify-between">
         <h1 className="hidden md:block text-lg font-semibold">
-          All Announcements
+          Tüm Duyurular
         </h1>
         <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
           <TableSearch />

@@ -12,12 +12,12 @@ const UnauthorizedPage = () => {
           {/* Logo ve Başlık */}
           <div className="flex justify-center items-center gap-4 mb-6">
             <img src="/5.png" alt="Logo" width={120} height={120} className="rounded-full shadow-lg" />
-            <h1 className="text-4xl font-extrabold text-gray-800">Unauthorized Access</h1>
+            <h1 className="text-4xl font-extrabold text-gray-800">Yetkisiz İşlem</h1>
           </div>
     
           {/* Mesaj */}
           <p className="text-lg text-gray-700 mb-6">
-            You do not have permission to view this page. Please contact the administrator or login with the appropriate credentials.
+            Bu sayfaya erişim yetkiniz bulunmamaktadır. Lütfen giriş yapınız.
           </p>
     
           {/* Yönlendirme Butonu */}
@@ -25,7 +25,7 @@ const UnauthorizedPage = () => {
             className="mt-4 px-8 py-3 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 focus:outline-none transition-all"
             onClick={() => router.push('/login')} // Kullanıcıyı login sayfasına yönlendir
           >
-            Go to Login
+          Giriş Yap
           </button>
         </div>
       </div>

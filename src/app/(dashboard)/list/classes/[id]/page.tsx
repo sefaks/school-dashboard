@@ -91,11 +91,11 @@ const singleClassPage = async ({
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <Image src="/student.png" alt="Students" width={14} height={20} />
-                                            <span>{classModel.student_class?.length || 0} Students</span>
+                                            <span>{classModel.student_class?.length || 0} Öğrenciler</span>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <Image src="/teacher.png" alt="Teachers" width={20} height={20} />
-                                            <span> Teachers</span>
+                                            <span> Öğretmenler</span>
                                         </div>
                                     </div>
                                 </div>
@@ -113,7 +113,7 @@ const singleClassPage = async ({
                                     />                        
                                         <div>
                                         <h1 className="text-xl font-semibold">{classModel.assignment_class?.length || 0}</h1>
-                                        <span className="text-sm text-gray-400">Subjects</span>
+                                        <span className="text-sm text-gray-400">Dersler</span>
                                     </div>
                                 </div>
                                 {/* TEACHERS CARD */}
@@ -126,7 +126,7 @@ const singleClassPage = async ({
                 className="w-6 h-6"
               />                                  <div>
                                         <h1 className="text-xl font-semibold">{classModel.class_code?.length || 0}</h1>
-                                        <span className="text-sm text-gray-400">Teachers</span>
+                                        <span className="text-sm text-gray-400">Öğretmenler</span>
                                     </div>
                                 </div>
                                 {/* STUDENTS CARD */}
@@ -139,7 +139,7 @@ const singleClassPage = async ({
                 className="w-6 h-6"
               />                                    <div>
                                         <h1 className="text-xl font-semibold">{classModel.student_class?.length || 0}</h1>
-                                        <span className="text-sm text-gray-400">Students</span>
+                                        <span className="text-sm text-gray-400">Öğrenciler</span>
                                     </div>
                                 </div>
                             </div>
@@ -153,25 +153,25 @@ const singleClassPage = async ({
                     <div className="w-full xl:w-1/3 flex flex-col gap-4">
                         {/* SHORTCUTS */}
                         <div className="bg-white p-4 rounded-md">
-                            <h1 className="text-xl font-semibold">Shortcuts</h1>
+                            <h1 className="text-xl font-semibold">Kısa Yollar</h1>
                             <div className="mt-4 flex gap-4 flex-wrap text-xs text-gray-500">
                                 <Link
                                     className="p-3 rounded-md bg-lamaSkyLight"
                                     href={`/list/students?classId=${classModel?.id}`}
                                 >
-                                    Class&apos;s Students
+                                    Sınıf&apos;ın Öğrencileri
                                 </Link>
                                 <Link
                                     className="p-3 rounded-md bg-lamaPurpleLight"
                                     href={`/list/teachers?classId=${classModel?.id}`}
                                 >
-                                    Class&apos;s Teachers
+                                    Sınıf&apos;s Öğretmenleri
                                 </Link>
                                 <Link
                                     className="p-3 rounded-md bg-pink-50"
                                     href={`/list/assignments?classId=${classModel?.id}`}
                                 >
-                                    Class&apos;s Assignments
+                                    Sınıf&apos;ın Ödevleri
                                 </Link>
                              
                             </div>

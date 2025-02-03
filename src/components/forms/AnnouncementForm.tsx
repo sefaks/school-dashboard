@@ -193,12 +193,12 @@ const AnnouncementForm = ({
     return (
         <form className="flex flex-col gap-8" onSubmit={handleSubmit(onSubmit)}>
           <h1 className="text-xl font-semibold">
-            {type === "create" ? "Create Announcement" : "Update Announcement"}
+            {type === "create" ? "Duyuru Oluştur" : "Duyuru Güncelle"}
           </h1>
     
           {/* Title Input */}
           <div>
-            <label className="block mb-2 text-sm font-medium">Title</label>
+            <label className="block mb-2 text-sm font-medium">Başlık</label>
             <input
               {...register("title", { required: "Title is required" })}
               className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
@@ -208,7 +208,7 @@ const AnnouncementForm = ({
     
           {/* Content Input */}
           <div>
-            <label className="block mb-2 text-sm font-medium">Content</label>
+            <label className="block mb-2 text-sm font-medium">İçerik</label>
             <textarea
               {...register("content", { required: "Content is required" })}
               className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
@@ -218,7 +218,7 @@ const AnnouncementForm = ({
     
           {/* Teachers Selection */}
           <div>
-            <label className="block mb-2 text-sm font-medium">Select Teachers</label>
+            <label className="block mb-2 text-sm font-medium">Öğretmen Seçimi</label>
             <select
               {...register("teacher_ids", { valueAsNumber: true })}  // valueAsNumber özelliği ile string'i number'a dönüştür
 
@@ -258,7 +258,7 @@ const AnnouncementForm = ({
     
           {/* Parents Selection */}
           <div>
-            <label className="block mb-2 text-sm font-medium">Select Parents</label>
+            <label className="block mb-2 text-sm font-medium">Veli Seçimi</label>
             <select
               {...register("parent_ids", { valueAsNumber: true })}  // valueAsNumber özelliği ile string'i number'a dönüştür
               className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
@@ -297,7 +297,7 @@ const AnnouncementForm = ({
     
           {/* Classes Selection */}
           <div>
-            <label className="block mb-2 text-sm font-medium">Select Classes</label>
+            <label className="block mb-2 text-sm font-medium">Sınıf Seçimi</label>
             <select
               {...register("class_ids", { valueAsNumber: true })}  // valueAsNumber özelliği ile string'i number'a dönüştür
               className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
@@ -339,7 +339,7 @@ const AnnouncementForm = ({
             className="bg-blue-400 text-white p-2 rounded-md disabled:opacity-50 mt-4"
             disabled={!isValid}
           >
-            {type === "create" ? "Create" : "Update"}
+            {type === "create" ? "Oluştur" : "Güncelle"}
           </button>
         </form>
       );

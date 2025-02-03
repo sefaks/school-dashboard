@@ -66,21 +66,21 @@ const ClassListPage = async ({searchParams}:{searchParams:{[key:string]:string} 
 
   const columns = [
     {
-      header: "Class Name",
+      header: "Sınıf İsmi",
       accessor: "name",
     },
     {
-      header: "Capacity",
+      header: "Kapasite",
       accessor: "capacity",
       className: "hidden md:table-cell",
     },
     {
-      header: "Grade",
+      header: "Seviye",
       accessor: "grade",
       className: "hidden md:table-cell",
     },
     {
-      header: "Teachers",
+      header: "Öğretmenler",
       accessor: "teachers",
       className: "hidden md:table-cell",
     },
@@ -205,7 +205,7 @@ const ClassListPage = async ({searchParams}:{searchParams:{[key:string]:string} 
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
       {/* TOP */}
       <div className="flex items-center justify-between">
-        <h1 className="hidden md:block text-lg font-semibold">All Classes</h1>
+        <h1 className="hidden md:block text-lg font-semibold">Tüm Sınıflar</h1>
         <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
           <TableSearch />
           <div className="flex items-center gap-4 self-end">

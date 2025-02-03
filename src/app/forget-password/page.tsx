@@ -83,13 +83,13 @@ const ResetPasswordPage = () => {
               />
             </svg>
           ) : null}
-          {loading ? "Sending..." : "Send Reset Link"}
+          {loading ? "Gönderiliyor..." : "Şifremi Sıfırla"}
         </button>
 
         {/* Link to login page */}
         <div className="flex flex-col gap-2 text-center">
           <a href="/login" className="text-sm text-blue-500 hover:underline">
-            Back to Login
+            Giriş yapmak için tıklayınız
           </a>
         </div>
       </form>

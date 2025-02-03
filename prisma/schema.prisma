@@ -24,6 +24,8 @@ model assignment_student {
   id                      Int                       @id @default(autoincrement())
   assignment_id           Int?
   student_id              Int?
+  status                  assignmentstatus?
+  created_at              DateTime?                 @db.Timestamp(6)
   assignments             assignments?              @relation(fields: [assignment_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   students                students?                 @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   test_student_assignment test_student_assignment[]
@@ -31,8 +33,8 @@ model assignment_student {
 
 model assignments {
   id                  Int                   @id @default(autoincrement())
-  start_date          DateTime              @db.Timestamptz(6)
-  deadline_date       DateTime              @db.Timestamptz(6)
+  start_date          DateTime              @db.Timestamp(6)
+  deadline_date       DateTime              @db.Timestamp(6)
   assignee_id         Int?
   assignee_type       assigneetype
   description         String?               @db.VarChar
@@ -44,6 +46,7 @@ model assignments {
   assignment_student  assignment_student[]
   subjects            subjects?             @relation(fields: [subject_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   comments            comments[]
+  student_submissions student_submissions[]
 
   @@index([id], map: "ix_assignments_id")
 }
@@ -53,7 +56,7 @@ model classes {
   class_code           String                 @unique @db.VarChar
   grade                Int
   institution_id       Int
-  announcement_classes announcement_classes[] 
+  announcement_classes announcement_classes[]
   assignment_class     assignment_class[]
   institutions         institutions           @relation(fields: [institution_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   schedules            schedules[]
@@ -79,13 +82,13 @@ model contents {
   id              Int               @id @default(autoincrement())
   unit_id         Int
   content_count   Int?
-  lesson_id       Int?
   content_name    String?           @db.VarChar
   level           Int?
   content_id      String            @unique @db.Uuid
   unit_no         Int
   order           Int?
-  lessons         lessons?          @relation(fields: [lesson_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  publish_id      Int
+  publishes       publishes         @relation(fields: [publish_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   units           units             @relation(fields: [unit_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   student_content student_content[]
 
@@ -98,6 +101,7 @@ model institutions {
   phone_number        String                @db.VarChar
   address             String?               @db.VarChar
   email               String?               @unique(map: "ix_institutions_email") @db.VarChar
+  validation_code     String?               @db.VarChar
   admins              admins[]
   classes             classes[]
   lessons             lessons[]
@@ -114,8 +118,8 @@ model lesson_schedules {
   id          Int       @id @default(autoincrement())
   lesson_id   Int
   schedule_id Int
-  start_time  DateTime  @db.Timetz(6)
-  end_time    DateTime  @db.Timetz(6)
+  start_time  DateTime  @db.Time(6)
+  end_time    DateTime  @db.Time(6)
   day_of_week dayofweek
   teacher_id  Int
   lessons     lessons   @relation(fields: [lesson_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -134,10 +138,10 @@ model lessons {
   subject_id       Int?
   description      String?            @db.VarChar
   lesson_image     String?            @db.VarChar
-  contents         contents[]
   lesson_schedules lesson_schedules[]
   institutions     institutions       @relation(fields: [institution_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   subjects         subjects?          @relation(fields: [subject_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  publish_lesson   publish_lesson[]
   teacher_lesson   teacher_lesson[]
 
   @@index([id], map: "ix_lessons_id")
@@ -167,10 +171,18 @@ model parents {
 }
 
 model questions {
-  id            Int             @id @default(autoincrement())
-  test_question test_question[]
+  id              Int          @id @default(autoincrement())
+  question_number Int?
+  test_id         Int?
+  question_type   questiontype
+  question_text   String?      @db.VarChar
+  options         Json?
+  correct_answers Json?
+  question_url    String?      @db.VarChar
+  tests           tests?       @relation(fields: [test_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([id], map: "ix_questions_id")
+  @@index([question_number], map: "ix_questions_question_number")
 }
 
 model schedules {
@@ -224,6 +236,8 @@ model students {
   student_class              student_class[]
   student_content            student_content[]
   student_institution        student_institution[]
+  student_submissions        student_submissions[]
+  student_tests              student_tests[]
 
   @@index([id], map: "ix_students_id")
 }
@@ -231,8 +245,10 @@ model students {
 model subjects {
   id              Int               @id @default(autoincrement())
   subject_name    subject_name
+  image           String?           @db.VarChar
   assignments     assignments[]
   lessons         lessons[]
+  publishes       publishes[]
   teacher_subject teacher_subject[]
   units           units[]
 
@@ -294,15 +310,6 @@ model teachers {
   @@index([phone_number], map: "ix_teachers_phone_number")
 }
 
-model test_question {
-  test_id     Int
-  question_id Int
-  questions   questions @relation(fields: [question_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  tests       tests     @relation(fields: [test_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-
-  @@id([test_id, question_id])
-}
-
 model test_student_assignment {
   test_id               Int
   assignment_student_id Int
@@ -320,10 +327,13 @@ model tests {
   id                      Int                       @id @default(autoincrement())
   name                    String?                   @db.VarChar(255)
   test_no                 Int?
-  unit_id                 Int
-  test_question           test_question[]
+  unit_id                 Int?
+  publish_id              Int
+  questions               questions[]
+  student_tests           student_tests[]
   test_student_assignment test_student_assignment[]
-  units                   units                     @relation(fields: [unit_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  publishes               publishes                 @relation(fields: [publish_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  units                   units?                    @relation(fields: [unit_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([id], map: "ix_tests_id")
   @@index([name], map: "ix_tests_name")
@@ -369,9 +379,10 @@ model announcement_classes {
   announcement_id Int
   class_id        Int
   announcements   announcements @relation(fields: [announcement_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  classes         classes      @relation(fields: [class_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  classes         classes     @relation(fields: [class_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@id([announcement_id, class_id])
+
 }
 
 model announcement_parents {
@@ -401,7 +412,7 @@ model announcements {
   is_active             Boolean?
   publisher_id          Int
   publisher_type        publishertype
-  announcement_classes  announcement_classes[] 
+  announcement_classes  announcement_classes[]  
   announcement_parents  announcement_parents[]
   announcement_teachers announcement_teachers[]
 
@@ -423,7 +434,9 @@ model documents {
   url                 String?               @db.VarChar
   uploaded_at         DateTime              @db.Timestamp(6)
   content             Bytes?
+  submission_id       Int?
   assignment_document assignment_document[]
+  student_submissions student_submissions?  @relation(fields: [submission_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([id], map: "ix_documents_id")
 }
@@ -450,6 +463,56 @@ model student_content {
   students   students  @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([id], map: "ix_student_content_id")
+}
+
+model publish_lesson {
+  lesson_id  Int
+  publish_id Int
+  lessons    lessons   @relation(fields: [lesson_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  publishes  publishes @relation(fields: [publish_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([lesson_id, publish_id])
+}
+
+model publishes {
+  id              Int              @id @default(autoincrement())
+  publisher       String           @db.VarChar
+  curriculum_year String           @db.VarChar
+  subject_id      Int
+  grade           Int
+  contents        contents[]
+  publish_lesson  publish_lesson[]
+  subjects        subjects         @relation(fields: [subject_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tests           tests[]
+
+  @@index([id], map: "ix_publishes_id")
+}
+
+model student_submissions {
+  id            Int         @id @default(autoincrement())
+  student_id    Int
+  assignment_id Int
+  submitted_at  DateTime    @default(now()) @db.Timestamp(6)
+  is_graded     Boolean?
+  feedback      String?     @db.VarChar
+  score         Int?
+  documents     documents[]
+  assignments   assignments @relation(fields: [assignment_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  students      students    @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([id], map: "ix_student_submissions_id")
+}
+
+model student_tests {
+  id         Int      @id @default(autoincrement())
+  student_id Int
+  test_id    Int
+  score      Int?
+  evaluation String?
+  students   students @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tests      tests    @relation(fields: [test_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([id], map: "ix_student_tests_id")
 }
 
 enum assigneetype {
@@ -532,4 +595,10 @@ enum publishertype {
 enum usertype {
   STUDENT
   TEACHER
+}
+
+enum questiontype {
+  MULTIPLE_CHOICE
+  TRUE_FALSE
+  OPEN_ENDED
 }

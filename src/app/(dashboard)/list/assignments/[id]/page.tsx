@@ -1,9 +1,13 @@
+import DownloadDocumentButton from "@/components/DownloadDocumentButton";
+import SubmissionFeedbackForm from "@/components/SubmissionFeedbackForm";
 import CommentForm from "@/components/forms/CommentForm";
 import EditCommentForm from "@/components/forms/EditCommentForm";
 import prisma from "@/lib/prisma";
 import { getRoleAndUserIdAndInstitutionId } from "@/lib/utils";
 import { assignments, classes, comments, documents } from "@prisma/client";
+import { DateTime } from "luxon";
 import Image from "next/image";
+import { FaFilePdf } from "react-icons/fa";
 
 const SingleAssignmentPage = async ({
     params: { id },
@@ -12,17 +16,35 @@ const SingleAssignmentPage = async ({
 }) => {
     const { role, current_user_id, institution_id } = await getRoleAndUserIdAndInstitutionId();
 
+    
+
     let assignment:
-        | (assignments & {
-              assignment_class: Array<{
-                  classes: classes;
-              }>;
-              assignment_document: Array<{
-                  documents: documents;
-              }>;
-              comments: comments[]; // Yorumlar burada sadece basic comment objesi
-          })
-        | null = null;
+    | (assignments & {
+          assignment_class: Array<{
+              classes: classes;
+          }>;
+          assignment_document: Array<{
+              documents: documents;
+          }>;
+          assignment_student: Array<{
+              students: {
+                  id: number;
+                  name: string;
+                  surname: string;
+                  student_submissions: Array<{
+                      id: number;
+                      submitted_at: DateTime | null;
+                      documents: Array<documents>; // Birden fazla doküman olabilir
+                      assignment_id: number;
+                      score: number | null;
+                      feedback: string | null;
+                      is_graded: boolean;
+                  }>;
+              };
+          }>;
+          comments: comments[]; // Yorumlar burada sadece basic comment objesi
+      })
+    | null = null;
 
     if (role === "admin" && institution_id) {
         assignment = await prisma.assignments.findUnique({
@@ -70,7 +92,38 @@ const SingleAssignmentPage = async ({
                         documents: true,
                     },
                 },
-                comments: true, // Yine sadece comment'ler çekilecek
+                assignment_student: {
+                    include: {
+                        students: {
+                            select: {
+                                id: true,
+                                name: true,
+                                surname: true,
+                                student_submissions: {
+                                    select: {
+                                        id: true,
+                                        submitted_at: true,
+                                        assignment_id: true,
+                                        feedback: true,
+                                        score: true,
+                                        is_graded: true,
+                                        documents: {
+                                            select: {
+                                                name: true,
+                                                url: true,
+                                                id: true,
+                                            },
+                                        },
+                                    },
+                                    orderBy: {
+                                        submitted_at: "desc",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+                comments: true, // Sadece yorumlar çekiliyor
             },
         });
     }
@@ -148,14 +201,14 @@ const SingleAssignmentPage = async ({
                                         viewBox="0 0 24 24"
                                         fill="none"
                                         stroke="currentColor"
-                                        strokeWidth="2"
+                                        strokeWidth="3"
                                         strokeLinecap="round"
                                         strokeLinejoin="round"
                                     >
                                         <circle cx="12" cy="12" r="10" />
                                         <polyline points="12 6 12 12 16 14" />
-                                    </svg>                      
-                                    {new Date(assignment.start_date).toLocaleDateString("tr-TR")} - {new Date(assignment.deadline_date).toLocaleDateString("tr-TR")}
+                                    </svg>  
+                                    <span className="text-md"> {new Date(assignment.start_date).toLocaleDateString("tr-TR")} - {new Date(assignment.deadline_date).toLocaleDateString("tr-TR")} </span>
                                     </div>
                                    
                                 </div>
@@ -164,7 +217,7 @@ const SingleAssignmentPage = async ({
                         </div>
 
                         <div className="bg-white p-6 rounded-md shadow">
-                            <h2 className="text-lg font-semibold">Assigned Classes</h2>
+                            <h2 className="text-lg font-semibold">Atanan Sınıflar</h2>
                             <ul className="mt-4 space-y-2">
                                 {assignment.assignment_class.map((classItem) => (
                                     <li key={classItem.classes.id} className="text-sm text-gray-700">
@@ -174,93 +227,227 @@ const SingleAssignmentPage = async ({
                             </ul>
                         </div>
 
+                        {/* Öğrenciler */}
+        <div className="bg-white p-6 rounded-md shadow relative ">
+        <h2 className="text-lg font-semibold">Öğrenci Teslimler</h2>
+        
+            <table className="w-full mt-4 min-w-[600px]">
+                <thead>
+                <tr className="bg-gray-100 text-left">
+                    <th className="p-2 text-sm sm:text-base">Öğrenci</th>
+                    <th className="p-2 text-sm sm:text-base">Durum</th>
+                    <th className="p-2 text-sm sm:text-base">Teslim Tarihi</th>
+                    <th className="p-2 text-sm sm:text-base">Döküman</th>
+                    <th className="p-2 text-sm sm:text-base">Not ve Geri Bildirim</th>
+
+                </tr>
+                </thead>
+                <tbody>
+                {assignment.assignment_student.map((studentItem) => (
+                    <tr key={studentItem.students.id} className="border-b">
+                    {/* Öğrenci Bilgisi */}
+                    <td className="p-2 whitespace-nowrap">
+                        {studentItem.students.name} {studentItem.students.surname}
+                    </td>
+
+                    {/* Teslim Durumu */}
+                    <td className="p-2 text-sm sm:text-base ">
+                        <span className="sm:hidden"> {/* Mobilde kısa versiyon */}
+              {studentItem.students.student_submissions
+                .filter(submission => submission.assignment_id === parseInt(id))
+                [0]?.submitted_at ? "✓" : "✗"}
+            </span>
+            <span className="hidden sm:inline"> {/* Normalde tam metin */}
+              {studentItem.students.student_submissions
+                .filter(submission => submission.assignment_id === parseInt(id))
+                [0]?.submitted_at ? "Teslim Edildi" : "Teslim Edilmedi"}
+            </span>
+                    </td>
+
+                    {/* Teslim Tarihi */}
+                    <td className="p-2">
+                        {studentItem.students.student_submissions
+                            .filter(submission => submission.assignment_id === parseInt(id)) // Sadece bu assignment_id'ye ait submission'lar
+                            .sort((a, b) => new Date(b.submitted_at) - new Date(a.submitted_at))[0]
+                            ?.submitted_at ? (
+                            new Date(
+                                studentItem.students.student_submissions
+                                    .filter(submission => submission.assignment_id === parseInt(id)) // Filtreleme
+                                    .sort((a, b) => new Date(b.submitted_at) - new Date(a.submitted_at))[0]
+                                    ?.submitted_at
+                            ).toLocaleDateString("tr-TR")
+                        ) : (
+                            "Belirtilmemiş"
+                        )}
+                    </td>
+
+                         {/* Dokümanlar */}
+                         <td className="p-2">
+                        {studentItem.students.student_submissions
+                            .filter(submission => submission.assignment_id === parseInt(id)) // Sadece bu assignment_id'ye ait submission'lar
+                            .sort((a, b) => new Date(b.submitted_at) - new Date(a.submitted_at)).length > 0 ? (
+                            (() => {
+                                // En son tarihli submission'ı alıyoruz
+                                const latestSubmission = studentItem.students.student_submissions
+                                    .filter(submission => submission.assignment_id === parseInt(id)) // Filtreleme
+                                    .sort((a, b) => new Date(b.submitted_at) - new Date(a.submitted_at))[0];
+
+                                return latestSubmission.documents.length > 0 ? (
+                                    <div className="flex flex-wrap mb-2">
+                                        {latestSubmission.documents.map((doc, docIndex) => {
+                                            // Doküman adını kısaltma
+                                            const maxNameLength = 10; // Maksimum karakter sayısı
+                                            const shortenedName =
+                                                doc.name.length > maxNameLength
+                                                    ? doc.name.substring(0, maxNameLength) + "..."
+                                                    : doc.name;
+
+                                            return (
+                                                <DownloadDocumentButton
+                                                    key={docIndex}
+                                                    documentId={doc.id}
+                                                    assignmentId={parseInt(id)} // Ödev ID'si
+                                                    teacherId={parseInt(current_user_id)} // Kullanıcı ID'si
+                                                    documentName={shortenedName} // Kısaltılmış doküman adı
+                                                    downloadType="submission" // Öğrenci Teslim Dokümanları için
+                                                />
+                                            );
+                                        })}
+                                    </div>
+                                ) : (
+                                    <span>Döküman Yok</span>
+                                );
+                            })()
+                        ) : (
+                            <span>Döküman Yok</span>
+                        )}
+                    </td>
+
+                    <td className="p-2 flex flex-col xs:flex-row items-start xs:items-center gap-1">
+  {studentItem.students.student_submissions
+    .filter((submission) => submission.assignment_id === parseInt(id)) // Bu assignment'a ait olan submissions'ı filtreliyoruz
+    .sort((a, b) => {
+      const dateA = a.submitted_at ? new Date(a.submitted_at) : new Date(0);
+      const dateB = b.submitted_at ? new Date(b.submitted_at) : new Date(0);
+      return dateB.getTime() - dateA.getTime(); // En son teslimatı almak için tarihe göre sıralama
+    })[0] && (  // İlk öğe (en son teslimat) alınıyor
+    <>
+      <div className="relative"> {/* wrapper div eklendi */}
+        <div className="flex items-center gap-1">
+          {/* Her öğrencinin doğru teslimatını ve geri bildirimini almak için şu şekilde düzenliyoruz */}
+          <SubmissionFeedbackForm
+            submissionId={studentItem.students.student_submissions
+              .filter((submission) => submission.assignment_id === parseInt(id))[0]?.id.toString()}
+            currentScore={parseInt(studentItem.students.student_submissions
+              .filter((submission) => submission.assignment_id === parseInt(id))[0]?.score) || null}
+            currentFeedback={studentItem.students.student_submissions
+              .filter((submission) => submission.assignment_id === parseInt(id))[0]?.feedback || ""}
+            currentStudentName={`${studentItem.students.name} ${studentItem.students.surname}`}
+          />
+
+          {studentItem.students.student_submissions
+            .filter((submission) => submission.assignment_id === parseInt(id))[0]?.is_graded && (
+            <span className="text-green-600" title="Değerlendirme tamamlandı">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </span>
+          )}
+        </div>
+      </div>
+    </>
+  )}
+</td>
+
+                    </tr>
+                ))}
+                </tbody>
+            </table>
+            </div>
+
                       
 
                         {/* Yorumlar */}
-                        <div className="bg-white p-6 rounded-lg shadow-lg mt-4">
-    <h2 className="text-xl font-semibold text-lamaPurple">Comments</h2>
-    {assignment.comments.length > 0 ? (
-        <ul className="mt-4 space-y-4">
-            {assignment.comments.map((comment) => (
-                <li key={comment.id} className="flex items-start space-x-4 border p-4 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300">
-                    {/* Avatar */}
-                    <Image
-                        src={comment.user.photo || "/noAvatar.png"}
-                        alt={`${comment.user.name} ${comment.user.surname}`}
-                        width={48}
-                        height={48}
-                        className="w-12 h-12 rounded-full object-cover"
-                    />
-                    
-                    {/* Yorum İçeriği */}
-                    <div className="flex-1">
-                        {/* Yorum Başlığı ve Kullanıcı Bilgisi */}
-                        <div className="flex items-center justify-between gap-2 mb-2">
-                            <div className="flex items-center gap-2">
-                            <span
-                                className={`text-sm font-medium ${
-                                comment.user_type === "TEACHER" ? "text-black" : "text-black"
-                                }`}
-                            >
-                                {comment.user.name} {comment.user.surname}
-                            </span>
-                            {comment.user_type === "TEACHER" && (
-                                <span className="text-xs text-white bg-lamaPurple px-2 py-1 rounded-md">
-                                Teacher
-                                </span>
-                            )}
-                            </div>
-                            <span className="text-xs text-gray-400">
-                            {comment.created_at ? new Date(comment.created_at).toLocaleString("tr-TR") : ""}
-                            </span>
-                        </div>
-                                                        <EditCommentForm
-                                                            commentId={comment.id}
-                                                            initialContent={comment.content}
-                                                            isOwner={comment.user_id === Number(current_user_id) && comment.user_type === "TEACHER"}
-                                                           
-                                                        />
+    <div className="bg-white p-6 rounded-lg shadow-lg mt-4">
+                    <h2 className="text-xl font-semibold text-lamaPurple">Yorumlar</h2>
+                    {assignment.comments.length > 0 ? (
+                        <ul className="mt-4 space-y-4">
+                            {assignment.comments.map((comment) => (
+                                <li key={comment.id} className="flex items-start space-x-4 border p-4 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300">
+                                    {/* Avatar */}
+                                    <Image
+                                        src={comment.user.photo || "/noAvatar.png"}
+                                        alt={`${comment.user.name} ${comment.user.surname}`}
+                                        width={48}
+                                        height={48}
+                                        className="w-12 h-12 rounded-full object-cover"
+                                    />
+                                    
+                                    {/* Yorum İçeriği */}
+                                    <div className="flex-1">
+                                        {/* Yorum Başlığı ve Kullanıcı Bilgisi */}
+                                        <div className="flex items-center justify-between gap-2 mb-2">
+                                            <div className="flex items-center gap-2">
+                                            <span
+                                                className={`text-sm font-medium ${
+                                                comment.user_type === "TEACHER" ? "text-black" : "text-black"
+                                                }`}
+                                            >
+                                                {comment.user.name} {comment.user.surname}
+                                            </span>
+                                            {comment.user_type === "TEACHER" && (
+                                                <span className="text-xs text-white bg-lamaPurple px-2 py-1 rounded-md">
+                                                Teacher
+                                                </span>
+                                            )}
+                                            </div>
+                                            <span className="text-xs text-gray-400">
+                                            {comment.created_at ? new Date(comment.created_at).toLocaleString("tr-TR") : ""}
+                                            </span>
+                                        </div>
+                                                    <EditCommentForm
+                                                    commentId={comment.id}
+                                                    initialContent={comment.content}
+                                                    isOwner={comment.user_id === Number(current_user_id) && comment.user_type === "TEACHER"} 
+                                                    />
+                                        {/* Yorum İçeriği */}
+                                        <p className="text-gray-700 text-sm">{comment.content}</p>
+                                    </div>
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <p className="text-gray-500 mt-2">There is no comment yet.</p>
+                    )}
 
-                        {/* Yorum İçeriği */}
-                        <p className="text-gray-700 text-sm">{comment.content}</p>
-
-                        
+                {/* Yorum Ekleme Formu */}
+                     <div className="mt-4">
+                         {role === "teacher" && (
+                        <CommentForm assignmentId={id} userId={current_user_id} />
+                         )}
                     </div>
-
-                </li>
-            ))}
-        </ul>
-    ) : (
-        <p className="text-gray-500 mt-2">There is no comment yet.</p>
-    )}
-
-    {/* Yorum Ekleme Formu */}
-    <div className="mt-4">
-        {role === "teacher" && (
-            <CommentForm assignmentId={id} userId={current_user_id} />
-        )}
-    </div>
-</div>
-                    </div>
+                 </div>
+            </div>
 
                     {/* Sağ Kısım */}
                     <div className="w-full xl:w-1/3">
 
                           {/* Dokümanlar */}
                           <div className="bg-white p-6 rounded-md shadow">
-                            <h2 className="text-lg font-semibold text-lamaRed">Documents</h2>
+                            <h2 className="text-lg font-semibold text-lamaRed">Dokümanlar</h2>
                             {assignment.assignment_document.length > 0 ? (
-                                <ul className="mt-4 space-y-2">
-                                    {assignment.assignment_document.map((docItem) => (
-                                        <li
-                                            key={docItem.documents.id}
-                                            className="flex items-center gap-2 text-gray-700 text-sm"
-                                        >
-                                            <i className="fas fa-file text-gray-500"></i>
-                                            <span>{docItem.documents.name}</span>
-                                        </li>
-                                    ))}
-                                </ul>
+                               <ul className="mt-4 space-y-2">
+                               {assignment.assignment_document.map((docItem) => (
+                                 <DownloadDocumentButton
+                                    downloadType="assignment"
+                                   key={docItem.documents.id}
+                                   documentId={docItem.documents.id}
+                                   assignmentId={parseInt(id)} // assignment.id'yi parent component'ten alıyoruz
+                                   teacherId={parseInt(current_user_id)} // current_user_id prop olarak gelmeli
+                                   documentName={docItem.documents.name}
+                                 />
+                               ))}
+                             </ul>
                             ) : (
                                 <p className="text-gray-500 mt-2">No document has been assigned for this assignment.</p>
                             )}

@@ -18,7 +18,8 @@ const config: Config = {
         lamaSky: "#C3EBFA",
 
         lamaSkyLight: "#C9F0FD", // Hafif bir koyulaşma, çok açık olmasın
-        lamaPurple: "#C2A9F1", // Koyu mor tonunu kullanarak daha dikkat çekici hale getirildi
+        lamaPurpleDark: "#6D28D9", // Mor tonunu biraz daha koyu ve belirgin hale getirdik
+        lamaPurple: "#A78BFA", // Mor tonunu biraz daha koyu ve belirgin hale getirdik
         lamaPurpleLight2: "#D4A9F6", // Mor tonunun hafif daha belirgin bir tonu
         lamaPurpleLight:"#E7E1FC",
         lamaYellow: "#FFB04E", // Sarı daha koyu ve göz alıcı

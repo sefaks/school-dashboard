@@ -27,9 +27,9 @@ const Announcements = async () => {
   return (
     <div className="bg-white p-4 rounded-md">
      <div className="flex items-center justify-between">
-      <h1 className="text-xl font-semibold">Announcements</h1>
+      <h1 className="text-xl font-semibold">Duyurular</h1>
       <a href="/list/announcements" className="text-xs text-gray-400 flex items-center gap-1">
-        View All
+        Tümünü Gör
         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
         </svg>

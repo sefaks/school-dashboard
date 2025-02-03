@@ -1,0 +1,11 @@
+
+
+{
+    "select": "Select",
+    "select_publishers": "Select Publishers",
+    "lessons": "Lessons",
+    "no_publishers": "No publishers found",
+    "no_insitution_found": "No Institution Found",
+    "no_questions_available": "No Questions Available",
+    "there_is_no_assignment_yet": "There is no assignment yet"
+}

@@ -53,27 +53,27 @@ const ParentListPage = async ({searchParams}:{searchParams:{[key:string]:string}
 
   const columns = [
     {
-      header: "Info",
+      header: "Bilgiler",
       accessor: "info",
     },
     {
-      header: "Student Names",
+      header: "Öğrenciler",
       accessor: "students",
       className: "hidden md:table-cell",
     },
     {
-      header: "Phone",
+      header: "Telefon Numarası",
       accessor: "phone",
       className: "hidden lg:table-cell",
     },
     {
-      header: "Address",
+      header: "Adres",
       accessor: "address",
       className: "hidden lg:table-cell",
     },
     ...(role === "admin" ? 
     [{
-       header: "Actions" ,
+       header: "Aksiyonlar" ,
         accessor: "actions",
       }] : []),
     ];

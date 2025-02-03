@@ -73,11 +73,11 @@ function RegisterPage() {
           {/* Form Section */}
           <div className="w-full md:w-1/2 p-8">
             <h1 className="text-3xl font-extrabold text-gray-700 mb-6 text-center">
-            Teacher Registration
+           Öğretmen Kaydı
             </h1>
             <form className="flex flex-col space-y-4" onSubmit={handleRegister}>
               <div className="flex flex-col">
-                <label className="text-sm font-medium text-gray-700">Name</label>
+                <label className="text-sm font-medium text-gray-700">İsim</label>
                 <input
                   type="text"
                   className="p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 transition-all"
@@ -88,7 +88,7 @@ function RegisterPage() {
               </div>
   
               <div className="flex flex-col">
-                <label className="text-sm font-medium text-gray-700">Surname</label>
+                <label className="text-sm font-medium text-gray-700">Soyisim</label>
                 <input
                   type="text"
                   className="p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 transition-all"
@@ -110,7 +110,7 @@ function RegisterPage() {
               </div>
   
               <div className="flex flex-col">
-                <label className="text-sm font-medium text-gray-700">Password</label>
+                <label className="text-sm font-medium text-gray-700">Şifre</label>
                 <input
                   type="password"
                   className="p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 transition-all"
@@ -121,7 +121,7 @@ function RegisterPage() {
               </div>
 
               <div className="flex flex-col">
-              <label className="text-sm font-medium text-gray-700">Confirm Password</label>
+              <label className="text-sm font-medium text-gray-700">Şifre Onaylaması</label>
               <input
                 type="password"
                 className="p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 transition-all"
@@ -157,12 +157,14 @@ function RegisterPage() {
                     />
                   </svg>
                 ) : null}
-                {loading ? "Registering..." : "Register"}
+                {loading ? "Kayıt Oluşturuluyor..." : "Kayıt Ol"}
               </button>
 
               <div className="flex flex-col gap-2 text-center">
-              <a href="/reset-password" className="text-sm text-blue-500 hover:underline">Are you school manager? Contact with us</a>
-              <a href="/login" className="text-sm text-purple-600 hover:underline">Login</a>
+              <a href="https://arfonstar.tech" className="text-sm text-blue-500 hover:underline">
+                    Okul yöneticisi misiniz? İletişime Geçin
+                  </a>
+              <a href="/login" className="text-sm text-purple-600 hover:underline">Giriş Yap</a>
             </div>
             </form>
           </div>

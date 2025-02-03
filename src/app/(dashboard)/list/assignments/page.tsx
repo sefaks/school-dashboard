@@ -48,11 +48,22 @@ type AssignmentList = assignments & {
     PAST_DUE: "bg-red-500",
   };
 
+  // status colors to Turkish
+  const statusColorsTR: { [key in assignmentstatus]: string } = {
+    ASSIGNED: "ATANDI",
+    COMPLETED: "TAMAMLANDI",
+    PENDING: "BEKLEMEDE",
+    PAST_DUE: "GEÇMİŞ"
+  };
+    
+
+
+
   const subjectColors: Record<subject_name, string> = {
-    [subject_name.TURKCE]: "text-red-500",
-    [subject_name.MATEMATIK]: "text-blue-500",
-    [subject_name.FEN_BILIMLERI]: "text-green-500",
-    [subject_name.SOSYAL_BILGILER]: "text-yellow-500",
+    [subject_name.TURKCE]: "text-red-600",
+    [subject_name.MATEMATIK]: "text-blue-600",
+    [subject_name.FEN_BILIMLERI]: "text-green-600",
+    [subject_name.SOSYAL_BILGILER]: "text-yellow-600",
     [subject_name.INGILIZCE]: "text-teal-500",
     [subject_name.DIN_BILGISI]: "text-purple-500",
     [subject_name.COGRAFYA]: "text-indigo-500",
@@ -71,30 +82,30 @@ const AssignmentListPage = async ({searchParams}:{searchParams:{[key:string]:str
 
 const columns = [
   {
-    header: "Subject",
+    header: "Ders",
     accessor: "name",
   },
   {
-    header: "Class",
+    header: "Sınıf",
     accessor: "class",
   },
   {
-    header: "Status",
+    header: "Durum",
     accessor: "status",
     className: "hidden md:table-cell",
   },
   {
-    header: "Start Date",
+    header: "Başlangıç Zamanı",
     accessor: "startDate",
     className: "hidden md:table-cell",
   },
   {
-    header: "Due Date",
+    header: "Bitiş Zamanı",
     accessor: "dueDate",
     className: "hidden md:table-cell",
   },
   {
-    header:"Document",
+    header:"Dökümanlar",
     accessor:"documents",
     className: "hidden md:table-cell",
   }
@@ -102,7 +113,7 @@ const columns = [
   // actions for teacher, not
   ...(role === "teacher" ? 
   [{
-     header: "Actions" ,
+     header: "Aksiyonlar" ,
       accessor: "actions",
     }] : []),
 
@@ -149,11 +160,11 @@ const renderRow = (item: AssignmentList, role: string) => {
 
       <td className="hidden md:table-cell">
         {item.subjects ? (
-          <span
-            className={`${statusColors[item.status as keyof typeof statusColors] || 'bg-gray-500'} text-white py-1 px-3 rounded-full`}
-          >
-            {item.status}
-          </span>
+         <span
+         className={`${statusColors[item.status as keyof typeof statusColors] || 'bg-gray-500'} text-white py-1 px-3 rounded-full`}
+       >
+         {statusColorsTR[item.status as keyof typeof statusColorsTR] || "BİLİNMİYOR"}
+       </span>
         ) : (
           "No status assigned"
         )}
@@ -175,34 +186,24 @@ const renderRow = (item: AssignmentList, role: string) => {
         })}
       </td>
 
-      <td className="hidden md:table-cell">
-        {item.assignment_document?.map((document_item: { documents: documents }) => (
-          <div className="flex items-center gap-2" key={document_item.documents.id}>
-            {document_item.documents.content ? (
-              (() => {
-                // Uint8Array'yi Base64 string'e dönüştür
-                const base64String = Buffer.from(document_item.documents.content).toString();
-                const href = `data:application/pdf;base64,${base64String}`;
-
-                return (
-                  <>
-                    <span>{document_item.documents.name}</span>
-                    <a
-                      href={href}
-                      download={document_item.documents.name}
-                      className="text-red-500 hover:text-red-700 flex items-center"
-                    >
-                      <FaFilePdf size={24} />
-                    </a>
-                  </>
-                );
-              })()
-            ) : (
-              <span>No content available</span>
-            )}
+   <td className="hidden md:table-cell">
+  {item.assignment_document?.map((document_item: { documents: documents }) => (
+    <div className="flex items-center gap-2" key={document_item.documents.id}>
+      {document_item.documents.url ? (
+        <>
+          <span>{document_item.documents.name}</span>
+          <div className="flex items-center">
+          <div style={{ color: "red" }}>
+            <FaFilePdf size={24} />
+          </div>            
           </div>
-        ))}
-      </td>
+        </>
+      ) : (
+        <span>No content available</span>
+      )}
+    </div>
+  ))}
+</td>
 
       <div className="flex items-center gap-2">
         <Link href={`/list/assignments/${item.id}`}>

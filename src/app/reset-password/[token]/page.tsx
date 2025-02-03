@@ -24,6 +24,13 @@ export default function ResetPassword({ params }: { params: { token: string } })
       setLoading(false);
       return;
     }
+
+    const passwordErrors = validatePassword(newPassword);
+    if (passwordErrors.length > 0) {
+      setError("Geçersiz şifre: " + passwordErrors.join(", "));
+      setLoading(false);
+      return;
+    }
   
     try {
       const secret_token = params.token;
@@ -58,6 +65,26 @@ export default function ResetPassword({ params }: { params: { token: string } })
       setLoading(false);  // İstek tamamlandığında yüklenme durumu bitiriliyor
     }
   };
+
+  const validatePassword = (password: string): string[] => {
+    const errors = [];
+    if (password.length < 8) {
+      errors.push("En az 8 karakter uzunluğunda olmalıdır");
+    }
+    if (!/[A-Z]/.test(password)) {
+      errors.push("En az bir büyük harf içermelidir (A-Z)");
+    }
+    if (!/[a-z]/.test(password)) {
+      errors.push("En az bir küçük harf içermelidir (a-z)");
+    }
+    if (!/[0-9]/.test(password)) {
+      errors.push("En az bir rakam içermelidir (0-9)");
+    }
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+      errors.push("En az bir özel karakter içermelidir (!@#$%^&* gibi)");
+    }
+    return errors;
+  };
   
 
   return (
@@ -72,15 +99,29 @@ export default function ResetPassword({ params }: { params: { token: string } })
           onSubmit={handleResetPassword}
         >
           <div className="flex flex-col">
-            <label className="text-sm font-medium text-gray-700">New Password</label>
-            <input
-              type="password"
-              className="p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 transition-all"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              required
-            />
-          </div>
+              <label className="text-sm font-medium text-gray-700">New Password</label>
+              <input
+                type="password"
+                className="p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 transition-all"
+                value={newPassword}
+                onChange={(e) => {
+                  setNewPassword(e.target.value);
+                  setError("");
+                }}
+                required
+              />
+              {/* Password Requirements */}
+              <div className="text-xs text-gray-500 mt-2">
+                Şifre gereksinimleri:
+                <ul className="list-disc list-inside pl-3">
+                  <li>Minimum 8 karakter</li>
+                  <li>En az 1 büyük harf</li>
+                  <li>En az 1 küçük harf</li>
+                  <li>En az 1 rakam</li>
+                  <li>En az 1 özel karakter</li>
+                </ul>
+              </div>
+            </div>
 
           <div className="flex flex-col">
             <label className="text-sm font-medium text-gray-700">Confirm Password</label>

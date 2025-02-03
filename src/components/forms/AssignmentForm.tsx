@@ -275,13 +275,13 @@ const AssignmentForm = ({
  
   return (
     <form className="flex flex-col gap-8 max-h-screen overflow-y-auto p-4" onSubmit={handleSubmit(onSubmit)}>
-      <h1 className="text-xl font-semibold">Add a new assignment</h1>
+      <h1 className="text-xl font-semibold">Ödev Oluştur</h1>
       <div className="flex flex-col gap-4">
 
         <div className='flex flex-row w-full '>
           {/* Start Date */}
           <div className="w-1/2 space-y-2">
-        <label className="block text-sm font-medium text-gray-700">Start Date</label>
+        <label className="block text-sm font-medium text-gray-700">Başlangıç Tarihi</label>
         <div className="flex flex-col space-y-2">
                 <input
             type="datetime-local"
@@ -312,7 +312,7 @@ const AssignmentForm = ({
 
       {/* Deadline Date */}
       <div className="w-1/2 space-y-2">
-        <label className="block text-sm font-medium text-gray-700">Deadline Date</label>
+        <label className="block text-sm font-medium text-gray-700">Bitiş Tarihi</label>
         <div className="flex flex-col space-y-2">
               <input
             type="datetime-local"
@@ -345,7 +345,7 @@ const AssignmentForm = ({
         {/* Description */}
         <div className="w-full">
           {/* Textarea */}
-          <label className="block mb-2 text-sm font-medium">Description</label>
+          <label className="block mb-2 text-sm font-medium">Açıklama</label>
           <textarea
             {...register("description")}
             className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
@@ -355,12 +355,12 @@ const AssignmentForm = ({
 
         {/* Subject Selection */}
         <div className="w-full">
-          <label className="block mb-2 text-sm font-medium">Select Subject</label>
+          <label className="block mb-2 text-sm font-medium">Ders Seçimi</label>
           <select
             {...register("subject_id", { valueAsNumber: true })}
             className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
           >
-            <option value="">Select a subject</option>
+            <option value="">Ders Seçimi</option>
             {subjects.map((subject: any) => (
               <option key={subject.id} value={subject.id}>
                 {subject.subject_name}
@@ -374,7 +374,7 @@ const AssignmentForm = ({
 
         {/* Students Selection */}
         <div className="w-full">
-          <label className="block mb-2 text-sm font-medium">Select Students</label>
+          <label className="block mb-2 text-sm font-medium">Öğrenci Seçimi</label>
           <select
             {...register("student_ids", { valueAsNumber: true })}
             className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
@@ -395,7 +395,7 @@ const AssignmentForm = ({
 
           {/* Show selected students */}
           <div className="mt-2">
-            <h3 className="font-medium text-green-600">Selected Students:</h3>
+            <h3 className="font-medium text-green-600">Seçilen Öğrenciler:</h3>
             <div className="flex gap-2 flex-wrap">
               {selectedStudents.map((studentId) => {
                 const student = relatedData?.students?.find((s: any) => s.id === studentId);
@@ -420,7 +420,7 @@ const AssignmentForm = ({
 
         {/* Classes Selection */}
         <div className="w-full">
-          <label className="block mb-2 text-sm font-medium">Select Classes</label>
+          <label className="block mb-2 text-sm font-medium">Sınıf Seçimi</label>
           <select
           {...register("class_ids", { valueAsNumber: true })}  // valueAsNumber özelliği ile string'i number'a dönüştür
           className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
@@ -441,7 +441,7 @@ const AssignmentForm = ({
 
           {/* Show selected classes */}
           <div className="mt-2">
-            <h3 className="font-medium text-green-600">Selected Classes:</h3>
+            <h3 className="font-medium text-green-600">Seçilen Sınıflar:</h3>
             <div className="flex gap-2 flex-wrap">
               {selectedClasses.map((classId) => {
                 const cls = relatedData?.classes?.find((c: any) => c.id === classId);
@@ -466,7 +466,7 @@ const AssignmentForm = ({
       </div>
 
       <div className="w-full mt-4">
-  <label className="block mb-2 text-sm font-medium text-gray-700">Upload Document(s)</label>
+  <label className="block mb-2 text-sm font-medium text-gray-700">Doküman(lar) Yükleme</label>
   <div className="flex items-center gap-4 border p-4 rounded-md border-dashed focus-within:ring-2 focus-within:ring-blue-500">
     <input
       // register'ı kaldırıyoruz çünkü documents state'ini manuel yönetiyoruz
@@ -475,7 +475,7 @@ const AssignmentForm = ({
       multiple
       onChange={handleFileChange}
     />
-    <span className="text-gray-500">Drag & Drop or Browse</span>
+    <span className="text-gray-500">Sürükle veya Seç</span>
   </div>
   {errors.documents && (
     <span className="text-red-500 text-sm">{errors.documents.message}</span>
@@ -485,7 +485,7 @@ const AssignmentForm = ({
       {/* Yüklenen Dosyalar */}
       {selectedFiles.length > 0 && (
       <div className="mt-4">
-        <h2 className="text-lg font-semibold">Uploaded Documents:</h2>
+        <h2 className="text-lg font-semibold">Yüklenen Dokümanlar:</h2>
         <ul className="list-disc pl-6">
           {selectedFiles.map((file, index) => (
             <li key={index} className="flex justify-between items-center text-sm">
@@ -495,7 +495,7 @@ const AssignmentForm = ({
                 onClick={() => handleRemoveFile(index)}
                 className="text-red-500 hover:text-red-700"
               >
-                Remove
+                Kaldır
               </button>
             </li>
           ))}
@@ -509,7 +509,7 @@ const AssignmentForm = ({
         className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-md disabled:opacity-50 mt-4 transition-colors"
         disabled={!isValid}
       >
-        {type === "create" ? "Create" : "Update"}
+        {type === "create" ? "Oluştur" : "Güncelle"}
       </button>
     </form>
   );

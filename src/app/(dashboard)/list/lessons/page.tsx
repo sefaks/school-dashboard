@@ -54,19 +54,19 @@ const { role, current_user_id, institution_id} = await getRoleAndUserIdAndInstit
 
 const columns = [
   {
-    header: "Lesson Name",
+    header: "Ders İsmi",
     accessor: "name",
   },
   {
-    header:"Institution",
+    header:"Kurum",
     accessor: "institution",
   },
   {
-    header: "Grade",
+    header: "Seviye",
     accessor: "grade",
   },
   {
-    header: "Curriculum Year",
+    header: "Müfredat Yılı",
     accessor: "year",
   },
   // actions for admin role
@@ -228,7 +228,7 @@ prisma.lessons.count({
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
       {/* TOP */}
       <div className="flex items-center justify-between">
-        <h1 className="hidden md:block text-lg font-semibold">All Lessons</h1>
+        <h1 className="hidden md:block text-lg font-semibold">Tüm Dersler</h1>
         <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
           <TableSearch />
           <div className="flex items-center gap-4 self-end">

@@ -56,7 +56,7 @@ const CommentForm = ({ assignmentId, userId }: { assignmentId: string; userId: s
 
     return (
         <div className="bg-white p-6 rounded-lg shadow-lg mt-4">
-            <h2 className="text-lg font-semibold text-lamaPurple">Add Comment</h2>
+            <h2 className="text-lg font-semibold text-lamaPurple">Yorum Yap</h2>
             {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
             <form onSubmit={handleSubmit} className="mt-4 flex items-center gap-3">
                 <textarea
@@ -70,7 +70,7 @@ const CommentForm = ({ assignmentId, userId }: { assignmentId: string; userId: s
                 />
                 <button
                     type="submit"
-                    className="w-24 bg-lamaPurple text-white p-2 rounded-lg transition-all duration-300 hover:bg-lamaSky"
+                    className="w-24 bg-lamaPurple text-white p-2 rounded-lg transition-all duration-300 hover:bg-indigo-600 "
                     disabled={loading}
                 >
                     {loading ? "Yükleniyor..." : "Gönder"}

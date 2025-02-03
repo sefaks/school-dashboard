@@ -157,7 +157,7 @@ const SingleStudentPage = async ({
                 <h1 className="text-xl font-semibold">
                   {firstClass?.grade}th
                 </h1>
-                <span className="text-sm text-gray-400">Grade</span>
+                <span className="text-sm text-gray-400">Seviye</span>
               </div>
             </div>
             {/* CARD */}
@@ -173,7 +173,7 @@ const SingleStudentPage = async ({
                 <h1 className="text-xl font-semibold">
                   {firstClass?.grade}
                 </h1>
-                <span className="text-sm text-gray-400">Lessons</span>
+                <span className="text-sm text-gray-400">Dersler</span>
               </div>
             </div>
             {/* CARD */}
@@ -187,7 +187,7 @@ const SingleStudentPage = async ({
               />
               <div className="">
                 <h1 className="text-xl font-semibold">{firstClass?.class_code}</h1>
-                <span className="text-sm text-gray-400">Class</span>
+                <span className="text-sm text-gray-400">Sınıf</span>
               </div>
             </div>
           </div>
@@ -201,37 +201,37 @@ const SingleStudentPage = async ({
       {/* RIGHT */}
       <div className="w-full xl:w-1/3 flex flex-col gap-4">
         <div className="bg-white p-4 rounded-md">
-          <h1 className="text-xl font-semibold">Shortcuts</h1>
+          <h1 className="text-xl font-semibold">Kısayollar</h1>
           <div className="mt-4 flex gap-4 flex-wrap text-xs text-gray-500">
             <Link
               className="p-3 rounded-md bg-lamaSkyLight"
               href={`/list/lessons?grade=${firstClass?.grade ?? ''}`}
             >
-              Student&apos;s Lessons
+              Öğrenci&apos;nin Dersleri
             </Link>
             <Link
               className="p-3 rounded-md bg-lamaPurpleLight"
               href={`/list/teachers?classId=${firstClass?.id ?? ''}`}
             >
-              Student&apos;s Teachers
+              Öğrenci&apos;nin Öğretmenleri
             </Link>
             <Link
               className="p-3 rounded-md bg-pink-50"
               href={`/list/exams?classId=${firstClass?.id ?? ''}`}
             >
-              Student&apos;s Exams
+              Öğrenci&apos;nin Sınavları
             </Link>
             <Link
               className="p-3 rounded-md bg-lamaSkyLight"
               href={`/list/assignments?classId=${firstClass?.id ?? ''}`}
             >
-              Student&apos;s Assignments
+              Öğrenci&apos;nin Ödevleri
             </Link>
             <Link
               className="p-3 rounded-md bg-lamaYellowLight"
               href={`/list/results?studentId=${student.id}`}
             >
-              Student&apos;s Results
+              Öğrenci&apos;nin Sonuçları
             </Link>
           </div>
         </div>

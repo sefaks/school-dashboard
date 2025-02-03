@@ -60,7 +60,7 @@ const LoginPage = () => {
     <div className="h-screen flex flex-col items-center justify-center bg-gradient-to-r from-purple-500 via-indigo-500 to-blue-500 gap-6">
       <div className="flex flex-row items-center justify-start gap-4">
         <img src="5.png" alt="Logo" width={100} height={100} className="rounded-full shadow-lg" /> 
-        <h1 className="text-4xl font-extrabold text-white">Arf Login</h1>
+        <h1 className="text-4xl font-extrabold text-white">Arf - Giriş </h1>
       </div>
   
       {/* Login Form */}
@@ -80,7 +80,7 @@ const LoginPage = () => {
         </div>
   
         <div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-700">Password</label>
+          <label className="text-sm font-medium text-gray-700">Şifre</label>
           <input
             type="password"
             className="p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 transition-all"
@@ -117,13 +117,13 @@ const LoginPage = () => {
               />
             </svg>
           ) : null}
-          {loading ? 'Logging in...' : 'Login'}
+          {loading ? 'Giriş Yapılıyor...' : 'Giriş Yap'}
         </button>
   
         {/* Link to reset password or register */}
         <div className="flex flex-col gap-2 text-center">
-          <a href="/forget-password" className="text-sm text-blue-500 hover:underline">Forgot Password?</a>
-          <a href="/new-user" className="text-sm text-purple-600 hover:underline">Don't have an account?</a>
+          <a href="/forget-password" className="text-sm text-blue-500 hover:underline">Şifrenizi mi unuttunuz?</a>
+          <a href="/new-user" className="text-sm text-purple-600 hover:underline">Hesabınız yok mu?</a>
 
         </div>
       </form>

@@ -1,0 +1,10 @@
+
+{
+    "select": "Seç",
+    "select_publishers": "Yayınevi Seç",
+    "lessons": "Dersler",
+    "no_publishers": "Yayınevi bulunamadı",
+    "no_insitution_found": "Kurum bulunamadı",
+    "no_questions_available": "Soru bulunamadı",
+    "there_is_no_assignment_yet": "Henüz bir ödev yok"
+}

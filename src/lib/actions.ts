@@ -559,7 +559,7 @@ export const teacherAddComment = async (formData: CommentSchema, token: string, 
     console.error("Error details:", error);
 
     if (error.response) {
-      return { success: false, message: error.response.data.detail || "Failed to add comment!" };
+      return { success: false, message: error.response.data.detail || "Yorum Eklenemedi." };
     } else if (error.request) {
       return { success: false, message: "No response from server." };
     } else {
