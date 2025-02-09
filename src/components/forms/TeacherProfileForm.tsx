@@ -20,7 +20,11 @@ const TeacherUpdateSchema = z.object({
 });
 
 const TeacherProfileForm = ({ initialData }: { initialData: any }) => {
-  const [selectedSubjects, setSelectedSubjects] = useState<string[]>(initialData.subjects || []);
+  const [selectedSubjects, setSelectedSubjects] = useState<string[]>(  
+    initialData.subjects.map((subject: any) => subject.subject_name) || []  
+  ); 
+
+  console.log(selectedSubjects);
 
   const { data: session } = useSession();
   const router = useRouter();

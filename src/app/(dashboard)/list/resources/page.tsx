@@ -6,6 +6,8 @@ import { useSession } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import en from "@/app/messages/en.json";
+import tr from "@/app/messages/tr.json";
 
 const Page = () => {
   const [institutes, setInstitutes] = useState<Institution[]>([]);
@@ -16,6 +18,15 @@ const Page = () => {
   const isExam = redirectTo === "tests"; // ✅ redirectTo'ya göre isExam belirledik
 
   const { data: session } = useSession(); 
+
+  const [language, setLanguage] = useState("en");
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedLanguage = localStorage.getItem("language") || "en";
+      setLanguage(storedLanguage);
+    }
+  }, []);
+  const currentLanguageContent = language === "en" ? en : tr;
 
   useEffect(() => {
     const fetchInstitutes = async () => {
@@ -51,10 +62,11 @@ const Page = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className="loader border-t-2 border-b-2 border-[#702DFF] w-10 h-10 rounded-full animate-spin mr-2"></div>
-        <span className="text-[#702DFF]">Loading...</span>
-      </div>
+      <div className="w-full h-full flex flex-col items-center justify-center">
+      <div className="border-t-4 border-blue-500 border-solid w-16 h-16 rounded-full animate-spin"></div>
+      <span className="mt-2 text-blue-500">{currentLanguageContent.loading}</span>
+    </div>
+    
     );
   }
 
@@ -74,7 +86,7 @@ const Page = () => {
       ) : (
         <div>
           <p className="text-black text-[18px] font-semibold italic">
-            Herhangi bir kurum bulunamadı.
+            {currentLanguageContent.no_insitution_found}
           </p>
         </div>
       )}

@@ -9,6 +9,7 @@ import Image from "next/image";
 import FormContainer from "@/components/FormContainer";
 import TableSearch from "@/components/TableSearch";
 import Link from "next/link";
+import RedirectButton from "@/components/AssignmentPage/RedirectButton";
 
 type ScheduleList = schedules & {
 
@@ -28,7 +29,6 @@ const statusColors: { [key in schedulestatus]: string } = {
 
 const renderRow = (item: ScheduleList, role: string) => (
 
-  
     <tr
         key={item.id}
         className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
@@ -43,7 +43,6 @@ const renderRow = (item: ScheduleList, role: string) => (
 
         </span> 
         </td>   
-        
         
         <td>
             <div className="flex items-center gap-2">
@@ -103,7 +102,9 @@ const ScheduleListPage = async ({searchParams}:{searchParams:{[key:string]:strin
               {
                 classes: {
                   class_code: {
-                    contains: value,
+                  // contains value but case-insensitive
+                  contains: value,
+                  mode: "insensitive",
                   },
                 },
               },
@@ -198,7 +199,7 @@ const ScheduleListPage = async ({searchParams}:{searchParams:{[key:string]:strin
         <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
           {/* TOP */}
           <div className="flex items-center justify-between">
-            <h1 className="hidden md:block text-lg font-semibold">Tüm Takvimler</h1>
+            <h1 className="hidden md:block text-lg font-semibold">Tüm Programlar</h1>
             <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
               <TableSearch />
               <div className="flex items-center gap-4 self-end">
@@ -211,6 +212,9 @@ const ScheduleListPage = async ({searchParams}:{searchParams:{[key:string]:strin
             
                 {role === "admin" &&
                  <FormContainer table="schedule" type="create" />}
+
+                 {role === "teacher" &&
+                 <RedirectButton type="create" page_type="schedules" />}
            </div>
             </div>
           </div>

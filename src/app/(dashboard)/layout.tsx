@@ -14,7 +14,7 @@ export default function DashboardLayout({
             <div className="w-[14%] md:w[8%] lg:w-[16%] xl:w-[14%] p-4 ">
 
                 <Link href="/" className="flex items-center justify-center gap-2 lg:justify-start ">
-                    <span className="hidden lg:block font-bold">Arf Management</span>
+                    <span className="hidden lg:block font-bold">Arf - Yönetim</span>
                 </Link>
                 <Menu/>
             

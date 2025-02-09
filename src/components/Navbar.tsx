@@ -19,10 +19,16 @@ const Navbar =  () => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement | null>(null); // Dropdown menüsünü referans olarak tutar
 
-    const [language, setLanguage] = useState<string>(() => {
+    const [language, setLanguage] = useState<string>("en");
+    const [isClient, setIsClient] = useState(false); // Track if we are on the client-side
+
+    useEffect(() => {
+        setIsClient(true); // Only run this on client-side
         const savedLanguage = localStorage.getItem("language");
-        return savedLanguage ? savedLanguage : "en"; // Default to English
-      });
+        if (savedLanguage) {
+          setLanguage(savedLanguage);
+        }
+      }, []);
 
 
     const handleLogout = () => {
@@ -62,13 +68,18 @@ const Navbar =  () => {
         };
     }, []);
 
-    const handleLanguageSwitch = () => {
-        const newLanguage = language === "en" ? "tr" : "en";
-        localStorage.setItem("language", newLanguage);
-        setLanguage(newLanguage);
-        // reload the page to apply the new language
-        window.location.reload();
-      };
+   const handleLanguageSwitch = () => {
+    const newLanguage = language === "en" ? "tr" : "en";
+    localStorage.setItem("language", newLanguage);
+    setLanguage(newLanguage); // Update language state dynamically
+    // Instead of reload, use your logic to update the page or content as needed
+
+    // Reload the page
+    if (isClient) {
+      window.location.reload();
+    }
+  };
+
 
 
     const role_turkish = (role: string) => {

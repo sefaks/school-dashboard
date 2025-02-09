@@ -300,33 +300,89 @@ const base64ToBlob = (base64: string): Blob => {
   return new Blob([byteArray], { type: 'application/octet-stream' });
 };
 
+export const updateAssignment = async (
+  formData: Omit<AssignmentSchema, "id">,
+  files: FileWithBase64[] | null,
+  token: string,
+  assignment_id: number
+) => {
+  const requestData = new FormData();
 
-export const updateAssignment = async (formData: AssignmentSchema, token: string, assignment_id:number) => {
-  try {
-   
-    const response = await axios.post(`${API_BASE_URL}/teachers/me/update-assignment/${assignment_id}`, formData, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
+  // Sadece değişen tarihleri gönder
+  if (formData.start_date) {
+    requestData.append('start_date', new Date(formData.start_date).toISOString().split('.')[0]);
+  }
+  if (formData.deadline_date) {
+    requestData.append('deadline_date', new Date(formData.deadline_date).toISOString().split('.')[0]);
+  }
 
-    return response.data;
-  } catch (error: any) {
-    console.error("Error details:", error);
+  // Opsiyonel alanları kontrol et
+  if (formData.description !== undefined) {
+    requestData.append('description', formData.description);
+  }
 
-    if (error.response) {
-      console.error("API Error:", error.response.data);
-      throw new Error(error.response.data.detail || "Failed to update assignment!");
-    } else if (error.request) {
-      console.error("No response received from server:", error.request);
-      throw new Error("No response from server.");
-    } else {
-      console.error("Error during setup:", error.message);
-      throw new Error("An unexpected error occurred!");
+  if (formData.header !== undefined) {
+    requestData.append('header', formData.header);
+  }
+
+  if (formData.subject_id) {
+    requestData.append('subject_id', formData.subject_id.toString());
+  }
+
+  // Array türündeki verileri işle
+  if (Array.isArray(formData.class_ids)) {
+    requestData.append('class_ids', formData.class_ids.join(','));
+  }
+
+  if (Array.isArray(formData.student_ids)) {
+    requestData.append('student_ids', formData.student_ids.join(','));
+  }
+
+  if (Array.isArray(formData.test_ids)) {
+    requestData.append('test_ids', formData.test_ids.join(','));
+  }
+
+  // Dosyaları işle
+  if (files?.length) {
+    for (const file of files) {
+      try {
+        const blob = base64ToBlob(file.base64);
+        requestData.append('files', blob, file.name || file.name);
+      } catch (error) {
+        console.error('Error converting file to blob:', file.name, error);
+        throw new Error(`Failed to process file: ${file.name}`);
+      }
     }
   }
-}
+
+  try {
+    const response = await axios.put(
+      `${API_BASE_URL}/teachers/update-assignment/${assignment_id}`,
+      requestData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const errorMessage = error.response?.data?.detail || "Failed to update assignment!";
+      console.error("API Error:", {
+        status: error.response?.status,
+        message: errorMessage,
+        data: error.response?.data
+      });
+      throw new Error(errorMessage);
+    }
+    
+    console.error("Unexpected Error:", error);
+    throw new Error("An unexpected error occurred while updating the assignment!");
+  }
+};
 
 export const createAnnouncementAdmin = async (formData: AnnouncementSchema, token: string) => {
   try {
@@ -710,6 +766,151 @@ export const teacherUpdateComment = async (content: string, token: string, comme
 }
 
 
+export const teacherGetWeeklyAnalysis = async (token: string) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/teachers/me/students-weekly-analysis`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return response.data;
+  } catch (error: any) {
+    if (error.response) {
+      console.error("API Response Error:", error.response);
+      throw new Error(error.response.data.detail || "Failed to get weekly analysis!");
+    }
+    console.error("Network Error:", error);
+    throw new Error("An unexpected error occurred!");
+  }
+}
+
+
+export const teacherStudentsandClasses = async (token: string) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/teachers/me/classes-students`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return response.data;
+  } catch (error: any) {
+    if (error.response) {
+      console.error("API Response Error:", error.response);
+      throw new Error(error.response.data.detail || "Failed to get students and classes!");
+    }
+    console.error("Network Error:", error);
+    throw new Error("An unexpected error occurred!");
+  }
+}
+
+export const teacherSubjects = async (token: string) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/teachers/me/subjects`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return response.data;
+  }
+  catch (error: any) {
+    if (error.response) {
+      console.error("API Response Error:", error.response);
+      throw new Error(error.response.data.detail || "Failed to get subjects!");
+    }
+    console.error("Network Error:", error);
+    throw new Error("An unexpected error occurred!");
+  }
+
+}
+
+
+export const getAssignment = async ( assignmentId: number) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/assignments/${assignmentId}`)
+
+    console.log("API Response:", response.data);
+    return response.data;
+  } catch (error: any) {
+    if (error.response) {
+      console.error("API Response Error:", error.response);
+      throw new Error(error.response.data.detail || "Failed to get assignment!");
+    }
+    console.error("Network Error:", error);
+    throw new Error("An unexpected error occurred!");
+  }
+}
+
+export const getTeacherProfile = async (token: string) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/teachers/my-profile/view`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return response.data;
+  } catch (error: any) {
+    if (error.response) {
+      console.error("API Response Error:", error.response);
+      throw new Error(error.response.data.detail || "Failed to get teacher profile!");
+    }
+    console.error("Network Error:", error);
+    throw new Error("An unexpected error occurred!");
+  }
+}
+
+
+export const getTeacherStudentsAndClasses = async (token: string) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/teachers/me/classes-students`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return response.data;
+  } catch (error: any) {
+    if (error.response) {
+      console.error("API Response Error:", error.response);
+      throw new Error(error.response.data.detail || "Failed to get students and classes!");
+    }
+    console.error("Network Error:", error);
+    throw new Error("An unexpected error occurred!");
+  }
+}
+
+export const addScheduleToStudent = async (formData: any, token: string, student_id: number) => {
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}/teachers/me/add-schedule-to-student/${student_id}`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error: any) {
+    if (error.response) {
+      console.error("API Response Error:", error.response);
+      console.log("API Error:", error.response.data);
+
+      throw new Error(JSON.stringify({
+        status: error.response.status,
+        message: error.response.data.detail || "Failed to add schedule to student!"
+      }));
+      
+    }
+    console.error("Network Error:", error);
+    throw { status: 500, message: "An unexpected error occurred!" };
+  }
+};
 
 
 

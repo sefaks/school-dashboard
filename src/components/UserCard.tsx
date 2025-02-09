@@ -3,7 +3,7 @@ import { getRoleAndUserIdAndInstitutionId } from "@/lib/utils";
 
 
 // Define specific type for user types
-type UserType = "admin" | "teacher" | "student" | "parent";
+type UserType = "admin" | "öğretmen" | "öğrenci" | "veli";
 
 const UserCard = async ({ type }: { type: UserType }) => {
   const { role, current_user_id, institution_id } = await getRoleAndUserIdAndInstitutionId();
@@ -11,9 +11,9 @@ const UserCard = async ({ type }: { type: UserType }) => {
   // Type-safe model map
   const modelMap: Record<UserType, any> = {
     admin: prisma.admins,
-    teacher: prisma.teachers,
-    student: prisma.students,
-    parent: prisma.parents,
+    öğretmen: prisma.teachers,
+    öğrenci: prisma.students,
+    veli: prisma.parents,
   };
 
   // Ensure type exists in modelMap
@@ -29,7 +29,7 @@ const UserCard = async ({ type }: { type: UserType }) => {
         institution_id: parseInt(institution_id),
       };
       break;
-    case "teacher":
+    case "öğretmen":
       whereClause = {
         teacher_institution: {
           some: {
@@ -38,7 +38,7 @@ const UserCard = async ({ type }: { type: UserType }) => {
         },
       };
       break;
-    case "student":
+    case "öğrenci":
       whereClause = {
         student_institution: {
           some: {
@@ -47,7 +47,7 @@ const UserCard = async ({ type }: { type: UserType }) => {
         },
       };
       break;
-    case "parent":
+    case "veli":
       whereClause = {
         parent_student: {
           some: {

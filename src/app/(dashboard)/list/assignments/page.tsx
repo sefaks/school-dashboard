@@ -1,5 +1,6 @@
 
 import { authOptions } from "@/app/auth";
+import RedirectButton from "@/components/AssignmentPage/RedirectButton";
 import FormContainer from "@/components/FormContainer";
 import FormModal from "@/components/FormModal";
 import Pagination from "@/components/Pagination";
@@ -212,12 +213,12 @@ const renderRow = (item: AssignmentList, role: string) => {
           </button>
         </Link>
         {role === "teacher" && (
-          <>
-            <FormContainer table="assignment" type="update" data={item} />
-            <FormContainer table="assignment" type="delete" id={item.id} />
-          </>
-        )}
-      </div>
+              <>
+                <RedirectButton type="update" id={item.id} page_type="assignments" />
+                <FormContainer table="assignment" type="delete" id={item.id} />
+              </>
+            )}
+          </div>
     </tr>
   );
 };
@@ -397,7 +398,7 @@ const [assignmentsData, count] = await prisma.$transaction([
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
             {role === "admin" || role === "teacher" &&               
-            <FormContainer table="assignment" type="create" />
+            <RedirectButton type="create" page_type="assignments" />
             }
           </div>
         </div>

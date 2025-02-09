@@ -57,12 +57,15 @@ export const assignmentSchema = z.object({
   start_date: z.string().refine(val => !isNaN(Date.parse(val)), { message: "Invalid start date!" }),
   deadline_date: z.string().refine(val => !isNaN(Date.parse(val)), { message: "Invalid deadline date!" }),
   description: z.string().min(1, { message: "Description is required!" }),
+  header: z.string(),  // optional header
   subject_id: z.union([
     z.string().transform(val => Number(val)),
     z.number()
   ]).refine(val => !isNaN(val), { message: "Invalid subject ID!" }),
-  student_ids: z.array(z.string().transform(val => parseInt(val))),
-  class_ids: z.array(z.string().transform(val => parseInt(val))),
+  student_ids: z.array(z.string().transform(val => parseInt(val))).optional(),
+  class_ids: z.array(z.string().transform(val => parseInt(val))).optional(),
+  //optional test_ids
+  test_ids: z.array(z.string().transform(val => parseInt(val))).optional(),
   documents: z.array(
     z.object({
         name: z.string().min(1, { message: "Document name is required!" }),

@@ -95,5 +95,6 @@ export const config = {
     '/teacher/:path*',
     '/list/:path*',
     '/unauthorized',
+    '/my-profile',
   ],
 };

@@ -52,14 +52,14 @@ const menuItems = [
       },
       {
         icon: "/calendar.png",
-        label: "Takvimler",
+        label: "Programlar",
         href: "/list/schedules",
         visible: ["admin", "teacher", "student", "parent"],
       },
       {
         icon: "/attendance.png",
-        label: "Yoklama",
-        href: "/list/attendance",
+        label: "Analizler",
+        href: "/list/analysis",
         visible: ["admin", "teacher", "student", "parent"],
       },
       {

@@ -1,3 +1,4 @@
+"use client"
 import React, { useState, useEffect } from "react";
 import { Card, Box, Chip, MenuItem, Select, FormControl } from "@mui/material";
 import Image from "next/image";
@@ -14,18 +15,16 @@ interface CourseCardProps {
 
 const CourseCardBox: React.FC<CourseCardProps> = ({ lesson, resourceId, isTest }) => {
   const router = useRouter();
-  const [language, setLanguage] = useState("en");
   const [selectedOption, setSelectedOption] = useState<string>("");
+
   const [imageSrc, setImageSrc] = useState(
     lesson?.lesson_image || "/course1.svg"
   );
 
-  const currentLanguageContent = language === "en" ? en : tr;
+  const storedLanguage = localStorage.getItem("language") || "en";
+  const [language, setLanguage] = useState(storedLanguage);
+  const currentLanguageContent = language === "en" ? en : tr; 
 
-  useEffect(() => {
-    const storedLanguage = localStorage.getItem("language") || "en";
-    setLanguage(storedLanguage);
-  }, []);
 
   const handleChange = (event: React.ChangeEvent<{ value: unknown }>) => {
     const selectedPublisher = event.target.value as string;

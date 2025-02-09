@@ -27,12 +27,14 @@ const Page = () => {
   const isTest = redirectTo === "tests"; // Eğer tests sayfasına gidilecekse isTest true olacak
 
   const [language, setLanguage] = useState("en");
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedLanguage = localStorage.getItem("language") || "en";
+      setLanguage(storedLanguage);
+    }
+  }, []);
   const currentLanguageContent = language === "en" ? en : tr;
 
-  useEffect(() => {
-    const storedLanguage = localStorage.getItem("language") || "en";
-    setLanguage(storedLanguage);
-  }, []);
 
   useEffect(() => {
     const fetchLessons = async () => {
@@ -74,15 +76,10 @@ const Page = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-          <svg
-            className="animate-spin h-5 w-5 mr-2"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          ></svg>
-        </div>
+      <div className="w-full h-full flex flex-col items-center justify-center">
+        <div className="border-t-4 border-blue-500 border-solid w-16 h-16 rounded-full animate-spin"></div>
+        <span className="mt-2 text-blue-500">{currentLanguageContent.loading}</span>
+    </div>
     );
   }
 
@@ -98,7 +95,7 @@ const Page = () => {
             <ArrowBackIos className="ml-1" fontSize="small" />
           </button>
           <p className="font-semibold text-[24px] leading-[29px] text-textColor">
-            {currentLanguageContent.lessons}
+            {currentLanguageContent.institutions}
           </p>
         </div>
 
@@ -117,7 +114,7 @@ const Page = () => {
         ) : (
           <div>
             <p className="text-black text-[18px] font-semibold italic">
-              No lessons found
+              {currentLanguageContent.noLessons}
             </p>
           </div>
         )}

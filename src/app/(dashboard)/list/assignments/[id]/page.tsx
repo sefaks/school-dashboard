@@ -1,10 +1,11 @@
+import AssignmentTests from "@/components/AssignmentPage/AssignmentTests";
 import DownloadDocumentButton from "@/components/DownloadDocumentButton";
 import SubmissionFeedbackForm from "@/components/SubmissionFeedbackForm";
 import CommentForm from "@/components/forms/CommentForm";
 import EditCommentForm from "@/components/forms/EditCommentForm";
 import prisma from "@/lib/prisma";
 import { getRoleAndUserIdAndInstitutionId } from "@/lib/utils";
-import { assignments, classes, comments, documents } from "@prisma/client";
+import { assignments, classes, comments, documents, tests } from "@prisma/client";
 import { DateTime } from "luxon";
 import Image from "next/image";
 import { FaFilePdf } from "react-icons/fa";
@@ -41,6 +42,9 @@ const SingleAssignmentPage = async ({
                       is_graded: boolean;
                   }>;
               };
+          }>;
+          assignment_test:Array<{
+                tests: tests[];
           }>;
           comments: comments[]; // Yorumlar burada sadece basic comment objesi
       })
@@ -124,6 +128,18 @@ const SingleAssignmentPage = async ({
                     },
                 },
                 comments: true, // Sadece yorumlar çekiliyor
+
+                assignment_test: {
+                   include: {
+                          tests: {
+                            select: {
+                                id: true,
+                                name: true,
+                                test_no: true,
+                            },
+                          }
+                     },
+                },
             },
         });
     }
@@ -323,6 +339,10 @@ const SingleAssignmentPage = async ({
                         )}
                     </td>
 
+
+                        
+                       
+
                     <td className="p-2 flex flex-col xs:flex-row items-start xs:items-center gap-1">
   {studentItem.students.student_submissions
     .filter((submission) => submission.assignment_id === parseInt(id)) // Bu assignment'a ait olan submissions'ı filtreliyoruz
@@ -352,21 +372,17 @@ const SingleAssignmentPage = async ({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </span>
-          )}
-        </div>
-      </div>
-    </>
-  )}
-</td>
-
-                    </tr>
+                        )}
+                        </div>
+                    </div>
+                    </>
+                )}
+                </td>
+            </tr>
                 ))}
-                </tbody>
-            </table>
+        </tbody>
+    </table>
             </div>
-
-                      
-
                         {/* Yorumlar */}
     <div className="bg-white p-6 rounded-lg shadow-lg mt-4">
                     <h2 className="text-xl font-semibold text-lamaPurple">Yorumlar</h2>
@@ -417,7 +433,7 @@ const SingleAssignmentPage = async ({
                             ))}
                         </ul>
                     ) : (
-                        <p className="text-gray-500 mt-2">There is no comment yet.</p>
+                        <p className="text-gray-500 mt-2">Henüz bir yorum yapılmamış.</p>
                     )}
 
                 {/* Yorum Ekleme Formu */}
@@ -430,10 +446,10 @@ const SingleAssignmentPage = async ({
             </div>
 
                     {/* Sağ Kısım */}
-                    <div className="w-full xl:w-1/3">
+                    <div className="w-full xl:w-1/3  flex flex-col gap-4">
 
                           {/* Dokümanlar */}
-                          <div className="bg-white p-6 rounded-md shadow">
+                          <div className="bg-white p-4 rounded-md shadow">
                             <h2 className="text-lg font-semibold text-lamaRed">Dokümanlar</h2>
                             {assignment.assignment_document.length > 0 ? (
                                <ul className="mt-4 space-y-2">
@@ -449,9 +465,18 @@ const SingleAssignmentPage = async ({
                                ))}
                              </ul>
                             ) : (
-                                <p className="text-gray-500 mt-2">No document has been assigned for this assignment.</p>
+                                <p className="text-gray-500 text-sm mt-2 p-2">Henüz bir doküman bu ödeve eklenmemiş.</p>
                             )}
                         </div>
+
+                        {/* Testler */}
+                    <AssignmentTests 
+                    assignment={assignment} 
+                    />
+
+                        
+
+
                         
                     </div>
                 </>

@@ -14,9 +14,9 @@ const AdminPage = () => {
         <div className="w-full lg:w-2/3 flex flex-col gap-8">
             {/* USER CARDS */}
             <div className="flex flex-row gap-4 justify-between flex-wrap">
-                <UserCard type="student" />
-                <UserCard type="teacher" />
-                <UserCard type="parent" />
+                <UserCard type="öğrenci" />
+                <UserCard type="öğretmen" />
+                <UserCard type="veli" />
                 <UserCard type="admin" />
             </div>
             {/* MIDDLE CHARTS */}

@@ -2,6 +2,7 @@ import Announcements from "@/components/Announcements";
 import BigCalendarContainer from "@/components/BigCalenderContainer";
 import FormContainer from "@/components/FormContainer";
 import Performance from "@/components/Performance";
+import ClassCodeDisplay from "@/components/StudentPage/ClassCodeUpdate";
 import prisma from "@/lib/prisma";
 import { getRoleAndUserIdAndInstitutionId } from "@/lib/utils";
 import { auth } from "@clerk/nextjs/server";
@@ -155,9 +156,9 @@ const SingleStudentPage = async ({
               />
               <div className="">
                 <h1 className="text-xl font-semibold">
-                  {firstClass?.grade}th
+                  {firstClass?.grade}.
                 </h1>
-                <span className="text-sm text-gray-400">Seviye</span>
+                <span className="text-sm text-gray-400">Sınıf</span>
               </div>
             </div>
             {/* CARD */}
@@ -185,10 +186,11 @@ const SingleStudentPage = async ({
                 height={24}
                 className="w-6 h-6"
               />
-              <div className="">
-                <h1 className="text-xl font-semibold">{firstClass?.class_code}</h1>
-                <span className="text-sm text-gray-400">Sınıf</span>
-              </div>
+              <ClassCodeDisplay 
+                firstClass={firstClass}
+                role={role}
+                id = {student.id}
+              />
             </div>
           </div>
         </div>

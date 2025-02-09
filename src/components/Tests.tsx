@@ -1,10 +1,10 @@
 "use client";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import React, { useState, useEffect, ReactNode } from "react";
 import {toast} from 'react-toastify'
 import en from "@/app/messages/en.json";  
 import tr from "@/app/messages/tr.json"; 
-import { ArrowRight } from "@mui/icons-material";
+import { ArrowBackIos, ArrowRight } from "@mui/icons-material";
 import { set } from "date-fns";
 
 import apiClient from "@/lib/apiClient";
@@ -55,6 +55,9 @@ const Tests: React.FC = () => {
   const [showExplanation, setShowExplanation] = useState(false); // Cevap açıklamalarını göstermek için state
   const [initialLoading, setInitialLoading] = useState(true);
   const [reviewActiveQuestionIndex, setReviewActiveQuestionIndex] = useState(0);
+
+  const router = useRouter();
+
 
 
   const searchParams = useSearchParams();
@@ -119,6 +122,10 @@ const Tests: React.FC = () => {
       const newParams = new URLSearchParams(searchParams.toString());
       newParams.set('testId', testId.toString());
 
+      window.history.replaceState(null, '', `?${newParams.toString()}`);
+
+
+
       // Soruları yükle
       const response = await apiClient.get(`/questions/test-questions/${testId}`);
       console.log("response is ", response)
@@ -170,6 +177,7 @@ const Tests: React.FC = () => {
 
       return (
         <>
+       
           <h2 className="text-xl font-semibold mb-4 underline">Testler</h2>
           {sortedTests.map((test) => (
           <TestListItem
@@ -200,7 +208,7 @@ const Tests: React.FC = () => {
     const currentQuestion = questions[activeQuestionIndex];
 
     return (
-      <div className="flex flex-col lg:flex-row items-center mt-4 gap-8">
+      <div className="flex flex-col lg:flex-col items-center mt-4 gap-8">
         {/* Left Side: Question Image */}
         <div className="w-full mb-4 lg:mb-0">
           <img
@@ -210,11 +218,23 @@ const Tests: React.FC = () => {
           />
         </div>
 
+        <div className="mb-6">
+            <p className="font-semibold text-lg">
+              {currentQuestion.question_number}. {currentLanguageContent.explanation_for_question}
+            </p>
+            <div className="mt-2 p-4 bg-gray-100 border-l-4 border-blue-500 rounded-lg shadow-md"> 
+              <p className="text-gray-700">{currentQuestion.explanation}</p>
+            </div>
+          </div>
+        
+
         {/* Right Side: Question Text */}
         {/* <div className="lg:w-1/2 w-full">
           <h1 className="text-xl font-semibold mb-4">{currentQuestion.question_text}</h1>
         </div> */}
       </div>
+
+      
     );
   };
 
@@ -248,30 +268,14 @@ const Tests: React.FC = () => {
       {/* Left: Test List */}
       {selectedTestId && (
       <div className="lg:w-2/3 bg-[#FFFFFF] p-4 shadow-custom-black rounded-[12px]">
-        {isTestFinish ? (
-          (isLoading || initialLoading) ? (
-            <div className="flex items-center justify-center py-20">
-              <div className="loader border-t-2 border-b-2 border-[#702DFF] w-10 h-10 rounded-full animate-spin mr-2"></div>
-              <span className="text-[#702DFF]">Loading...</span>
-            </div>
-          ) : questions.length > 0 ? (
-            <TestReview
-              questions={questions}
-              currentLanguageContent={currentLanguageContent}
-              activeQuestionIndex={reviewActiveQuestionIndex}
-              setActiveQuestionIndex={setReviewActiveQuestionIndex}
-            />
-          ) : (
-            <p className="text-md italic">{currentLanguageContent.no_questions_available}</p>
-          )
-        ) : (
+       
           <div>
               <h2 className="font-semibold text-[16px] leading-[20px] mb-4">{currentLanguageContent.test_questions}</h2>
               {(isLoading || initialLoading) ? (
-                <div className="flex items-center justify-center py-20">
-                  <div className="loader border-t-2 border-b-2 border-[#702DFF] w-10 h-10 rounded-full animate-spin mr-2"></div>
-                  <span className="text-[#702DFF]">Loading...</span>
-                </div>
+                <div className="w-full h-full flex flex-col items-center justify-center">
+                <div className="border-t-4 border-blue-500 border-solid w-16 h-16 rounded-full animate-spin"></div>
+                <span className="mt-2 text-blue-500">{currentLanguageContent.loading}</span>
+            </div>
               ) : (
                 questions.length > 0 ? renderActiveQuestion() : <p className="text-md italic">{currentLanguageContent.no_questions_available}</p>
               )}
@@ -295,28 +299,40 @@ const Tests: React.FC = () => {
                 </div>
               )}
             </div>
-          )}
         </div>
       )}
 
         <div className="lg:w1/3 bg-[#FFFFFF]  max-h-[60vh] overflow-y-auto p-4 shadow-custom-black rounded-[12px]">
           {isLoading ? (
-            <div className="flex items-center justify-center py-20">
-              <div className="loader border-t-2 border-b-2 border-[#702DFF] w-10 h-10 rounded-full animate-spin mr-2"></div>
-              <span className="text-[#702DFF]">Loading...</span>
+            <div className="w-full h-full flex flex-col items-center justify-center">
+              <div className="border-t-4 border-blue-500 border-solid w-16 h-16 rounded-full animate-spin"></div>
+              <span className="mt-2 text-blue-500">{currentLanguageContent.loading}</span>
             </div>
           ) : (
-            selectedTestId && isTestFinish ? (
-              <QuestionNumbersNav
-              questions={questions}
-              activeQuestionIndex={reviewActiveQuestionIndex}
-              setActiveQuestionIndex={setReviewActiveQuestionIndex}
-              currentLanguageContent={currentLanguageContent}
-            />
+              questions ? (
+              <>
+                {/* Geri butonu ve başlık */}
+                <div className="flex mb-[20px] items-center gap-[20px]">
+                  <button
+                    onClick={() => router.back()}
+                    className="bg-white border p-2 rounded-[10px] hover:bg-gray-300"
+                  >
+                    <ArrowBackIos className="ml-1" fontSize="small" />
+                  </button>
+                  <p className="font-semibold text-[24px] leading-[29px] text-textColor">
+                    {currentLanguageContent.lessons}
+                  </p>
+                </div>
+          
+                {/* Testleri göster */}
+                {renderTests()}
+              </>
             ) : (
-              questions ? renderTests() : <p>{currentLanguageContent.no_test_available}</p>
+              <p className="text-center text-gray-500">{currentLanguageContent.no_test_available}</p>
             )
           )}
+
+        
         </div>
     </div>
   );
