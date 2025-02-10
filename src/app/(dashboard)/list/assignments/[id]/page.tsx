@@ -17,133 +17,185 @@ const SingleAssignmentPage = async ({
 }) => {
     const { role, current_user_id, institution_id } = await getRoleAndUserIdAndInstitutionId();
 
-    let assignment:
-    | (assignments & {
-          assignment_class: Array<{
-              classes: classes;
-          }>;
-          assignment_document: Array<{
-              documents: documents;
-          }>;
-          assignment_student: Array<{
-              students: {
-                  id: number;
-                  name: string;
-                  surname: string;
-                  student_submissions: Array<{
-                      id: number;
-                      submitted_at: Date | null; // DateTime yerine Date
-                      documents: Array<documents>;
-                      assignment_id: number;
-                      score: number | null;
-                      feedback: string | null;
-                      is_graded: boolean;
-                  }>;
-              };
-          }>;
-          assignment_test: Array<{
-              tests: Array<{
-                  id: number;
-                  name: string;
-                  test_no: number;
-              }>;
-          }>;
-          comments: comments[];
-      })
-    | null = null;
-
-if (role === "admin" && institution_id) {
-    assignment = (await prisma.assignments.findUnique({
-        where: { id: parseInt(id) },
-        include: {
-            assignment_class: {
-                where: {
-                    classes: {
-                        institution_id: parseInt(institution_id),
-                    },
-                },
-                take: 1,
-                include: {
-                    classes: true,
-                },
-            },
-            assignment_document: {
-                include: {
-                    documents: true,
-                },
-            },
-            comments: true,
-        },
-    })) as typeof assignment;
-} else if (role === "teacher" && current_user_id) {
-    assignment = (await prisma.assignments.findUnique({
-        where: { id: parseInt(id) },
-        include: {
-            assignment_class: {
-                where: {
-                    classes: {
-                        teacher_class: {
-                            some: {
-                                teacher_id: parseInt(current_user_id),
-                            },
+    
+    interface Documents {
+        id: number;
+        name: string;
+        url: string;
+    }
+    
+    interface Classes {
+        id: number;
+        class_code: string;
+        grade: number;
+        institution_id: number;
+    }
+    
+    interface Tests {
+        id: number;
+        name: string;
+        test_no: number;
+    }
+    
+    interface Comments {
+        id: number;
+        content: string;
+        user_type: string;
+        user_id: number;
+        created_at: DateTime;
+        user: {
+            name: string;
+            surname: string;
+            photo: string | null;
+        };
+    }
+    
+    interface StudentSubmission {
+        id: number;
+        submitted_at: DateTime | null;
+        documents: Documents[];
+        assignment_id: number;
+        score: number | null;
+        feedback: string | null;
+        is_graded: boolean;
+    }
+    
+    interface Student {
+        id: number;
+        name: string;
+        surname: string;
+        student_submissions: StudentSubmission[];
+    }
+    
+    // Ana assignment interface'i
+    interface Assignment {
+        id: number;
+        start_date: Date;
+        deadline_date: Date;
+        assignee_id: number | null;
+        assignee_type: string;
+        description: string | null;
+        status: string;
+        header: string | null;
+        subject_id: number | null;
+        assignment_class: Array<{
+            classes: Classes;
+            assignment_id: number;
+            class_id: number;
+        }>;
+        assignment_document: Array<{
+            documents: Documents;
+            assignment_id: number;
+            document_id: number;
+        }>;
+        assignment_student: Array<{
+            students: Student;
+            assignment_id: number;
+            student_id: number;
+        }>;
+        assignment_test: Array<{
+            tests: Tests;
+            assignment_id: number;
+            test_id: number;
+        }>;
+        comments: Comments[];
+    }
+    
+    // Prisma sorgusu
+    let assignment: Assignment | null = null;
+    
+    if (role === "admin" && institution_id) {
+        assignment = await prisma.assignments.findUnique({
+            where: { id: parseInt(id) },
+            include: {
+                assignment_class: {
+                    where: {
+                        classes: {
+                            institution_id: parseInt(institution_id),
                         },
                     },
+                    take: 1,
+                    include: {
+                        classes: true,
+                    },
                 },
-                include: {
-                    classes: true,
+                assignment_document: {
+                    include: {
+                        documents: true,
+                    },
                 },
+                comments: true,
             },
-            assignment_document: {
-                include: {
-                    documents: true,
+        }) as Assignment | null;
+    } else if (role === "teacher" && current_user_id) {
+        assignment = await prisma.assignments.findUnique({
+            where: { id: parseInt(id) },
+            include: {
+               
+                assignment_document: {
+                    include: {
+                        documents: true,
+                    },
                 },
-            },
-            assignment_student: {
-                include: {
-                    students: {
-                        select: {
-                            id: true,
-                            name: true,
-                            surname: true,
-                            student_submissions: {
-                                select: {
-                                    id: true,
-                                    submitted_at: true,
-                                    assignment_id: true,
-                                    feedback: true,
-                                    score: true,
-                                    is_graded: true,
-                                    documents: {
-                                        select: {
-                                            name: true,
-                                            url: true,
-                                            id: true,
+                assignment_student: {
+                    include: {
+                        students: {
+                            select: {
+                                id: true,
+                                name: true,
+                                surname: true,
+                                student_submissions: {
+                                    select: {
+                                        id: true,
+                                        submitted_at: true,
+                                        assignment_id: true,
+                                        feedback: true,
+                                        score: true,
+                                        is_graded: true,
+                                        documents: {
+                                            select: {
+                                                name: true,
+                                                url: true,
+                                                id: true,
+                                            },
                                         },
                                     },
-                                },
-                                orderBy: {
-                                    submitted_at: "desc",
+                                    orderBy: {
+                                        submitted_at: "desc",
+                                    },
                                 },
                             },
                         },
                     },
                 },
-            },
-            comments: true,
-            assignment_test: {
-                include: {
-                    tests: {
-                        select: {
-                            id: true,
-                            name: true,
-                            test_no: true,
+                comments: true,
+                assignment_test: {
+                    include: {
+                        tests: {
+                            select: {
+                                id: true,
+                                name: true,
+                                test_no: true,
+                            },
                         },
                     },
                 },
-            },
-        },
-    })) as typeof assignment;
-}
+               
+                assignment_class: {
+                        include: {
+                            classes: {
+                                select: {
+                                    id: true,
+                                    class_code: true,
+                                },
+                            }
+                        },
+                    },
+
+        }
+        }) as Assignment | null;
+    }
+
     if (assignment && assignment.comments) {
         // İlk olarak, yorumlarda kullanılan user_id'leri toplamak
         const teacherIds = new Set<number>();
@@ -355,15 +407,15 @@ if (role === "admin" && institution_id) {
       <div className="relative"> {/* wrapper div eklendi */}
         <div className="flex items-center gap-1">
           {/* Her öğrencinin doğru teslimatını ve geri bildirimini almak için şu şekilde düzenliyoruz */}
-          <SubmissionFeedbackForm
+        <SubmissionFeedbackForm
             submissionId={studentItem.students.student_submissions
-              .filter((submission) => submission.assignment_id === parseInt(id))[0]?.id.toString()}
-            currentScore={parseInt(studentItem.students.student_submissions
-              .filter((submission) => submission.assignment_id === parseInt(id))[0]?.score) || null}
+                .filter((submission) => submission.assignment_id === parseInt(id))[0]?.id.toString()}
+            currentScore={studentItem.students.student_submissions
+                .filter((submission) => submission.assignment_id === parseInt(id))[0]?.score?.toString() || ""}
             currentFeedback={studentItem.students.student_submissions
-              .filter((submission) => submission.assignment_id === parseInt(id))[0]?.feedback || ""}
+                .filter((submission) => submission.assignment_id === parseInt(id))[0]?.feedback || ""}
             currentStudentName={`${studentItem.students.name} ${studentItem.students.surname}`}
-          />
+        />
 
           {studentItem.students.student_submissions
             .filter((submission) => submission.assignment_id === parseInt(id))[0]?.is_graded && (
@@ -418,7 +470,7 @@ if (role === "admin" && institution_id) {
                                             )}
                                             </div>
                                             <span className="text-xs text-gray-400">
-                                            {comment.created_at ? new Date(comment.created_at).toLocaleString("tr-TR") : ""}
+                                                {comment.created_at ? new Date(String(comment.created_at)).toLocaleString("tr-TR") : ""}
                                             </span>
                                         </div>
                                                     <EditCommentForm
