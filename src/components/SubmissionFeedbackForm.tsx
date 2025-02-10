@@ -40,7 +40,7 @@ const SubmissionFeedbackForm = ({
             }
         
         const response = await fetch(
-                `http://127.0.0.1:8000/teachers/me/grade-student-submission/${submissionId}`,
+                `https://base-service-ua14.onrender.com/teachers/me/grade-student-submission/${submissionId}`,
                 {
                   method: "PATCH", // POST yerine PUT/PATCH daha uygun
                   headers: {
