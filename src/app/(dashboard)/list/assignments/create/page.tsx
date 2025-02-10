@@ -73,10 +73,12 @@ interface FileWithBase64 {
       const parsedData = JSON.parse(formData);
       const { token, selectedFiles, ...restData } = parsedData;
 
+      let response = null;
+
       if (type === "create") {
-        await addAssignment(restData, selectedFiles, token);
+        response = await addAssignment(restData, selectedFiles, token);
       } else if (type === "update") {
-        await updateAssignment(restData, selectedFiles, token, parseInt(id ?? ""));
+         response = await updateAssignment(restData, selectedFiles, token, parseInt(id ?? ""));
       }
 
       
@@ -453,7 +455,7 @@ interface FileWithBase64 {
                 </label>
                 <textarea
                 {...register("description")}
-                rows="4"
+                rows={4}
                   className="border rounded-md p-2 w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   onChange={handleChange}
                 />
@@ -519,17 +521,17 @@ interface FileWithBase64 {
             <div className="w-full bg-white p-4 rounded-lg shadow-sm">
              <label className="block mb-2 text-sm font-medium">{currentLanguageContent.lesson_selection}</label>
                 <select
-                    className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
-                    multiple
-                    {...register("class_ids")}
-                    value={selectedClasses.map(String)}
-                    onChange={(e) => handleClassSelect(parseInt(e.target.value))}
+                  className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
+                  multiple
+                  {...register("class_ids")}
+                  value={selectedClasses.map(String)}
+                  onChange={(e) => handleClassSelect(parseInt(e.target.value))}
                 >
-                    {relatedData.classes.map((classItem) => (
+                  {relatedData?.classes?.map((classItem: any) => (
                     <option key={classItem.id} value={classItem.id}>
-                        {classItem.class_code}
+                      {classItem.class_code}
                     </option>
-                    ))}
+                  ))}
                 </select>
                 {errors.class_ids && (
                     <span className="text-red-500 text-sm">{errors.class_ids.message}</span>
@@ -544,7 +546,7 @@ interface FileWithBase64 {
                     return (
                       cls && (
                         <span key={classId} className="flex items-center gap-2 p-1 bg-blue-200 rounded-md">
-                          {cls.class_code}
+                          {(cls as any).class_code}
                           <button
                             type="button"
                             onClick={() => handleClassRemove(classId)}
@@ -582,7 +584,7 @@ interface FileWithBase64 {
                                     handleStudentSelect(selectedId);
                                 }}
                                 >
-                                {relatedData.students.map((student) => (
+                                {relatedData.students.map((student:any) => (
                                     <option key={student.id} value={student.id}>
                                     {`${student.name} ${student.surname}`}
                                     </option>
@@ -605,17 +607,17 @@ interface FileWithBase64 {
                                     return (
                                         student && (
                                         <span 
-                                            key={studentId} 
-                                            className="flex items-center gap-2 p-1 bg-blue-200 rounded-md"
+                                          key={studentId} 
+                                          className="flex items-center gap-2 p-1 bg-blue-200 rounded-md"
                                         >
-                                            {student.name} {student.surname}
-                                            <button
-                                            type="button"
-                                            onClick={() => handleStudentRemove(studentId)}
-                                            className="text-red-500"
-                                            >
-                                            X
-                                            </button>
+                                          {(student as any).name} {(student as any).surname}
+                                          <button
+                                          type="button"
+                                          onClick={() => handleStudentRemove(studentId)}
+                                          className="text-red-500"
+                                          >
+                                          X
+                                          </button>
                                         </span>
                                         )
                                     );
