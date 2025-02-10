@@ -137,8 +137,8 @@ const handleRemoveParent = (index: number) => {
         <InputField label="Email" name="email" register={register} error={errors?.email} />
         <InputField label="Student Code" name="student_code" register={register} error={errors?.student_code} />
         <p className="text-xs text-green-600">
-          The code will be the 5-digit sharing code found in the student's "My Codes" section.
-        </p>
+  The code will be the 5-digit sharing code found in the student&apos;s &quot;My Codes&quot; section.
+</p>
       </div>
 
       {/* Class Selection */}

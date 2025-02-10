@@ -108,9 +108,9 @@ const TeacherForm = ({
           register={register}
           error={errors.validation_code}
         />
-        <p className="text-xs text-green-600">
-          The code will be the 5-digit sharing code found in the teacher's "My Codes" section.
-        </p>
+       <p className="text-xs text-green-600">
+        The code will be the 5-digit sharing code found in the teacher&apos;s &quot;My Codes&quot; section.
+      </p>
       </div>
       <button
         type="submit"

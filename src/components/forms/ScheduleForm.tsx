@@ -420,9 +420,8 @@ const ScheduleForm = ({
           <p className="text-gray-500 font-sm text-sm">
             Derslerin gelmesi için önce sınıf seçmeniz gerekmektedir.
             <br />
-            Lütfen saat ve dakika arasına ":" koyunuz. Şu şekilde: 14:30
+              Lütfen saat ve dakika arasına &quot;:&quot; koyunuz. Şu şekilde: 14&#58;30
             </p>
-              
   
           <button
             type="button"
