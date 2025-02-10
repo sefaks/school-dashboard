@@ -47,7 +47,7 @@ const SingleAssignmentPage = async ({
             name: string;
             surname: string;
             photo: string | null;
-        };
+        } | null;
     }
     
     interface StudentSubmission {
@@ -234,18 +234,32 @@ const SingleAssignmentPage = async ({
 
         // Yorumları güncellemek ve her birine user bilgisi eklemek
         assignment.comments = assignment.comments.map(comment => {
-            let user = null;
-
+            let user: { name: string; surname: string; photo: string | null } | null = null;
+        
             // Öğretmen için user bilgisi ekliyoruz
             if (comment.user_type === "TEACHER") {
-                user = teacherMap.get(comment.user_id);
+                const teacher = teacherMap.get(comment.user_id);
+                if (teacher) {
+                    user = {
+                        name: teacher.name ?? "Bilinmiyor",
+                        surname: teacher.surname ?? "Bilinmiyor",
+                        photo: teacher.photo ?? null,
+                    };
+                }
             }
-
+        
             // Öğrenci için user bilgisi ekliyoruz
             if (comment.user_type === "STUDENT") {
-                user = studentMap.get(comment.user_id);
+                const student = studentMap.get(comment.user_id);
+                if (student) {
+                    user = {
+                        name: student.name ?? "Bilinmiyor",
+                        surname: student.surname ?? "Bilinmiyor",
+                        photo: student.photo ?? null,
+                    };
+                }
             }
-
+        
             return { ...comment, user };
         });
     }
