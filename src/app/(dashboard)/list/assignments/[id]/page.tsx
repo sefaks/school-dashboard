@@ -367,14 +367,23 @@ const SingleAssignmentPage = async ({
 
                          {/* Dokümanlar */}
                          <td className="p-2">
-                        {studentItem.students.student_submissions
-                            .filter(submission => submission.assignment_id === parseInt(id)) // Sadece bu assignment_id'ye ait submission'lar
-                            .sort((a, b) => new Date(b.submitted_at) - new Date(a.submitted_at)).length > 0 ? (
-                            (() => {
+                            {studentItem.students.student_submissions
+                                .filter(submission => submission.assignment_id === parseInt(id))
+                                .sort((a, b) => {
+                                // Null check yapıyoruz
+                                if (!a.submitted_at || !b.submitted_at) return 0;
+                                // Tarihleri getTime() ile milisaniye cinsinden karşılaştırıyoruz
+                                return new Date(b.submitted_at.toString()).getTime() - new Date(a.submitted_at.toString()).getTime();
+                                }).length > 0 ? (
+                                (() => {
                                 // En son tarihli submission'ı alıyoruz
                                 const latestSubmission = studentItem.students.student_submissions
-                                    .filter(submission => submission.assignment_id === parseInt(id)) // Filtreleme
-                                    .sort((a, b) => new Date(b.submitted_at) - new Date(a.submitted_at))[0];
+                                    .filter(submission => submission.assignment_id === parseInt(id))
+                                    .sort((a, b) => {
+                                    if (!a.submitted_at || !b.submitted_at) return 0;
+                                    return new Date(b.submitted_at.toString()).getTime() - new Date(a.submitted_at.toString()).getTime();
+                                    })[0];
+
 
                                 return latestSubmission.documents.length > 0 ? (
                                     <div className="flex flex-wrap mb-2">
@@ -412,12 +421,12 @@ const SingleAssignmentPage = async ({
                        
 
                     <td className="p-2 flex flex-col xs:flex-row items-start xs:items-center gap-1">
-  {studentItem.students.student_submissions
+{studentItem.students.student_submissions
     .filter((submission) => submission.assignment_id === parseInt(id)) // Bu assignment'a ait olan submissions'ı filtreliyoruz
     .sort((a, b) => {
-      const dateA = a.submitted_at ? new Date(a.submitted_at) : new Date(0);
-      const dateB = b.submitted_at ? new Date(b.submitted_at) : new Date(0);
-      return dateB.getTime() - dateA.getTime(); // En son teslimatı almak için tarihe göre sıralama
+        const dateA = a.submitted_at ? new Date(a.submitted_at.toString()) : new Date(0);
+        const dateB = b.submitted_at ? new Date(b.submitted_at.toString()) : new Date(0);
+        return dateB.getTime() - dateA.getTime(); // En son teslimatı almak için tarihe göre sıralama
     })[0] && (  // İlk öğe (en son teslimat) alınıyor
     <>
       <div className="relative"> {/* wrapper div eklendi */}
@@ -426,8 +435,8 @@ const SingleAssignmentPage = async ({
         <SubmissionFeedbackForm
             submissionId={studentItem.students.student_submissions
                 .filter((submission) => submission.assignment_id === parseInt(id))[0]?.id.toString()}
-            currentScore={studentItem.students.student_submissions
-                .filter((submission) => submission.assignment_id === parseInt(id))[0]?.score?.toString() || ""}
+            currentScore={parseInt(studentItem.students.student_submissions
+                .filter((submission) => submission.assignment_id === parseInt(id))[0]?.score?.toString() || "")}
             currentFeedback={studentItem.students.student_submissions
                 .filter((submission) => submission.assignment_id === parseInt(id))[0]?.feedback || ""}
             currentStudentName={`${studentItem.students.name} ${studentItem.students.surname}`}
@@ -460,8 +469,8 @@ const SingleAssignmentPage = async ({
                                 <li key={comment.id} className="flex items-start space-x-4 border p-4 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300">
                                     {/* Avatar */}
                                     <Image
-                                        src={comment.user.photo || "/noAvatar.png"}
-                                        alt={`${comment.user.name} ${comment.user.surname}`}
+                                        src={comment.user?.photo || "/noAvatar.png"}
+                                        alt={`${comment.user?.name} ${comment.user?.surname}`}
                                         width={48}
                                         height={48}
                                         className="w-12 h-12 rounded-full object-cover"
@@ -472,18 +481,18 @@ const SingleAssignmentPage = async ({
                                         {/* Yorum Başlığı ve Kullanıcı Bilgisi */}
                                         <div className="flex items-center justify-between gap-2 mb-2">
                                             <div className="flex items-center gap-2">
-                                            <span
-                                                className={`text-sm font-medium ${
-                                                comment.user_type === "TEACHER" ? "text-black" : "text-black"
-                                                }`}
-                                            >
-                                                {comment.user.name} {comment.user.surname}
-                                            </span>
-                                            {comment.user_type === "TEACHER" && (
-                                                <span className="text-xs text-white bg-lamaPurple px-2 py-1 rounded-md">
-                                                Teacher
+                                                <span
+                                                    className={`text-sm font-medium ${
+                                                    comment.user_type === "TEACHER" ? "text-black" : "text-black"
+                                                    }`}
+                                                >
+                                                    {comment.user && comment.user.name} {comment.user && comment.user.surname}
                                                 </span>
-                                            )}
+                                                {comment.user_type === "TEACHER" && (
+                                                    <span className="text-xs text-white bg-lamaPurple px-2 py-1 rounded-md">
+                                                    Teacher
+                                                    </span>
+                                                )}
                                             </div>
                                             <span className="text-xs text-gray-400">
                                                 {comment.created_at ? new Date(String(comment.created_at)).toLocaleString("tr-TR") : ""}
