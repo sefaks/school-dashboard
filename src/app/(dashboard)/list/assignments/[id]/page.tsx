@@ -17,8 +17,6 @@ const SingleAssignmentPage = async ({
 }) => {
     const { role, current_user_id, institution_id } = await getRoleAndUserIdAndInstitutionId();
 
-    
-
     let assignment:
     | (assignments & {
           assignment_class: Array<{
@@ -34,8 +32,8 @@ const SingleAssignmentPage = async ({
                   surname: string;
                   student_submissions: Array<{
                       id: number;
-                      submitted_at: DateTime | null;
-                      documents: Array<documents>; // Birden fazla doküman olabilir
+                      submitted_at: Date | null; // DateTime yerine Date
+                      documents: Array<documents>;
                       assignment_id: number;
                       score: number | null;
                       feedback: string | null;
@@ -43,107 +41,109 @@ const SingleAssignmentPage = async ({
                   }>;
               };
           }>;
-          assignment_test:Array<{
-                tests: tests[];
+          assignment_test: Array<{
+              tests: Array<{
+                  id: number;
+                  name: string;
+                  test_no: number;
+              }>;
           }>;
-          comments: comments[]; // Yorumlar burada sadece basic comment objesi
+          comments: comments[];
       })
     | null = null;
 
-    if (role === "admin" && institution_id) {
-        assignment = await prisma.assignments.findUnique({
-            where: { id: parseInt(id) },
-            include: {
-                assignment_class: {
-                    where: {
-                        classes: {
-                            institution_id: parseInt(institution_id),
-                        },
-                    },
-                    take: 1,
-                    include: {
-                        classes: true,
+if (role === "admin" && institution_id) {
+    assignment = (await prisma.assignments.findUnique({
+        where: { id: parseInt(id) },
+        include: {
+            assignment_class: {
+                where: {
+                    classes: {
+                        institution_id: parseInt(institution_id),
                     },
                 },
-                assignment_document: {
-                    include: {
-                        documents: true,
-                    },
+                take: 1,
+                include: {
+                    classes: true,
                 },
-                comments: true, // Sadece comment'ler çekilecek
             },
-        });
-    } else if (role === "teacher" && current_user_id) {
-        assignment = await prisma.assignments.findUnique({
-            where: { id: parseInt(id) },
-            include: {
-                assignment_class: {
-                    where: {
-                        classes: {
-                            teacher_class: {
-                                some: {
-                                    teacher_id: parseInt(current_user_id),
-                                },
+            assignment_document: {
+                include: {
+                    documents: true,
+                },
+            },
+            comments: true,
+        },
+    })) as typeof assignment;
+} else if (role === "teacher" && current_user_id) {
+    assignment = (await prisma.assignments.findUnique({
+        where: { id: parseInt(id) },
+        include: {
+            assignment_class: {
+                where: {
+                    classes: {
+                        teacher_class: {
+                            some: {
+                                teacher_id: parseInt(current_user_id),
                             },
                         },
                     },
-                    include: {
-                        classes: true,
-                    },
                 },
-                assignment_document: {
-                    include: {
-                        documents: true,
-                    },
+                include: {
+                    classes: true,
                 },
-                assignment_student: {
-                    include: {
-                        students: {
-                            select: {
-                                id: true,
-                                name: true,
-                                surname: true,
-                                student_submissions: {
-                                    select: {
-                                        id: true,
-                                        submitted_at: true,
-                                        assignment_id: true,
-                                        feedback: true,
-                                        score: true,
-                                        is_graded: true,
-                                        documents: {
-                                            select: {
-                                                name: true,
-                                                url: true,
-                                                id: true,
-                                            },
+            },
+            assignment_document: {
+                include: {
+                    documents: true,
+                },
+            },
+            assignment_student: {
+                include: {
+                    students: {
+                        select: {
+                            id: true,
+                            name: true,
+                            surname: true,
+                            student_submissions: {
+                                select: {
+                                    id: true,
+                                    submitted_at: true,
+                                    assignment_id: true,
+                                    feedback: true,
+                                    score: true,
+                                    is_graded: true,
+                                    documents: {
+                                        select: {
+                                            name: true,
+                                            url: true,
+                                            id: true,
                                         },
                                     },
-                                    orderBy: {
-                                        submitted_at: "desc",
-                                    },
+                                },
+                                orderBy: {
+                                    submitted_at: "desc",
                                 },
                             },
                         },
                     },
                 },
-                comments: true, // Sadece yorumlar çekiliyor
-
-                assignment_test: {
-                   include: {
-                          tests: {
-                            select: {
-                                id: true,
-                                name: true,
-                                test_no: true,
-                            },
-                          }
-                     },
+            },
+            comments: true,
+            assignment_test: {
+                include: {
+                    tests: {
+                        select: {
+                            id: true,
+                            name: true,
+                            test_no: true,
+                        },
+                    },
                 },
             },
-        });
-    }
-
+        },
+    })) as typeof assignment;
+}
     if (assignment && assignment.comments) {
         // İlk olarak, yorumlarda kullanılan user_id'leri toplamak
         const teacherIds = new Set<number>();
