@@ -348,20 +348,22 @@ const SingleAssignmentPage = async ({
 
                     {/* Teslim Tarihi */}
                     <td className="p-2">
-                        {studentItem.students.student_submissions
-                            .filter(submission => submission.assignment_id === parseInt(id)) // Sadece bu assignment_id'ye ait submission'lar
-                            .sort((a, b) => new Date(b.submitted_at) - new Date(a.submitted_at))[0]
-                            ?.submitted_at ? (
-                            new Date(
-                                studentItem.students.student_submissions
-                                    .filter(submission => submission.assignment_id === parseInt(id)) // Filtreleme
-                                    .sort((a, b) => new Date(b.submitted_at) - new Date(a.submitted_at))[0]
-                                    ?.submitted_at
-                            ).toLocaleDateString("tr-TR")
-                        ) : (
-                            "Belirtilmemiş"
-                        )}
-                    </td>
+                        {(() => {
+                            const latestSubmission = studentItem.students.student_submissions
+                                .filter(submission => submission.assignment_id === parseInt(id))
+                                .sort((a, b) => {
+                                    if (!a.submitted_at || !b.submitted_at) return 0;
+                                    return new Date(b.submitted_at.toString()).getTime() - new Date(a.submitted_at.toString()).getTime();
+                                })[0];
+
+                            if (!latestSubmission?.submitted_at) {
+                                return "Belirtilmemiş";
+                            }
+
+                            // submitted_at'i Date objesine çevirip kullanıyoruz
+                            return new Date(latestSubmission.submitted_at.toString()).toLocaleDateString("tr-TR");
+                        })()}
+                        </td>
 
                          {/* Dokümanlar */}
                          <td className="p-2">
