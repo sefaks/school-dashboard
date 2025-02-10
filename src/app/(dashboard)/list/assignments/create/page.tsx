@@ -73,12 +73,11 @@ interface FileWithBase64 {
       const parsedData = JSON.parse(formData);
       const { token, selectedFiles, ...restData } = parsedData;
 
- 
       if (type === "create") {
-        await addAssignment(restData, selectedFiles, token)
-        } else if (type === "update") {
-            await updateAssignment(id, restData, selectedFiles, token)
-        }
+        await addAssignment(restData, selectedFiles, token);
+      } else if (type === "update") {
+        await updateAssignment(restData, selectedFiles, token, parseInt(id ?? ""));
+      }
 
       
       // Return the response data along with success status
