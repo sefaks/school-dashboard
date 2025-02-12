@@ -8,7 +8,7 @@ import axios from "axios";
 
 // request for add student to institution 
 
-const API_BASE_URL = "https://base-service-ua14.onrender.com";
+const API_BASE_URL = "http://127.0.0.1:8000";
 
 interface FileWithBase64 {
   name: string;
@@ -912,6 +912,45 @@ export const addScheduleToStudent = async (formData: any, token: string, student
   }
 };
 
+export const adminClasses = async (token: string) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/admins/me/classes`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return response.data;
+
+  }
+  catch (error: any) {
+    if (error.response) {
+      console.error("API Response Error:", error.response);
+      throw new Error(error.response.data.detail || "Failed to get classes!");
+    }
+    console.error("Network Error:", error);
+    throw new Error("An unexpected error occurred!");
+  }
+}
+
+export const getStudentSchedule = async (student_id: number, token: string) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/teachers/me/student-schedule/${student_id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return response.data;
+  } catch (error: any) {
+    if (error.response) {
+      console.error("API Response Error:", error.response);
+      throw new Error(error.response.data.detail || "Failed to get student schedule!");
+    }
+    console.error("Network Error:", error);
+    throw new Error("An unexpected error occurred!");
+  }
+}
 
 
 

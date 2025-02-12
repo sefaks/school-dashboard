@@ -61,7 +61,13 @@
     "student_not_found":"Student not found",
     "no_acces_to_add_schedule" : "You do not have permission to add this student's schedule.",
     "already_have_schedule": "The student already has a schedule, you can update it.",
-    "add_task": "Add Task"
+    "add_task": "Add Task",
+    "schedules": "Schedules",
+    "not_completed": "Not Completed",
+    "completed": "Completed",
+    "today": "Today",
+    "alert_schedule" :"Please select a valid schedule inputs to save the schedule",
+    "schedule_save_success" : "Schedule saved successfully"
 
 
 

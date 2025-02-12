@@ -29,6 +29,7 @@ const config: Config = {
 
         lamaBlue2: "#8CB6D2",
         lamaBlueLight: "#E6F0FF",
+        lamaBlueDark: "#2B6CB0",
         // Mavi tonunu biraz daha belirgin ve koyu hale getirdik
         lamaBlueLight2: "#B8D4F2", // Daha fazla kontrast sağlamak için koyu bir mavi tonu
         lamaRed: "#FF5A5F", // Kırmızı tonunu biraz daha koyu ve dikkat çekici hale getirdik

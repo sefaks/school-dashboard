@@ -60,7 +60,13 @@
     "student_not_found":"Öğrenci bulunamadı",
     "no_acces_to_add_schedule" : "Bu öğrencinin programını ekleme yetkiniz yok.",
     "already_have_schedule": "Öğrencinin zaten bir programı var, güncelleyebilirsiniz.",
-    "add_task": "Görev Ekle"
+    "add_task": "Görev Ekle",
+    "schedules": "Programlar",
+    "not_completed": "Henüz Tamamlanmadı",
+    "completed": "Tamamlandı",
+    "today": "Bugün",
+    "alert_schedule" : "Lütfen tüm saatleri doğru formatta girin (örn: 09:30 veya 14:45 gibi)",
+    "schedule_save_success" : "Program başarıyla kaydedildi"
 
 
 }

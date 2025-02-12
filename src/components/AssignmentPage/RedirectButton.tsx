@@ -1,10 +1,10 @@
 'use client'
 import { useRouter } from 'next/navigation'
-import { Edit, Plus } from 'lucide-react'
+import { Edit, Plus, View } from 'lucide-react'
 import page from '@/app/(dashboard)/list/resources/[Inst_id]/tests/page';
 
 export type AssignmentCreateUpdateProps = {
-  type: "create" | "update";
+  type: "create" | "update" 
   id?: number | string;
   page_type?: string;
 };
@@ -24,13 +24,19 @@ const RedirectButton = ({ type, id,page_type }: AssignmentCreateUpdateProps) => 
       baseUrl = `/list/schedules/create`
     }
 
-    
-    if (type === "create") {
-      return `${baseUrl}?type=${type}`;
-    } else if (type === "update" && id) {
-      return `${baseUrl}?type=${type}&id=${id}`;
+
+    if(page_type === "assignments" && type === "update" && id) {
+      return `/list/assignments/create?id=${id}`
     }
+    else if(page_type === "schedules" && type === "update" && id) {
+      return `/list/schedules/create/${id}`
+    }
+    else if (page_type === "assignments" && type === "create") {
+      return baseUrl;
+    }
+
     return baseUrl;
+    
   }
 
   return (
@@ -43,6 +49,9 @@ const RedirectButton = ({ type, id,page_type }: AssignmentCreateUpdateProps) => 
       ) : (
         <Edit className="w-5 h-5 text-gray-700" />
       )}
+
+     
+
     </button>
   )
 }

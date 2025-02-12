@@ -70,8 +70,6 @@ export default function StudentAnalysisPage() {
       setLoading(true);
       const response = await api.get('/teachers/me/students-weekly-analysis');
 
-    
-
       console.log("API Response:", response.data); // Tüm veriyi konsolda gör
 
       if (response.data) {
@@ -133,6 +131,13 @@ export default function StudentAnalysisPage() {
     </tr>
   );
 
+  if (loading) {
+    return <div className="w-full h-full flex flex-col items-center justify-center">
+    <div className="border-t-4 border-blue-500 border-solid w-16 h-16 rounded-full animate-spin"></div>
+    <span className="mt-2 text-blue-500">{currentLanguageContent.loading}</span>
+  </div>
+  }
+
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
       {/* TOP */}
@@ -152,11 +157,7 @@ export default function StudentAnalysisPage() {
       </div>
 
       {/* Loading ve Error durumları */}
-      {loading && <div className="w-full h-full flex flex-col items-center justify-center">
-                <div className="border-t-4 border-blue-500 border-solid w-16 h-16 rounded-full animate-spin"></div>
-                <span className="mt-2 text-blue-500">{currentLanguageContent.loading}</span>
-              </div>
-              }
+     
       {error && <div className="text-red-500 text-center py-4">{error}</div>}
 
       {/* LIST */}
