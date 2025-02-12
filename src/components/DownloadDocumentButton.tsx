@@ -38,9 +38,9 @@ const DownloadDocumentButton = ({
 
         // Endpoint, `downloadType` prop'una göre ayarlanır
         if (downloadType === "assignment") {
-          endpoint = `https://base-service-ua14.onrender.com/teachers/me/download-assignment-document/${assignmentId}/${documentId}`;
+          endpoint = `http://127.0.0.1:8000/teachers/me/download-assignment-document/${assignmentId}/${documentId}`;
         } else if (downloadType === "submission") {
-          endpoint = `https://base-service-ua14.onrender.com/teachers/me/download-student-submission/${documentId}`;
+          endpoint = `http://127.0.0.1:8000/teachers/me/download-student-submission/${documentId}`;
         }
   
         // Endpoint'e istek atılır
