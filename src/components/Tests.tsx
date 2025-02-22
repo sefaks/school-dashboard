@@ -13,6 +13,7 @@ import QuestionNumbersNav from "./QuestionNumbersNav";
 import TestListItem from "./TestListItem";
 import TestOptions from "./TestOption";
 import TestReview from "./TestReview";
+import MarkdownRenderer from "./MarkdownRenderer";
 
 type answer=
 {
@@ -223,8 +224,9 @@ const Tests: React.FC = () => {
               {currentQuestion.question_number}. {currentLanguageContent.explanation_for_question}
             </p>
             <div className="mt-2 p-4 bg-gray-100 border-l-4 border-blue-500 rounded-lg shadow-md"> 
-              <p className="text-gray-700">{currentQuestion.explanation}</p>
-            </div>
+            <MarkdownRenderer content={currentQuestion.explanation} />
+            
+                                </div>
           </div>
         
 
@@ -239,9 +241,6 @@ const Tests: React.FC = () => {
   };
 
   // Handle user's answer selection
-
-  
-  
   
   // Handle Previous/Next question navigation
   const handleNextQuestion = () => {

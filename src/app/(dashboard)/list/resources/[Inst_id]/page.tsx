@@ -50,7 +50,7 @@ const Page = () => {
           toast.error("Unauthorized Access");
           return;
         }
-
+        console.log("Lessons:", response.data);
         setLessons(response.data);
       } catch (error) {
         console.error("Error fetching lessons:", error);
@@ -66,11 +66,20 @@ const Page = () => {
     }
   }, [institution_id, session]);
 
-  const handleLessonClick = (lessonId: string) => {
+  const handleLessonClick = (lesson: Lesson, publishId?: number) => {
     if (isTest) {
-      router.push(`/list/resources/${institution_id}/tests?isTest=true`);
+      console.log("Test sayfasına yönlendirme");
+      console.log("Publish ID:", publishId);
+      router.push(`/list/resources/${institution_id}/tests?isTest=true${publishId ? `&publisher_id=${publishId}` : ''}`);
     } else {
-      router.push(`/list/resources/${institution_id}/lessons/${lessonId}`);
+      const publisher = lesson.publishes.find(p => p.id === publishId);
+      if (publisher) {
+        router.push(
+          `/list/resources/${institution_id}/lessons/${lesson.id}?curriculum_year=${publisher.curriculum_year}&publisher_name=${publisher.publisher}&grade=${publisher.grade}&subject_id=${lesson.subject_id}&publisher_id=${publisher.id}`
+        );
+      } else {
+        router.push(`/list/resources/${institution_id}/lessons/${lesson.id}`);
+      }
     }
   };
 
@@ -103,13 +112,13 @@ const Page = () => {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-[20px]">
             {lessons.map((lesson, index) => (
               <CourseCardBox
-                key={index}
-                lesson={lesson}
-                resourceId={institution_id}
-                isTest={isTest} // isTest bilgisini CourseCardBox'a gönderiyoruz
-                onClick={() => handleLessonClick(lesson.id)}
-              />
-            ))}
+              key={index}
+              lesson={lesson}
+              resourceId={institution_id}
+              isTest={isTest}
+              onClick={handleLessonClick}  // Sadece fonksiyonu veriyoruz
+            />
+          ))}
           </div>
         ) : (
           <div>

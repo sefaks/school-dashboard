@@ -42,6 +42,7 @@ interface FileWithBase64 {
     classes: [],
     students: [],
     subjects: [],
+    publishes: [],
   });
 
 
@@ -57,6 +58,9 @@ interface FileWithBase64 {
 
   const startDateValue = watch("start_date");
   const deadlineDateValue = watch("deadline_date");
+  const [selectedPublishId, setSelectedPublishId] = useState<number | null>(null);
+
+
 
   // state for loading and error handling
     const [error, setError] = useState(null);
@@ -103,8 +107,8 @@ interface FileWithBase64 {
 
     const [selectedStudents, setSelectedStudents] = useState<number[]>([]);
     const [selectedClasses, setSelectedClasses] = useState<number[]>([]);
+    const [selectedTests, setSelectedTests] = useState<number[]>([]);
 
-  
 
     useEffect(() => {
         const fetchData = async () => {
@@ -116,19 +120,26 @@ interface FileWithBase64 {
             const teacherSubjectsResponse =await  api.get("/teachers/me/subjects")
 
             console.log("Teacher Subjects Response:", teacherSubjectsResponse);
+
+            const teacherPublishesResponse = await api.get("/teachers/me/publishes")
+
+            console.log("Teacher Publishes Response:", teacherPublishesResponse);
+
       
             // Tüm data yüklendikten sonra state'i güncelle
             const classesAndStudentsResponseData =  classesAndStudentsResponse;
             const teacherSubjectsResponseData =  teacherSubjectsResponse;
+            const teacherPublishesResponseData = teacherPublishesResponse;
 
             setRelatedData({
               classes: classesAndStudentsResponseData.data.classes,
               students: classesAndStudentsResponseData.data.students,
-              subjects: teacherSubjectsResponseData.data
+              subjects: teacherSubjectsResponseData.data,
+              publishes: teacherPublishesResponseData.data
             });
       
             // Update case için assignment detaylarını çek
-            if (type === 'update' && id) {
+            if (id) {
                 try {
                   const assignmentResponse = await api.get(`/assignments/${id}`)
                   const assignmentData = assignmentResponse.data;
@@ -143,7 +154,7 @@ interface FileWithBase64 {
                   // Form alanlarını doldur
                   setValue("start_date", assignmentData.start_date);
                   setValue("deadline_date", assignmentData.deadline_date);
-                  setValue("header", assignmentData.title);
+                  setValue("header", assignmentData.header);
                   setValue("description", assignmentData.description);
                   setValue("subject_id", assignmentData.subject_id);
               
@@ -159,12 +170,22 @@ interface FileWithBase64 {
                       ? assignmentData.students.map((as: any) => as.id)
                       : []
                     : [];
+
+                  const testIds = assignmentData.tests
+                    ? Array.isArray(assignmentData.tests)
+                      ? assignmentData.tests.map((at: any) => at.id)
+                      : []
+                    : [];
+
+                    //set selectedPublishId is first test publisher id
+                  setSelectedPublishId(assignmentData.tests[0].publisher_id);
               
                   console.log("Extracted Class IDs:", classIds);
                   console.log("Extracted Student IDs:", studentIds);
               
                   setSelectedClasses(classIds);
                   setSelectedStudents(studentIds);
+                  setSelectedTests(testIds);
 
                   // Eğer assignmentData varsa, selected files'i set et
                   if (assignmentData.documents) {
@@ -282,6 +303,13 @@ interface FileWithBase64 {
         // if type is create, use created, else use updated
         if (type === "create") {
           toast.success(currentLanguageContent.homework_created_successfully);
+
+          // 1 saniye sonra sayfayı yenile
+          setTimeout(() => {
+            window.location.reload();
+          },1000);
+
+
         } else {
           toast.success(currentLanguageContent.homework_updated_successfully);
         }
@@ -315,6 +343,17 @@ interface FileWithBase64 {
   const handleClassRemove = (classId: number) => {
     setSelectedClasses((prev) => prev.filter((id) => id !== classId));
   };
+
+  const handleTestSelect = (testId: number) => {
+    // Prevent adding duplicates
+    if (!selectedTests.includes(testId)) {
+      setSelectedTests((prev) => [...prev, testId]);
+    }
+  }
+
+  const handleTestRemove = (testId: number) => {
+    setSelectedTests((prev) => prev.filter((id) => id !== testId));
+  }
 
   const [language, setLanguage] = useState("en");
 
@@ -447,10 +486,95 @@ interface FileWithBase64 {
                 </select>
                 </div>
               </div>
-  
+                
+                
+          {/* Publish and Test Selection Row - Stack on mobile */}
+          <div className="w-full bg-white p-4 rounded-lg shadow-sm mt-3">
+          <label className="block mb-2 text-sm font-medium">{currentLanguageContent.publish_and_tests_selection}</label>
+            <div className="flex flex-col sm:flex-row gap-4 mt-3">
+              <div className="w-full sm:flex-1">
+                  <label className="block text-sm font-medium text-gray-500 mb-1">
+                    {currentLanguageContent.publish_selection || "Yayın Seçimi"}
+                  </label>
+                  <select
+                    className="border rounded-md p-2 w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    value={selectedPublishId || ""}
+                    onChange={(e) => {
+                      const publishId = e.target.value ? parseInt(e.target.value) : null;
+                      setSelectedPublishId(publishId);
+                      setSelectedTests([]); // Publish değişince seçili testleri sıfırla
+                    }}
+                  >
+                    <option value="">Yayın Seçiniz</option>
+                    {relatedData.publishes
+                      .filter((publish: any) => publish.subject_id === watch("subject_id"))
+                      .map((publish: { id: number, publisher: string }) => (
+                        <option key={publish.id} value={publish.id}>
+                          {publish.publisher} - {publish.curriculum_year} / {publish.grade === 0 ? "Hazırlık" : publish.grade}. Sınıf
+                        </option>
+                      ))}
+                  </select>
+                </div>
+
+                {/* Çoklu test seçimi */}
+               
+              </div>
+
+              {selectedPublishId && (
+                <div className="flex flex-col sm:flex-row gap-4 mt-3">
+
+                  <div className="w-full sm:flex-1">
+                    <label className="block text-sm font-medium text-gray-500 mb-1">
+                      {currentLanguageContent.test_selection || "Test Seçimi (Birden fazla seçilebilir)"}
+                    </label>
+                    <select
+                      multiple
+                      className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
+                      {...register("test_ids")}
+                      value={selectedTests.map(String)}
+                      onChange={(e) => handleTestSelect(parseInt(e.target.value))}
+                    >
+                      {relatedData.publishes
+                        .find((publish: any) => publish.id === selectedPublishId)
+                        ?.tests?.map((test: { id: number, name: string }) => (
+                          <option key={test.id} value={test.id}>
+                            {test.name}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                  </div>
+                )}
+
+            <div className="mt-3 mb-2">
+                <h3 className="font-sm text-green-600">{currentLanguageContent.selected_tests}:</h3>
+                <div className="flex gap-2 flex-wrap">
+                  {selectedTests.map((id) => {
+                    const test = relatedData.publishes
+                      .find((publish: any) => publish.id === selectedPublishId)
+                      ?.tests?.find((test: any) => test.id === id);
+                    return (
+                      test && (
+                        <span key={id} className="flex items-center gap-2 p-1 bg-blue-200 rounded-md">
+                          {(test as any).name}
+                          <button
+                            type="button"
+                            onClick={() => handleTestRemove(id)}
+                            className="text-red-500"
+                          >
+                            X
+                          </button>
+                        </span>
+                      )
+                    );
+                  })}
+                </div>
+              </div>
+              </div>
+
               {/* Description Row */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+              <div className="mt-3">
+                <label className="block text-sm font-medium text-gray-700 mb-1 mt-2 ">
                   {currentLanguageContent.description}
                 </label>
                 <textarea
@@ -462,57 +586,55 @@ interface FileWithBase64 {
               </div>
   
               {/* File Upload Section */}
-              <div className="flex items-center gap-4 border p-4 rounded-md border-dashed focus-within:ring-2 focus-within:ring-blue-500">
-                <input
-                  type="file"
-                  className="w-full cursor-pointer text-sm text-gray-700"
-                  multiple
-                  onChange={handleFileChange}
-                />
-                <span className="text-gray-500 hidden sm:inline">{currentLanguageContent.drop_or_select}</span>
+              <div className="flex flex-col gap-2 mt-3">
+                <label className="block text-sm font-medium text-gray-700">
+                  {currentLanguageContent.document_selection}
+                </label>
+                
+                <div className="flex items-center gap-4 border p-4 rounded-md border-dashed focus-within:ring-2 focus-within:ring-blue-500">
+                  <input
+                    type="file"
+                    className="w-full cursor-pointer text-sm text-gray-700"
+                    multiple
+                    onChange={handleFileChange}
+                  />
+                  <span className="text-gray-500 hidden sm:inline">
+                    {currentLanguageContent.drop_or_select}
+                  </span>
+                </div>
 
-               
+                {selectedFiles.length > 0 && (
+                  <div className="mt-2">
+                    <h2 className="text-sm font-semibold text-red-600">{currentLanguageContent.uploaded_documents}</h2>
+                    <ul className="list-disc mt-2">
+                      {selectedFiles.map((file, index) => (
+                        <li key={index} className="flex flex-row gap-1 items-center text-sm">
+                          <div className="flex w-full mt-1 justify-between items-center">
+                            <div className="flex flex-row gap-2 items-center">
+                              <Image
+                                src="/icons/pdf.svg"
+                                alt="pdf icon"
+                                width={24}
+                                height={24}
+                              />
+                              <span>{file.name}</span>
+                            </div>
+                            <div className="flex items-center">
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveFile(index)}
+                                className="text-red-500 hover:text-red-700"
+                              >
+                                Kaldır
+                              </button>
+                            </div>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
-              {selectedFiles.length > 0 && (
-                        <div className="mt-4">
-                            <h2 className="text-md font-semibold">Yüklenen Dokümanlar:</h2>
-                            <ul className="list-disc ">
-                            {selectedFiles.map((file, index) => (
-                                console.log("File:", file),
-                                <li key={index} className="flex flex-row gap-1 items-center text-sm">
-                                  <div className="flex w-full mt-1 justify-between items-center" >
-
-                                      <div className="flex flex-row gap-2 items-center">
-                                          <Image
-                                          src="/icons/pdf.svg"
-                                          alt="pdf icon"
-                                          width={24}
-                                          height={24}
-                                      />
-                                      <span>{file.name}</span>
-                                      </div >
-
-                                      <div className="flex items-center">
-                                      <button
-                                    type="button"
-                                    onClick={() => handleRemoveFile(index)}
-                                    className="text-red-500 hover:text-red-700"
-                                >
-                                    Kaldır
-                                </button>
-                                      </div>
-                                     
-                                </div>
-
-                               
-                                
-                                </li>
-                            ))}
-                            </ul>
-                        </div>
-                        )}
-  
-            
           </div>
   
           {/* Right Section - Full width on mobile */}
@@ -539,7 +661,7 @@ interface FileWithBase64 {
   
               {/* Selected Classes */}
               <div className="mt-2">
-                <h3 className="font-medium text-green-600">{currentLanguageContent.selected_classes}:</h3>
+                <h3 className="font-sm text-green-600">{currentLanguageContent.selected_classes}:</h3>
                 <div className="flex gap-2 flex-wrap">
                   {selectedClasses.map((classId) => {
                     const cls = relatedData?.classes?.find((c: any) => c.id === classId);
@@ -565,7 +687,7 @@ interface FileWithBase64 {
             {/* notice for teachers */}
             <div className="w-full bg-white p-4 rounded-lg shadow-sm">
               <p className="text-sm text-gray-500">
-                {currentLanguageContent.notice_for_teachers}
+              ❗{currentLanguageContent.notice_for_teachers}
               </p>
             </div>
   
@@ -573,7 +695,7 @@ interface FileWithBase64 {
             <div className="w-full bg-white p-4 rounded-lg shadow-sm">
             {!isLoading && relatedData.students && (
                             <>
-                                <label className="block mb-2 text-sm font-medium">Öğrenci Seçimi</label>
+                                <label className="block mb-2 text-sm font-medium">{currentLanguageContent.student_selection}</label>
                                 <select
                                 className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
                                 multiple
@@ -596,7 +718,7 @@ interface FileWithBase64 {
 
                                 {/* Selected Students */}
                                 <div className="mt-2">
-                                <h3 className="font-medium text-green-600">
+                                <h3 className="font-sm text-green-600">
                                     {currentLanguageContent.selected_students}:
                                 </h3>
                                 <div className="flex gap-2 flex-wrap">

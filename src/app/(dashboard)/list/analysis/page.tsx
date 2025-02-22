@@ -26,6 +26,7 @@ interface AnalysisList {
     total_tests: number;
     average_test_score: number;
     total_solved_questions: number;
+  
   };
 }
 
@@ -73,10 +74,16 @@ export default function StudentAnalysisPage() {
       console.log("API Response:", response.data); // Tüm veriyi konsolda gör
 
       if (response.data) {
-        setAnalysisData(response.data);
+
+        const sortedData = response.data.sort((a: AnalysisList, b: AnalysisList) => {
+          const dateA = new Date(a.report.week_start_date).getTime();
+          const dateB = new Date(b.report.week_start_date).getTime();
+          return dateB - dateA; // En yakın tarih en önde olacak şekilde sıralama
+        });
+
+        setAnalysisData(sortedData);
         setCount(response.data.length);
-        console.log(response.data[0].student_name); // "Mertcan"
-      console.log(response.data[0].student_surname)
+      
       }
       setError(null);
     } catch (err) {

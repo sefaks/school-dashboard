@@ -66,7 +66,30 @@
     "completed": "Tamamlandı",
     "today": "Bugün",
     "alert_schedule" : "Lütfen tüm saatleri doğru formatta girin (örn: 09:30 veya 14:45 gibi)",
-    "schedule_save_success" : "Program başarıyla kaydedildi"
+    "schedule_save_success" : "Program başarıyla kaydedildi",
+    "create_new_student": "Yeni Öğrenci Ekle",
+    "update_student": "Öğrenci Bilgilerini Güncelle",
+    "authentication_information": "Ekleme Bilgileri",
+    "student_code": "Öğrenci Kodu",
+    "class": "Sınıf",
+    "school_no": "Okul Numarası",
+    "add_another_parent": "Başka Bir Veli Ekle",
+    "remove_parent": "Veliyi Kaldır",
+    "add_parents": "Veli Ekle",
+    "all_data_will_be_lost": "Bu veri ile ilgili bilgiler kaybolacak, silmek istediğinizden emin misiniz?",
+    "delete": "Sil",
+    "document_selection": "Döküman Seçimi",
+    "student_selection": "Öğrenci Seçimi",
+    "publish_selection": "Yayınevi Seçimi",
+    "test_selection": "Test Seçimi",
+    "selected_tests": "Seçilen Testler",
+    "publish_and_tests_selection": "Yayınevi ve Test Seçimi",
+    "uploaded_documents": "Yüklenen Dökümanlar",
+    "tasks": "Görevler",
+    "ai_analysis" : "Arf - Akıllı Analiz",
+    "download_report": "Analizi İndir"
+
+
 
 
 }

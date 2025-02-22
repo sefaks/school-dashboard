@@ -1,6 +1,6 @@
 "use client"
 import React, { useState, useEffect } from "react";
-import { Card, Box, Chip, MenuItem, Select, FormControl } from "@mui/material";
+import { Card, Box, Chip, MenuItem, Select, FormControl, SelectChangeEvent } from "@mui/material";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Lesson } from "@/app/types/Lesson";
@@ -10,42 +10,30 @@ import tr from "@/app/messages/tr.json";
 interface CourseCardProps {
   resourceId: number;
   lesson: Lesson;
-  isTest: boolean; // Yeni eklenen prop
+  isTest: boolean;
+  onClick: (lesson: Lesson, publishId?: number) => void;
 }
 
-const CourseCardBox: React.FC<CourseCardProps> = ({ lesson, resourceId, isTest }) => {
+const CourseCardBox: React.FC<CourseCardProps> = ({ lesson, resourceId, isTest, onClick }) => {
   const router = useRouter();
-  const [selectedOption, setSelectedOption] = useState<string>("");
-
-  const [imageSrc, setImageSrc] = useState(
-    lesson?.lesson_image || "/course1.svg"
-  );
-
+  const [selectedOption, setSelectedOption] = useState<string>(""); // number yerine string kullanıyoruz
+  const [imageSrc, setImageSrc] = useState(lesson?.lesson_image || "/course1.svg");
   const storedLanguage = localStorage.getItem("language") || "en";
   const [language, setLanguage] = useState(storedLanguage);
-  const currentLanguageContent = language === "en" ? en : tr; 
+  const currentLanguageContent = language === "en" ? en : tr;
 
-
-  const handleChange = (event: React.ChangeEvent<{ value: unknown }>) => {
-    const selectedPublisher = event.target.value as string;
-    setSelectedOption(selectedPublisher);
-
+  const handleChange = (event: SelectChangeEvent<string>) => {
+    const selectedPublisherId = event.target.value;
+    setSelectedOption(selectedPublisherId);
+    
+    console.log("Selected Publisher ID:", selectedPublisherId);
+    // ID'yi number'a çevirip karşılaştırma yapıyoruz
     const publisher = lesson?.publishes.find(
-      (p) => p.publisher === selectedPublisher
+      (p) => p.id === Number(selectedPublisherId)
     );
 
     if (publisher) {
-      if (isTest) {
-        // Eğer isTest=true ise test sayfasına yönlendiriyoruz
-        router.push(
-          `/list/resources/${resourceId}/tests`
-        );
-      } else {
-        // Normal ders sayfasına yönlendiriyoruz
-        router.push(
-          `/list/resources/${resourceId}/lessons/${publisher.id}?curriculum_year=${publisher.curriculum_year}&publisher_name=${publisher.publisher}&grade=${publisher.grade}&subject_id=${lesson.subject_id}`
-        );
-      }
+      onClick(lesson, Number(selectedPublisherId)); // Convert selectedPublisherId to number
     }
   };
 
@@ -69,10 +57,14 @@ const CourseCardBox: React.FC<CourseCardProps> = ({ lesson, resourceId, isTest }
         {lesson.grade}.Sınıf - {lesson.name}
       </p>
       <FormControl fullWidth>
-        <Select value={selectedOption} onChange={handleChange} displayEmpty>
+        <Select 
+          value={selectedOption}
+          onChange={handleChange}
+          displayEmpty
+        >
           <MenuItem value="">{currentLanguageContent.select_publishers}</MenuItem>
           {lesson.publishes.map((p) => (
-            <MenuItem key={p.id} value={p.publisher}>
+            <MenuItem key={p.id} value={p.id.toString()}> {/* ID'yi string olarak veriyoruz */}
               {p.publisher} - {p.curriculum_year}
             </MenuItem>
           ))}

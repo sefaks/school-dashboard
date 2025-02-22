@@ -24,6 +24,7 @@ const TestOptions = ({
               .sort((a, b) => a.question_number - b.question_number)
               .map((question, index) => {
                 const correctAnswerId = question.correct_answers[0]?.id; // Doğru cevabı al
+                const choiceCount = question.options.choices.length;
   
                 return (
                   <div key={question.id} className="space-y-2 flex items-center gap-1">
@@ -33,7 +34,7 @@ const TestOptions = ({
                     >
                       {question.question_number}
                     </span>
-                    <div className="grid flex-grow grid-cols-4 gap-2">
+                    <div className={`grid ${choiceCount <= 4 ? 'grid-cols-4' : 'grid-cols-5'} gap-2 mb-6`}>
                       {question.options.choices.map((choice) => (
                         <span
                           key={choice.id}

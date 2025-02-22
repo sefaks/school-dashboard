@@ -8,6 +8,8 @@ import en from "@/app/messages/en.json";
 import tr from "@/app/messages/tr.json"; 
 import api from '@/lib/apiClient_new';
 import CombinedPerformanceChart from '@/components/Analysis/CombinedPerformanceChart';
+import TaskStatsWithChart from '@/components/Analysis/TasksWithChart';
+import AIAnalysisSection from '@/components/Analysis/AiAnalysis';
 
 interface AnalysisDetail {
     student_name: string;
@@ -19,10 +21,15 @@ interface AnalysisDetail {
       total_tests: number;
       average_test_score: number;
       total_solved_questions: number;
+      total_weekly_tasks: number;
+      weekly_task_score: number;
+      average_task_score: number;
+      ai_analysis:string;
       report_details: {
         total_assignments: number;
         total_solved_questions: number;
         total_tests: number;
+       
         assignments: Array<{
           assignment_id: number;
           assignment_header: string;
@@ -59,6 +66,9 @@ interface AnalysisDetail {
     const [error, setError] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState('overview');
 
+    const tabs = ['overview', 'assignments', 'tests', 'tasks', 'ai_analysis'];
+
+
     const [language, setLanguage] = useState("en");
     useEffect(() => {
       if (typeof window !== "undefined") {
@@ -69,14 +79,13 @@ interface AnalysisDetail {
     const currentLanguageContent = language === "en" ? en : tr;
 
 
-
-  
     const fetchAnalysisDetail = async (analyisId: string) => {
 
       try {
         setLoading(true);
         const response = await api.get(`/teachers/me/student-analysis/${analyisId}`);
         setAnalysisData(response.data);
+        console.log(response.data);
       } catch (err) {
         setError('Analiz detayları yüklenirken bir hata oluştu.');
         console.error('Error fetching analysis detail:', err);
@@ -157,20 +166,30 @@ interface AnalysisDetail {
               {analysisData.report.report_details.total_assignments}
             </p>
           </div>
+    
         </div>
   
         {/* Testler */}
         <div className="flex space-x-4 border-b">
-        {['overview', 'assignments', 'tests'].map(tab => (
+        {tabs.map(tab => (
           <button
             key={tab}
-            className={`py-2 px-4 ${activeTab === tab ? 'border-b-2 border-blue-500 font-bold' : 'text-gray-500'}`}
+            className={`py-2 px-4 ${
+              activeTab === tab 
+                ? 'border-b-2 border-blue-500 font-bold' 
+                : 'text-gray-500'
+            }`}
             onClick={() => setActiveTab(tab)}
           >
-            {tab === 'overview' ? currentLanguageContent.general : tab === 'assignments' ? currentLanguageContent.assignments : currentLanguageContent.tests}
+            {tab === 'overview' ? currentLanguageContent.general : 
+             tab === 'assignments' ? currentLanguageContent.assignments : 
+             tab === 'tests' ? currentLanguageContent.tests : 
+             tab === 'tasks' ? currentLanguageContent.tasks :
+             currentLanguageContent.ai_analysis || 'AI Analizi'}
           </button>
         ))}
       </div>
+
 
       {/* Genel Bakış Sekmesi */}
       {activeTab === "overview" && (
@@ -260,6 +279,19 @@ interface AnalysisDetail {
     )}
   </div>
 )}
+  {/* Haftalık Tak Sekmesi */}
+  <TaskStatsWithChart analysisData={analysisData} activeTab= {activeTab} />
+
+  <AIAnalysisSection 
+  analysis={analysisData?.report?.ai_analysis || ''}
+  currentLanguageContent={currentLanguageContent}
+  activeTab={activeTab}
+  studentName={`${analysisData.student_name} ${analysisData.student_surname}`}
+  reportDates={{
+    startDate: analysisData.report.week_start_date,
+    endDate: analysisData.report.week_end_date
+  }}
+/>
 
       </div>
   );
