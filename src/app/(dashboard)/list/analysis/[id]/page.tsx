@@ -10,6 +10,7 @@ import api from '@/lib/apiClient_new';
 import CombinedPerformanceChart from '@/components/Analysis/CombinedPerformanceChart';
 import TaskStatsWithChart from '@/components/Analysis/TasksWithChart';
 import AIAnalysisSection from '@/components/Analysis/AiAnalysis';
+import Loading from '../../loading';
 
 interface AnalysisDetail {
     student_name: string;
@@ -105,10 +106,7 @@ interface AnalysisDetail {
       
 
     if (loading) {
-      return <div className="w-full h-full flex flex-col items-center justify-center">
-                <div className="border-t-4 border-blue-500 border-solid w-16 h-16 rounded-full animate-spin"></div>
-                <span className="mt-2 text-blue-500">{currentLanguageContent.loading}</span>
-              </div>;
+      return <Loading/>
     }
   
     if (error) {

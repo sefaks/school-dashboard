@@ -977,6 +977,26 @@ export const getTeacherPublishes = async (token: string) => {
   }
 }
 
+export const getPublishTestTypes = async (token: string,publish_id:number) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/teachers/me/publishes/${publish_id}/test-types`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+
+    return response.data;
+  } catch (error: any) {
+    if (error.response) {
+      console.error("API Response Error:", error.response);
+      throw new Error(error.response.data.detail || "Failed to get test types!");
+    }
+    console.error("Network Error:", error);
+    throw new Error("An unexpected error occurred!");
+  }
+}
+
 
 
 

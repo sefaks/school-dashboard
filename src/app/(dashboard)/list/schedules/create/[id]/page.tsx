@@ -15,6 +15,7 @@ import AddIcon from '@mui/icons-material/Add';
 import { toast } from 'react-toastify';
 import { set } from 'date-fns';
 import { ArrowBackIos } from '@mui/icons-material';
+import Loading from '../../../loading';
 
 const theme = createTheme({  
     palette: {  
@@ -350,10 +351,7 @@ const TeacherDashboard = () => {
 
 
   if (loading) {
-    return <div className="w-full h-full flex flex-col items-center justify-center">
-    <div className="border-t-4 border-blue-500 border-solid w-16 h-16 rounded-full animate-spin"></div>
-    <span className="mt-2 text-blue-500">{currentLanguageContent.loading}</span>
-  </div>;
+    return <Loading/>
   }
 
  

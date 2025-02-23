@@ -14,6 +14,7 @@ import TestListItem from "./TestListItem";
 import TestOptions from "./TestOption";
 import TestReview from "./TestReview";
 import MarkdownRenderer from "./MarkdownRenderer";
+import Loading from "@/app/(dashboard)/list/loading";
 
 type answer=
 {
@@ -43,8 +44,6 @@ type Test = {
   
 };
 
-
-
 const Tests: React.FC = () => {
   const [tests, setTests] = useState<Test[]>([]);
 
@@ -59,11 +58,9 @@ const Tests: React.FC = () => {
 
   const router = useRouter();
 
-
-
   const searchParams = useSearchParams();
   const publish_id =   searchParams.get('publisher_id') || 1;
-
+  const test_type  = searchParams.get('test_type') || "";
   const storedLanguage = localStorage.getItem("language") || "en";
   const [language, setLanguage] = useState(storedLanguage);
   const currentLanguageContent = language === "en" ? en : tr;
@@ -77,7 +74,7 @@ const Tests: React.FC = () => {
         try {
           setIsLoading(true);
           const response = await apiClient.get(
-            `/teachers/me/publishes/${publish_id}/tests`,
+            `/teachers/me/publishes/${publish_id}/tests?test_type=${test_type}`,
             {
               headers: { Authorization: `Bearer ${session?.user.accessToken}` },
             }
@@ -111,6 +108,7 @@ const Tests: React.FC = () => {
     loadInitialTest();
   }, []);
 
+
   // Fetch questions when a test is selected
   const handleTestClick = async (testId: number) => {
     setIsLoading(true);
@@ -124,9 +122,6 @@ const Tests: React.FC = () => {
       newParams.set('testId', testId.toString());
 
       window.history.replaceState(null, '', `?${newParams.toString()}`);
-
-
-
       // Soruları yükle
       const response = await apiClient.get(`/questions/test-questions/${testId}`);
       console.log("response is ", response)
@@ -153,9 +148,7 @@ const Tests: React.FC = () => {
       
       setQuestions(questionsWithImages);
 
-  
-      // Action'a göre işlem yap
-      
+      // Action'a göre işlem yap      
     } catch (error: any) {
       toast.error("Soruları alırken bir hata oluştu", error);
     } finally {
@@ -205,6 +198,8 @@ const Tests: React.FC = () => {
       />
     );
   };
+
+
   const renderActiveQuestion = () => {
     const currentQuestion = questions[activeQuestionIndex];
 
@@ -220,13 +215,21 @@ const Tests: React.FC = () => {
         </div>
 
         <div className="mb-6">
-            <p className="font-semibold text-lg">
-              {currentQuestion.question_number}. {currentLanguageContent.explanation_for_question}
-            </p>
-            <div className="mt-2 p-4 bg-gray-100 border-l-4 border-blue-500 rounded-lg shadow-md"> 
+           
+            {currentQuestion.explanation && currentQuestion.explanation != '' && (
+              <div>
+              <p className="font-semibold text-lg">
+               {currentQuestion.question_number}. {currentLanguageContent.explanation_for_question}
+             </p>
+                <div className="mt-2 p-4 bg-gray-100 border-l-4 border-blue-500 rounded-lg shadow-md"> 
+
             <MarkdownRenderer content={currentQuestion.explanation} />
+            </div>
+              </div>
+              
+
+            )}
             
-                                </div>
           </div>
         
 
@@ -263,78 +266,76 @@ const Tests: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col gap-8 lg:flex-row">
-      {/* Left: Test List */}
-      {selectedTestId && (
+  <div className="flex flex-col gap-8 lg:flex-row">
+    {/* Sol: Test Detayları - Sadece bir test seçildiğinde görünür */}
+    {selectedTestId && (
       <div className="lg:w-2/3 bg-[#FFFFFF] p-4 shadow-custom-black rounded-[12px]">
-       
-          <div>
-              <h2 className="font-semibold text-[16px] leading-[20px] mb-4">{currentLanguageContent.test_questions}</h2>
-              {(isLoading || initialLoading) ? (
-                <div className="w-full h-full flex flex-col items-center justify-center">
-                <div className="border-t-4 border-blue-500 border-solid w-16 h-16 rounded-full animate-spin"></div>
-                <span className="mt-2 text-blue-500">{currentLanguageContent.loading}</span>
-            </div>
-              ) : (
-                questions.length > 0 ? renderActiveQuestion() : <p className="text-md italic">{currentLanguageContent.no_questions_available}</p>
-              )}
-
-              {/* Navigation Buttons */}
-              {questions.length > 0 && (
-                <div className="flex justify-between mt-4">
-                  <button
-                    disabled={activeQuestionIndex === 0}
-                    onClick={handlePreviousQuestion}
-                    className="px-4 py-2 bg-gray-300 rounded-md text-gray-800 hover:bg-gray-400 disabled:opacity-50"
-                  >
-                    {currentLanguageContent.previous}
-                  </button>
-                  <button
-                    onClick={handleNextQuestion}
-                    className="px-4 py-2 bg-[#702DFF] text-white rounded-md hover:bg-purple-700"
-                  >
-                    {activeQuestionIndex === questions.length - 1 ? 'Finish' : currentLanguageContent.next}
-                  </button>
-                </div>
-              )}
-            </div>
-        </div>
-      )}
-
-        <div className="lg:w1/3 bg-[#FFFFFF]  max-h-[60vh] overflow-y-auto p-4 shadow-custom-black rounded-[12px]">
-          {isLoading ? (
-            <div className="w-full h-full flex flex-col items-center justify-center">
-              <div className="border-t-4 border-blue-500 border-solid w-16 h-16 rounded-full animate-spin"></div>
-              <span className="mt-2 text-blue-500">{currentLanguageContent.loading}</span>
-            </div>
+        <div>
+          <h2 className="font-semibold text-[16px] leading-[20px] mb-4">
+            {currentLanguageContent.test_questions}
+          </h2>
+          {(isLoading || initialLoading) ? (
+            <Loading/>
           ) : (
-              questions ? (
-              <>
-                {/* Geri butonu ve başlık */}
-                <div className="flex mb-[20px] items-center gap-[20px]">
-                  <button
-                    onClick={() => router.back()}
-                    className="bg-white border p-2 rounded-[10px] hover:bg-gray-300"
-                  >
-                    <ArrowBackIos className="ml-1" fontSize="small" />
-                  </button>
-                  <p className="font-semibold text-[24px] leading-[29px] text-textColor">
-                    {currentLanguageContent.lessons}
-                  </p>
-                </div>
-          
-                {/* Testleri göster */}
-                {renderTests()}
-              </>
-            ) : (
-              <p className="text-center text-gray-500">{currentLanguageContent.no_test_available}</p>
-            )
+            questions.length > 0 ? renderActiveQuestion() : 
+            <p className="text-md italic">{currentLanguageContent.no_questions_available}</p>
           )}
-
-        
+          {/* Navigation Buttons */}
+          {questions.length > 0 && (
+            <div className="flex justify-between mt-4">
+              <button
+                disabled={activeQuestionIndex === 0}
+                onClick={handlePreviousQuestion}
+                className="px-4 py-2 bg-gray-300 rounded-md text-gray-800 hover:bg-gray-400 disabled:opacity-50"
+              >
+                {currentLanguageContent.previous}
+              </button>
+              <button
+                onClick={handleNextQuestion}
+                className="px-4 py-2 bg-[#702DFF] text-white rounded-md hover:bg-purple-700"
+              >
+                {activeQuestionIndex === questions.length - 1 ? 'Finish' : currentLanguageContent.next}
+              </button>
+            </div>
+          )}
         </div>
+      </div>
+    )}
+
+    {/* Sağ: Test Listesi - Test seçili değilken tam genişlik */}
+    <div className={`${selectedTestId ? 'lg:w-1/3' : 'lg:w-full'} bg-[#FFFFFF] max-h-[calc(100vh-200px)] overflow-y-auto p-6 shadow-custom-black rounded-[12px]`}>
+      {isLoading ? (
+        <Loading/>
+      ) : (
+        questions ? (
+          <>
+            {/* Geri butonu ve başlık row */}
+            <div className="flex items-center gap-4 mb-6">
+              <button
+                onClick={() => router.back()}
+                className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <ArrowBackIos className="text-gray-600" fontSize="small" />
+              </button>
+              <h1 className="text-2xl font-semibold text-gray-900">
+                {currentLanguageContent.lessons}
+              </h1>
+            </div>
+
+            {/* Testler */}
+            {renderTests()}
+          </>
+        ) : (
+          <div className="flex flex-col items-center justify-center min-h-[400px]">
+            <p className="text-gray-500 text-lg">
+              {currentLanguageContent.no_test_available}
+            </p>
+          </div>
+        )
+      )}
     </div>
-  );
-};
+  </div>
+);
+}
 
 export default Tests;
