@@ -1,6 +1,6 @@
 "use client"
 import React, { useState, useEffect } from "react";
-import { Card, Box, Chip, MenuItem, Select, FormControl } from "@mui/material";
+import { Card, Box, Chip, MenuItem, Select, FormControl, SelectChangeEvent } from "@mui/material";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Lesson } from "@/app/types/Lesson";
@@ -10,74 +10,118 @@ import tr from "@/app/messages/tr.json";
 interface CourseCardProps {
   resourceId: number;
   lesson: Lesson;
-  isTest: boolean; // Yeni eklenen prop
+  isTest: boolean;
 }
 
-const CourseCardBox: React.FC<CourseCardProps> = ({ lesson, resourceId, isTest }) => {
+const CourseCardBox: React.FC<CourseCardProps> = ({ lesson, resourceId, isTest, onClick }) => {
   const router = useRouter();
-  const [selectedOption, setSelectedOption] = useState<string>("");
-
-  const [imageSrc, setImageSrc] = useState(
-    lesson?.lesson_image || "/course1.svg"
-  );
-
+  const [selectedOption, setSelectedOption] = useState<string>(""); // number yerine string kullanıyoruz
+  const [imageSrc, setImageSrc] = useState(lesson?.lesson_image || "/course1.svg");
+  
   const storedLanguage = localStorage.getItem("language") || "en";
   const [language, setLanguage] = useState(storedLanguage);
-  const currentLanguageContent = language === "en" ? en : tr; 
+  const currentLanguageContent = language === "en" ? en : tr;
 
+ 
 
   const handleChange = (event: React.ChangeEvent<{ value: unknown }>) => {
     const selectedPublisher = event.target.value as string;
     setSelectedOption(selectedPublisher);
 
+    // Find the publisher object by its name
     const publisher = lesson?.publishes.find(
       (p) => p.publisher === selectedPublisher
     );
+    const year = publisher?.curriculum_year;
+    console.log(year);
 
     if (publisher) {
-      if (isTest) {
-        // Eğer isTest=true ise test sayfasına yönlendiriyoruz
+      // Redirect to the publisher's page using their ID
+      if (isTest !== false) {
+        router.push(`/list/resources/test-types?publish_id=${publisher.id}`);  // ✅ isTest'e göre yönlendirme yapıldı
+
+      } else
         router.push(
-          `/list/resources/${resourceId}/tests`
+          `/list/resources/lessons/${publisher.id}`
         );
-      } else {
-        // Normal ders sayfasına yönlendiriyoruz
-        router.push(
-          `/list/resources/${resourceId}/lessons/${publisher.id}?curriculum_year=${publisher.curriculum_year}&publisher_name=${publisher.publisher}&grade=${publisher.grade}&subject_id=${lesson.subject_id}`
-        );
-      }
     }
   };
 
+  const lessonName = lesson?.name || currentLanguageContent.loading;
+
   return (
-    <Card className="!shadow-custom-daow !rounded-[14px] !p-[15px] !overflow-hidden">
-      <Box className="relative w-full">
-        <Image
-          src={imageSrc}
-          alt="Course Image"
-          layout="responsive"
-          width={400}
-          height={200}
-          onError={() => setImageSrc("/course1.svg")}
+    <Card className="shadow-lg rounded-xl p-4 overflow-hidden">
+      <Box className="relative w-full aspect-w-2 aspect-h-1">
+        <div className="relative w-full h-48">
+          <Image
+            src={imageSrc}
+            alt="Course Image"
+            layout="fill"
+            objectFit="cover"
+            onError={() => setImageSrc("/course1.svg")}
+            className="rounded-lg"
+          />
+        </div>
+      </Box>
+      
+      <Box className="flex gap-2 mt-3">
+        <Chip
+          label="Ders Kaynağı"
+          variant="outlined"
+          sx={{
+            backgroundColor: "#35B97D1A",
+            color: "#018B4D",
+            fontWeight: "medium",
+          }}
+          className="rounded-md border-0"
+        />
+        <Chip
+          label="Konu"
+          variant="outlined"
+          sx={{
+            backgroundColor: "#EBF2FF",
+            color: "#1165EF",
+            fontWeight: "medium",
+          }}
+          className="rounded-md border-0"
         />
       </Box>
-      <Box className="!flex !gap-2 !mt-[10px]">
-        <Chip label="Ders Kaynağı" className="!bg-[#35B97D1A] !text-[#018B4D]" />
-        <Chip label="Konu" className="!bg-[#EBF2FF] !text-[#1165EF]" />
-      </Box>
-      <p className="text-[#202020] font-semibold text-[15px] leading-[21px] my-[12px]">
-        {lesson.grade}.Sınıf - {lesson.name}
-      </p>
-      <FormControl fullWidth>
-        <Select value={selectedOption} onChange={handleChange} displayEmpty>
-          <MenuItem value="">{currentLanguageContent.select_publishers}</MenuItem>
-          {lesson.publishes.map((p) => (
-            <MenuItem key={p.id} value={p.publisher}>
-              {p.publisher} - {p.curriculum_year}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
+
+      <div>
+        <p className="text-gray-800 font-semibold text-base leading-snug my-3">
+          {lessonName} - {lesson?.grade} .{currentLanguageContent.grade}
+        </p>
+        
+        <div className="mt-4">
+          <FormControl fullWidth>
+            <Select
+              value={selectedOption}
+              onChange={handleChange}
+              displayEmpty
+              renderValue={(selected) => {
+                if (selected === "") {
+                  return <span>{currentLanguageContent.select_publishers}</span>;
+                }
+                return selected;
+              }}
+              sx={{
+                "& .MuiSelect-root": {
+                  py: 2.5,
+                },
+                "& .MuiOutlinedInput-notchedOutline": {
+                  borderColor: "rgba(0, 0, 0, 0.12)",
+                },
+              }}
+            >
+              {lesson?.publishes?.map((publish, index) => (
+                <MenuItem key={index} value={publish.publisher}>
+                  <span>{publish.publisher} - {publish.curriculum_year}</span>
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </div>
+      </div>
     </Card>
   );
 };

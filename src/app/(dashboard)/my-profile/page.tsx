@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { getTeacherProfile } from '@/lib/actions';
 import en from "@/app/messages/en.json";
 import tr from "@/app/messages/tr.json";
+import Loading from '../list/loading';
 
 export default function TeacherProfilePage() {  
   const [teacher, setTeacher] = useState(null);  
@@ -64,10 +65,7 @@ export default function TeacherProfilePage() {
   }
 
   if (loading) {
-    return <div className="w-full h-full flex flex-col items-center justify-center">
-    <div className="border-t-4 border-blue-500 border-solid w-16 h-16 rounded-full animate-spin"></div>
-    <span className="mt-2 text-blue-500">{currentLanguageContent.loading}</span>
-  </div>;
+    return <Loading/>
   }
   
   return (  

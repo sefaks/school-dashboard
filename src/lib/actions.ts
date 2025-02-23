@@ -243,6 +243,9 @@ export const addAssignment = async (
   if (formData.description) {
       requestData.append('description', formData.description);
   }
+  if (formData.header) {
+      requestData.append('header', formData.header);
+  }
   
   if (formData.subject_id) {
       requestData.append('subject_id', formData.subject_id.toString());
@@ -254,6 +257,9 @@ export const addAssignment = async (
   
   if (formData.student_ids && formData.student_ids.length > 0) {
       requestData.append('student_ids', formData.student_ids.join(','));
+  }
+  if (formData.test_ids && formData.test_ids.length > 0) {
+      requestData.append('test_ids', formData.test_ids.join(','));
   }
   
   // Dosya varsa ekle
@@ -946,6 +952,45 @@ export const getStudentSchedule = async (student_id: number, token: string) => {
     if (error.response) {
       console.error("API Response Error:", error.response);
       throw new Error(error.response.data.detail || "Failed to get student schedule!");
+    }
+    console.error("Network Error:", error);
+    throw new Error("An unexpected error occurred!");
+  }
+}
+
+export const getTeacherPublishes = async (token: string) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/teachers/me/publishes`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return response.data;
+  } catch (error: any) {
+    if (error.response) {
+      console.error("API Response Error:", error.response);
+      throw new Error(error.response.data.detail || "Failed to get publishes!");
+    }
+    console.error("Network Error:", error);
+    throw new Error("An unexpected error occurred!");
+  }
+}
+
+export const getPublishTestTypes = async (token: string,publish_id:number) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/teachers/me/publishes/${publish_id}/test-types`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+
+    return response.data;
+  } catch (error: any) {
+    if (error.response) {
+      console.error("API Response Error:", error.response);
+      throw new Error(error.response.data.detail || "Failed to get test types!");
     }
     console.error("Network Error:", error);
     throw new Error("An unexpected error occurred!");

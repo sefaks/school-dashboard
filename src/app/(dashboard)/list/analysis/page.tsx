@@ -13,6 +13,7 @@ import RedirectButton from '@/components/AssignmentPage/RedirectButton';
 import { set } from 'date-fns';
 import en from "@/app/messages/en.json";  
 import tr from "@/app/messages/tr.json"; 
+import Loading from '../loading';
 
 interface AnalysisList {
   student_id: number;
@@ -26,6 +27,7 @@ interface AnalysisList {
     total_tests: number;
     average_test_score: number;
     total_solved_questions: number;
+  
   };
 }
 
@@ -73,10 +75,16 @@ export default function StudentAnalysisPage() {
       console.log("API Response:", response.data); // Tüm veriyi konsolda gör
 
       if (response.data) {
-        setAnalysisData(response.data);
+
+        const sortedData = response.data.sort((a: AnalysisList, b: AnalysisList) => {
+          const dateA = new Date(a.report.week_start_date).getTime();
+          const dateB = new Date(b.report.week_start_date).getTime();
+          return dateB - dateA; // En yakın tarih en önde olacak şekilde sıralama
+        });
+
+        setAnalysisData(sortedData);
         setCount(response.data.length);
-        console.log(response.data[0].student_name); // "Mertcan"
-      console.log(response.data[0].student_surname)
+      
       }
       setError(null);
     } catch (err) {
@@ -132,10 +140,7 @@ export default function StudentAnalysisPage() {
   );
 
   if (loading) {
-    return <div className="w-full h-full flex flex-col items-center justify-center">
-    <div className="border-t-4 border-blue-500 border-solid w-16 h-16 rounded-full animate-spin"></div>
-    <span className="mt-2 text-blue-500">{currentLanguageContent.loading}</span>
-  </div>
+    return <Loading/>
   }
 
   return (

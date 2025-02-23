@@ -10,6 +10,9 @@ import { useFormState } from "react-dom";
 import { useSession } from "next-auth/react";
 import { useForm } from "react-hook-form";
 
+import en from "@/app/messages/en.json";  
+import tr from "@/app/messages/tr.json"; 
+
 const StudentForm = ({
   type,
   data,
@@ -24,15 +27,15 @@ const StudentForm = ({
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isValid },
     setValue,
     getValues,
     watch
-} = useForm<StudentSchema>({
+  } = useForm<StudentSchema>({
     resolver: zodResolver(studentSchema),
     defaultValues: data,
-});
-
+    mode: "onChange" // Form değerleri değiştiğinde anında doğrulama yapar
+  });
 
   const { data: session } = useSession(); // Get the session (which includes the token)
   const router = useRouter();
@@ -44,6 +47,15 @@ const StudentForm = ({
       error: false,
     }
   );
+
+  const [language, setLanguage] = useState("en");
+    useEffect(() => {
+      if (typeof window !== "undefined") {
+        const storedLanguage = localStorage.getItem("language") || "en";
+        setLanguage(storedLanguage);
+      }
+    }, []);
+    const currentLanguageContent = language === "en" ? en : tr;
 
  const onSubmit = async (formData: StudentSchema) => {
   const formattedData = {
@@ -121,30 +133,29 @@ const handleRemoveParent = (index: number) => {
 
   const formParents = watch('parents') || [];
 
-  const isValid = Object.keys(errors).length === 0;
 
 
   return (
     <form className="flex flex-col gap-8" onSubmit={handleSubmit(onSubmit)}>
       <h1 className="text-xl font-semibold">
-        {type === "create" ? "Create a new student" : "Update student"}
+        {type === "create" ? currentLanguageContent.create_new_student : currentLanguageContent.update_student}
       </h1>
 
       {/* Authentication Information */}
-      <span className="text-sm text-gray-400 font-medium">Authentication Information</span>
+      <span className="text-sm text-gray-400 font-medium">{currentLanguageContent.authentication_information}</span>
 
       <div className="flex justify-start flex-wrap gap-4">
         <InputField label="Email" name="email" register={register} error={errors?.email} />
-        <InputField label="Student Code" name="student_code" register={register} error={errors?.student_code} />
+        <InputField label={currentLanguageContent.student_code} name="student_code" register={register} error={errors?.student_code} />
         <p className="text-xs text-green-600">
   The code will be the 5-digit sharing code found in the student&apos;s &quot;My Codes&quot; section.
 </p>
       </div>
 
       {/* Class Selection */}
-      <span className="text-sm text-gray-400 font-medium">Class Selection</span>
+      <span className="text-sm text-gray-400 font-medium">{currentLanguageContent.class_selection}</span>
       <div className="flex flex-col gap-2">
-        <label className="text-xs text-gray-500">Class</label>
+        <label className="text-xs text-gray-500">{currentLanguageContent.class}</label>
         <select
           className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
           {...register("class_id")}
@@ -159,12 +170,12 @@ const handleRemoveParent = (index: number) => {
       </div>
 
       {/* Student School No */}
-      <InputField label="School No" name="school_no" register={register} error={errors?.school_no} />
+      <InputField label={currentLanguageContent.school_no} name="school_no" register={register} error={errors?.school_no} />
 
       {/* Student Information */}
 
       {/* Parent Information */}
-      <span className="text-sm text-gray-400 font-medium">Add Parents</span>
+      <span className="text-sm text-gray-400 font-medium">{currentLanguageContent.add_parents}</span>
       {formParents.map((parent, index) => (
         <div key={index} className="flex flex-row justify-start gap-4">
           <InputField
@@ -196,7 +207,7 @@ const handleRemoveParent = (index: number) => {
             className="text-sm text-red-500"
             onClick={() => handleRemoveParent(index)}
           >
-            Remove Parent
+            {currentLanguageContent.remove_parent}
           </button>
         </div>
       ))}
@@ -206,16 +217,16 @@ const handleRemoveParent = (index: number) => {
         onClick={handleAddParent}
         className="text-sm text-blue-500"
       >
-        Add Another Parent
+        {currentLanguageContent.add_another_parent}
       </button>
 
 
       <button
-          type="submit"
-          className="bg-blue-400 text-white p-2 rounded-md disabled:opacity-50 mt-4"
-          disabled={!isValid}
+        type="submit"
+        className="bg-blue-400 text-white p-2 rounded-md disabled:opacity-50 mt-4"
+        disabled={!isValid}
       >
-        {type === "create" ? "Create" : "Update"}
+        {type === "create" ? currentLanguageContent.create : currentLanguageContent.update}
       </button>
     </form>
   );

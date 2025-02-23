@@ -1,97 +1,92 @@
 "use client"
-import { Institution } from "@/app/types/Institution";
-import InstituteCard from "@/components/InstituteCard";
-import apiClient from "@/lib/apiClient";
-import { useSession } from "next-auth/react";
-import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
-import { toast } from "react-toastify";
+import React, { useEffect, useState } from 'react';
+import { ArrowBackIos } from '@mui/icons-material';
+
+import Link from 'next/link'
 import en from "@/app/messages/en.json";
 import tr from "@/app/messages/tr.json";
+import { useRouter } from 'next/navigation';
+import { Lesson } from '@/app/types/Lesson';
+import apiClient from '@/lib/apiClient';
+import CourseCardBox from '@/components/CourseCardBox';
+import { useSearchParams } from "next/navigation";
+import { useSession } from 'next-auth/react';
+import Loading from '../loading';
+
 
 const Page = () => {
-  const [institutes, setInstitutes] = useState<Institution[]>([]);
-  const [loading, setLoading] = useState(true);
-  const searchParams = useSearchParams();
+    const [loading, setLoading] = useState(true);
+    const router = useRouter();
+    const [lessons, setLessons] = useState<Lesson[]>([]);
+    const storedLanguage = localStorage.getItem("language") || "en";
+    const [language, setLanguage] = useState(storedLanguage);
+    const currentLanguageContent = language === "en" ? en : tr;
+
+    // get redirectTo from query params
+    const searchParams = useSearchParams();
   
-  const redirectTo = searchParams.get("redirectTo"); 
-  const isExam = redirectTo === "tests"; // ✅ redirectTo'ya göre isExam belirledik
+    const redirectTo = searchParams.get("redirectTo"); 
+    const isTest = redirectTo === "tests"; // ✅ redirectTo'ya göre isExam belirledik
 
-  const { data: session } = useSession(); 
+    const { data: session } = useSession();
 
-  const [language, setLanguage] = useState("en");
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const storedLanguage = localStorage.getItem("language") || "en";
-      setLanguage(storedLanguage);
-    }
-  }, []);
-  const currentLanguageContent = language === "en" ? en : tr;
-
-  useEffect(() => {
-    const fetchInstitutes = async () => {
-      try {
-        setLoading(true);
-
-        if (!session?.user?.accessToken) {
-          toast.error("Unauthorized Access");
-          return;
-        }
-
-        const response = await apiClient.get("/teachers/me/institutions", {
-          headers: { Authorization: `Bearer ${session.user.accessToken}` },
-        });
-
-        console.log("Institutes from API:", response.data);
-
-        const data = Array.isArray(response.data) ? response.data : [response.data];
-
-        setInstitutes(data);
-      } catch (err) {
-        console.error("Error fetching institutes:", err);
-        toast.error("Failed to fetch institutions");
-      } finally {
-        setLoading(false);
-      }
+    const handleBackClick = () => {
+        router.back();
     };
 
-    if (session) {
-      fetchInstitutes();
+    useEffect(() => {
+        const fetchLessons = async () => {
+            try {
+              const response = await apiClient.get('teachers/me/institution/lessons-publishes', {
+                headers: { Authorization: `Bearer ${session?.user.accessToken}` },
+              });
+              if (response.status === 401) {
+                return;
+              }
+              setLessons(response.data);
+              setLoading(false);
+            } catch (error) {
+              console.error("Error fetching lessons:", error);
+              setLoading(false);
+            }
+        };
+
+        fetchLessons();
+    }, []);
+
+    if (loading) {
+      return <Loading/>
     }
-  }, [session]); 
 
-  if (loading) {
     return (
-      <div className="w-full h-full flex flex-col items-center justify-center">
-      <div className="border-t-4 border-blue-500 border-solid w-16 h-16 rounded-full animate-spin"></div>
-      <span className="mt-2 text-blue-500">{currentLanguageContent.loading}</span>
-    </div>
-    
-    );
-  }
-
-  return (
-    <div className="px-[22px] xl:px-[30px] rounded-[14px] py-[25px]">
-      {institutes.length > 0 ? (
-        <div className="grid sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-[20px]">
-          {institutes.map((inst) => (
-            <InstituteCard
-              key={inst?.id}
-              image={inst?.image || "/instituteLogo.svg"}
-              name={inst?.name}
-              link={`/list/resources/${inst?.id}?redirectTo=${redirectTo || ""}`} // ✅ Artık sadece redirectTo'yu gönderiyoruz
-            />
-          ))}
-        </div>
-      ) : (
         <div>
-          <p className="text-black text-[18px] font-semibold italic">
-            {currentLanguageContent.no_insitution_found}
-          </p>
+            <div className="px-[30px] rounded-[14px] py-[25px] bg-[#fafbfc]">
+                <div className="flex mb-[20px] items-center gap-[20px]">
+                    
+                    <p className="font-semibold text-[24px] leading-[29px] text-textColor">{currentLanguageContent.lessons}</p>
+                </div>
+                {lessons.length > 0 ? (
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-[20px]">
+                        {lessons.map((lesson: Lesson, index: number) => (
+                            <CourseCardBox 
+                                key={index} 
+                                lesson={lesson} 
+                                resourceId={lesson.institution_id} 
+                                isTest={isTest}
+
+                            />
+                        ))}
+                    </div>
+                ) : (
+                    <div>
+                        <p className="text-black text-[18px] font-semibold italic">
+                            No lessons found
+                        </p>
+                    </div>
+                )}
+            </div>
         </div>
-      )}
-    </div>
-  );
+    );
 };
 
 export default Page;

@@ -14,6 +14,7 @@ import { adminClasses, teacherStudentsandClasses } from '@/lib/actions';
 import { set } from 'date-fns';
 import en from "@/app/messages/en.json";  
 import tr from "@/app/messages/tr.json"; 
+import Loading from '../loading';
 
 interface Schedule {
   id: number;
@@ -213,10 +214,7 @@ export default function ScheduleListPage() {
   );
 
   if (loading) {
-    return <div className="w-full h-full flex flex-col items-center justify-center">
-                <div className="border-t-4 border-blue-500 border-solid w-16 h-16 rounded-full animate-spin"></div>
-                <span className="mt-2 text-blue-500">{currentLanguageContent.loading}</span>
-              </div>
+    return <Loading/>
   }
   
 

@@ -9,6 +9,8 @@ import { FormContainerProps } from "./FormContainer";
 import { deleteAnnoucementAdmin, deleteAnnoucementTeacher, deleteClass, deleteStudent, deleteTeacher } from "@/lib/actions";
 import React from "react";
 import { useSession } from "next-auth/react";
+import en from "@/app/messages/en.json";  
+import tr from "@/app/messages/tr.json"; 
 
 // Dynamically imported forms
 const TeacherForm = dynamic(() => import("./forms/TeacherForm"), {
@@ -34,6 +36,8 @@ const ActivateForm = dynamic(() => import("./forms/ActivateForm"), {
 const ScheduleForm = dynamic(() => import("./forms/ScheduleForm"), {
   loading: () => <h1>Loading...</h1>,
 });
+
+
 
 
 
@@ -112,6 +116,7 @@ const FormModal = ({
   relatedData,
 }: FormContainerProps & { relatedData?: any }) => {
 
+
 // Form component as a functional component
 const Form = ({
   table,
@@ -135,6 +140,16 @@ const Form = ({
     error: false,
     message: "",
   });
+
+
+const [language, setLanguage] = useState("en");
+useEffect(() => {
+  if (typeof window !== "undefined") {
+    const storedLanguage = localStorage.getItem("language") || "en";
+    setLanguage(storedLanguage);
+  }
+}, []);
+const currentLanguageContent = language === "en" ? en : tr;
 
   const deleteActionMap = {
     
@@ -186,10 +201,10 @@ const Form = ({
     >
       <input type="text | number" name="id" value={id} hidden />
       <span className="text-center font-medium">
-        All data will be lost. Are you sure you want to delete this {table}?
+       {currentLanguageContent.all_data_will_be_lost}
       </span>
       <button className="bg-red-700 text-white py-2 px-4 rounded-md border-none w-max self-center">
-        Delete
+        {currentLanguageContent.delete}
       </button>
     </form>
   ) : type === "create" || type === "update" ? (
