@@ -23,7 +23,7 @@ export const authOptions: NextAuthOptions = {
           const { email, password, name, surname, isRegister } = credentials as unknown as { email: string; password: string; name?: string; surname?:string, isRegister?: boolean };
 
           if(isRegister){
-            const register_response = await fetch("https://arfbackend-h3g2bdftbxdffqcy.westeurope-01.azurewebsites.net/auth/teacher/register", {
+            const register_response = await fetch("https://base-service-ua14.onrender.com/auth/teacher/register", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ email, password, name, surname }),
@@ -48,7 +48,7 @@ export const authOptions: NextAuthOptions = {
       
           if (teacher) {
             // Öğretmen bulunduysa, öğretmen girişi için API'yi çağırıyoruz
-            let backendResponse = await fetch("https://arfbackend-h3g2bdftbxdffqcy.westeurope-01.azurewebsites.net/auth/teacher/login", {
+            let backendResponse = await fetch("https://base-service-ua14.onrender.com/auth/teacher/login", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ email, password }),
