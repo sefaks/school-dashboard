@@ -8,7 +8,7 @@ import axios from "axios";
 
 // request for add student to institution 
 
-const API_BASE_URL = "https://base-service-ua14.onrender.com";
+const API_BASE_URL = "https://arfbackend-h3g2bdftbxdffqcy.westeurope-01.azurewebsites.net";
 
 interface FileWithBase64 {
   name: string;
