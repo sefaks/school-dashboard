@@ -88,7 +88,15 @@
     "tasks": "Görevler",
     "ai_analysis" : "Arf - Akıllı Analiz",
     "download_report": "Analizi İndir",
-    "grade": "Sınıf"
+    "grade": "Sınıf",
+    "generating_idea": "Yaratıcı ödev fikri oluşturuluyor...",
+    "error_generating": "Ödev fikri oluşturulurken hata oluştu",
+    "try_again": "Tekrar Dene",
+    "apply_idea": "Bu Fikri Uygula",
+    "close": "Kapat",
+    "ai_homework_idea": "Arf - Akıllı Ödev Fikri",
+    "loading_message":"Yapay zekamız seçilen üniteye göre yaratıcı bir ödev fikri oluşturuyor...",
+    "regenerate_idea": "Fikri Yeniden Oluştur"
 
 
 

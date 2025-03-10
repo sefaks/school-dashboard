@@ -5,15 +5,17 @@ import { ArrowBackIos } from "@mui/icons-material";
 import en from "@/app/messages/en.json";
 import tr from "@/app/messages/tr.json";
 import { AssignmentSchema, assignmentSchema } from "@/lib/formValidationSchemas";
-import { addAssignment, getAssignment, teacherStudentsandClasses, teacherSubjects, updateAssignment } from "@/lib/actions";
+import { addAssignment, getAssignment, getUnitsForSubjectAndGrade, teacherStudentsandClasses, teacherSubjects, updateAssignment } from "@/lib/actions";
 import { useSession } from "next-auth/react";
 import { toast } from "react-toastify";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from 'react-hook-form';
 import Image from "next/image";
+import EmojiObjectsIcon from '@mui/icons-material/EmojiObjects'; // Ampul (fikir) ikonu
 
 import { useFormState } from 'react-dom';
 import api from "@/lib/apiClient_new";
+import AIHomeworkIdeaModal from "@/components/AssignmentPage/AIHomeworkIdeaModal";
 
 //cant resolve watch from fs
 
@@ -43,27 +45,25 @@ interface FileWithBase64 {
     students: [],
     subjects: [],
     publishes: [],
+    units: [],
   });
 
 
   const [selectedFiles, setSelectedFiles] = useState<FileWithBase64[]>([]);
-  const classes = useState([]);
-  const students = useState([]);
-  const [documents, setDocuments] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const searchParams = useSearchParams();
   const type = searchParams.get("type") || "create" as "create" | "update";
   const id = searchParams.get("id");
 
+  const [grade, setGrade] = useState(null); // Sınıf seviyesi için state
+  const [additionalRequirements, setAdditionalRequirements] = useState('');
+  const [isAIModalOpen, setIsAIModalOpen] = useState(false);
+  const [selectedUnitId, setSelectedUnitId] = useState(null);
+
   const startDateValue = watch("start_date");
   const deadlineDateValue = watch("deadline_date");
   const [selectedPublishId, setSelectedPublishId] = useState<number | null>(null);
-
-
-
-  // state for loading and error handling
-    const [error, setError] = useState(null);
 
   const { data: session } = useSession(); // Get the session (which includes the token)
   const router = useRouter();
@@ -84,8 +84,6 @@ interface FileWithBase64 {
       } else if (type === "update") {
          response = await updateAssignment(restData, selectedFiles, token, parseInt(id ?? ""));
       }
-
-      
       // Return the response data along with success status
       return { 
         success: true, 
@@ -367,6 +365,137 @@ interface FileWithBase64 {
   const currentLanguageContent = language === "en" ? en : tr;
 
 
+
+  const fetchUnitsForSubjectAndGrade = async (subjectId, grade) => {
+    try {
+      if (!subjectId || !grade) {
+        console.log('Subject ID or grade is missing', { subjectId, grade });
+        return;
+      }
+      
+      console.log('Fetching units for:', { subjectId, grade });
+      
+      const unitsData = await getUnitsForSubjectAndGrade(
+        subjectId, 
+        grade, 
+        session?.user.accessToken
+      );
+      
+      // API'den gelen veriyi kontrol et
+      const units = Array.isArray(unitsData) ? unitsData : [];
+      console.log('Units data received:', units);
+      
+      setRelatedData(prev => ({
+        ...prev,
+        units: units
+      }));
+    } catch (error) {
+      console.error('Error fetching units:', error);
+      toast.error('Üniteler alınırken bir hata oluştu');
+      // Hata durumunda boş dizi ata
+      setRelatedData(prev => ({
+        ...prev,
+        units: []
+      }));
+    }
+  };
+
+  // Konu veya sınıf seviyesi değiştiğinde üniteleri getir
+  useEffect(() => {
+    const subjectId = watch("subject_id");
+    console.log('Subject ID or grade changed:', { subjectId, grade });
+    
+    if (subjectId && grade) {
+      console.log('Calling fetchUnitsForSubjectAndGrade');
+      fetchUnitsForSubjectAndGrade(subjectId, grade);
+    } else {
+      // Eğer eksik parametreler varsa units'i boş bir dizi olarak ayarla
+      setRelatedData(prev => ({
+        ...prev,
+        units: []
+      }));
+    }
+  }, [watch("subject_id"), grade]);
+
+
+  
+
+  // Yapay zeka modalını açan fonksiyon
+  const handleOpenAIModal = () => {
+    console.log('Opening AI modal with unit ID:', selectedUnitId);
+    
+    if (!selectedUnitId) {
+      toast.error('Lütfen önce bir ünite seçin');
+      return;
+    }
+    
+    if (!session?.user.accessToken) {
+      toast.error('Oturum bilginiz eksik. Lütfen tekrar giriş yapın.');
+      return;
+    }
+    
+    setIsAIModalOpen(true);
+  };
+
+  // AI'dan gelen fikri forma uygulayan fonksiyon
+
+
+  const aiLanguageContent = language === "en" ? {
+    ai_homework_idea: "Get AI Homework Idea",
+    select_unit: "Select Unit",
+    select_grade: "Select Grade",
+    ai_idea_applied: "AI idea applied to the form!",
+    ai_feature: "AI Feature",
+    ai_help_text: "Get creative homework ideas with AI",
+    additional_requirements: "Additional Requirements (Optional)"
+  } : {
+    ai_homework_idea: "Arf ile Ödev Fikri Al",
+    select_unit: "Ünite Seçin",
+    select_grade: "Sınıf Seviyesi Seçin",
+    ai_idea_applied: "Arf fikri forma uygulandı!",
+    ai_feature: "ARF ile İnovatif Ödev Fikri Üretme",
+    ai_help_text: "Arf ile yaratıcı ödev fikirleri alın",
+    additional_requirements: "Ek İstekler (İsteğe Bağlı)"
+  };
+
+  const applyAIHomeworkIdea = (idea) => {
+    if (idea) {
+      // Başlık için öncelikle title değerini kullan
+      setValue("header", idea.title || "");
+      
+      // Yapılandırılmış verileri kullanarak formatlı bir açıklama oluştur
+      let formattedDescription = `# ${idea.title || ""}\n\n`;
+      
+      if (idea.summary) formattedDescription += `**Özet:** ${idea.summary}\n\n`;
+      if (idea.purpose) formattedDescription += `**Amaç:** ${idea.purpose}\n\n`;
+      
+      if (idea.steps && idea.steps.length > 0) {
+        formattedDescription += `**Uygulama Adımları:**\n`;
+        idea.steps.forEach((step, index) => {
+          formattedDescription += `${index + 1}. ${step}\n`;
+        });
+        formattedDescription += '\n';
+      }
+      
+      if (idea.evaluation_criteria && idea.evaluation_criteria.length > 0) {
+        formattedDescription += `**Değerlendirme Kriterleri:**\n`;
+        idea.evaluation_criteria.forEach(criterion => {
+          formattedDescription += `- ${criterion}\n`;
+        });
+      }
+      
+      // Eğer yapılandırılmış veri eksikse ve content varsa, onu kullan
+      if ((!idea.summary || !idea.steps || idea.steps.length === 0) && idea.content) {
+        console.log("Fallback içeriği kullanılıyor", idea.content);
+        formattedDescription = idea.content;
+      }
+      
+      setValue("description", formattedDescription);
+      toast.success(aiLanguageContent.ai_idea_applied);
+    }
+  };
+
+
   
   
     return (
@@ -383,11 +512,24 @@ interface FileWithBase64 {
             {currentLanguageContent.homeworks}
           </p>
         </div>
+
+        <AIHomeworkIdeaModal
+        isOpen={isAIModalOpen}
+        onClose={() => setIsAIModalOpen(false)}
+        unitId={selectedUnitId}
+        additionalRequirements={additionalRequirements}
+        token={session?.user.accessToken}
+        onApplyIdea={applyAIHomeworkIdea}
+        language={language}
+      />
+
   
         {/* Main Content - Made responsive with flex-col on mobile */}
         <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
 
-        <div className="flex flex-col lg:flex-row p-4 lg:p-6 gap-6">
+        <div className="flex flex-col lg:flex-col p-4 lg:p-6 gap-6">
+          <div className="flex flex-row">
+
             
           {/* Left Section - Full width on mobile */}
           <div className="w-full lg:w-1/2 lg:mr-4">
@@ -762,6 +904,97 @@ interface FileWithBase64 {
                 </button>
               </div>
           </div>
+          </div>
+
+
+          {/* AI section */}
+          <div className="w-full bg-white p-4 rounded-lg shadow-sm mt-3 border-2 border-purple-100">
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="font-medium text-purple-700 flex items-center">
+                  <EmojiObjectsIcon className="mr-1 text-yellow-500" />
+                  {aiLanguageContent.ai_feature}
+                </h3>
+              </div>
+              
+              <p className="text-sm text-gray-600 mb-3">{aiLanguageContent.ai_help_text}</p>
+              
+              <div className="flex flex-col gap-4">
+                {/* Sınıf Seviyesi Seçimi */}
+                <div className="w-full">
+                  <label className="block text-sm font-medium text-gray-500 mb-1">
+                    {aiLanguageContent.select_grade}
+                  </label>
+                  <select
+                    className="border rounded-md p-2 w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    onChange={(e) => setGrade(parseInt(e.target.value))}
+                    value={grade || ""}
+                  >
+                    <option value="">Sınıf Seviyesi Seçin</option>
+                    <option value="0">Hazırlık</option>
+                    <option value="1">1. Sınıf</option>
+                    <option value="2">2. Sınıf</option>
+                    <option value="3">3. Sınıf</option>
+                    <option value="4">4. Sınıf</option>
+                    <option value="5">5. Sınıf</option>
+                    <option value="6">6. Sınıf</option>
+                    <option value="7">7. Sınıf</option>
+                    <option value="8">8. Sınıf</option>
+                    <option value="9">9. Sınıf</option>
+                    <option value="10">10. Sınıf</option>
+                    <option value="11">11. Sınıf</option>
+                    <option value="12">12. Sınıf</option>
+                  </select>
+                </div>
+                
+                {/* Ünite Seçimi */}
+                <div className="w-full">
+                  <label className="block text-sm font-medium text-gray-500 mb-1">
+                    {aiLanguageContent.select_unit}
+                  </label>
+                  <select
+                    className="border rounded-md p-2 w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    onChange={(e) => setSelectedUnitId(parseInt(e.target.value))}
+                    value={selectedUnitId || ""}
+                    disabled={!relatedData.units || relatedData.units.length === 0}
+                  >
+                    <option value="">Ünite Seçiniz</option>
+                    {Array.isArray(relatedData.units) && relatedData.units.map((unit) => (
+                      <option key={unit.id} value={unit.id}>
+                        {unit.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
+                
+                {/* Ekstra İstek Alanı */}
+                <div className="w-full">
+                  <label className="block text-sm font-medium text-gray-500 mb-1">
+                    {aiLanguageContent.additional_requirements}
+                  </label>
+                  <textarea
+                    className="border rounded-md p-2 w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder={language === "en" ? "e.g., Include group work, focus on creative writing..." : "örn. Grup çalışması içersin, yaratıcı yazma odaklı olsun..."}
+                    rows={2}
+                    value={additionalRequirements}
+                    onChange={(e) => setAdditionalRequirements(e.target.value)}
+                  />
+                </div>
+                
+                <div className="self-end">
+                  <button
+                    type="button"
+                    onClick={handleOpenAIModal}
+                    disabled={!selectedUnitId}
+                    className="bg-purple-500 hover:bg-purple-600 text-white p-2 rounded-md disabled:opacity-50 transition-colors flex items-center"
+                  >
+                    <EmojiObjectsIcon className="mr-1" fontSize="small" />
+                    {aiLanguageContent.ai_homework_idea}
+                  </button>
+                </div>
+              </div>
+            </div>
+          
           
         </div>
         </form> 
