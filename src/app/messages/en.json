@@ -89,7 +89,15 @@
     "tasks": "Tasks",
     "ai_analysis" : "Arf - Smart Education Processes Analysis",
     "download_report": "Download Report",
-    "grade": "Grade"
+    "grade": "Grade",
+    " generating_idea": "Generating creative homework idea...",
+    "error_generating": "Error generating homework idea",
+    "try_again": "Try Again",
+    "apply_idea": "Apply Idea",
+    "close": "Close",
+    "ai_homework_idea": "AI Homework Idea",
+    "loading_message_homework": "Our AI is creating a creative homework idea based on the selected unit...",
+    "regenerate_idea": "Regenerate Idea"
     
 
 

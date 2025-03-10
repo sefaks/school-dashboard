@@ -977,6 +977,28 @@ export const getTeacherPublishes = async (token: string) => {
   }
 }
 
+
+export const getUnitsForSubjectAndGrade = async (subjectId:any, grade:any, token:string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/units/get-units/${subjectId}/${grade}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'Üniteler alınırken bir hata oluştu');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Üniteler alınırken hata oluştu:', error);
+    throw error;
+  }
+};
+
 export const getPublishTestTypes = async (token: string,publish_id:number) => {
   try {
     const response = await axios.get(`${API_BASE_URL}/teachers/me/publishes/${publish_id}/test-types`, {
@@ -996,6 +1018,34 @@ export const getPublishTestTypes = async (token: string,publish_id:number) => {
     throw new Error("An unexpected error occurred!");
   }
 }
+
+
+export const getHomeworkIdeaWithAI = async (unitId:any, additionalRequirements:any, token:any) => {
+  try {
+    const payload = {
+      additional_requirements: additionalRequirements || ""
+    };
+    
+    const response = await fetch(`${API_BASE_URL}/teachers/create-homework-idea/${unitId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'AI fikir oluşturma sırasında bir hata oluştu');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('AI ödev fikri alınırken hata oluştu:', error);
+    throw error;
+  }
+};
 
 
 
