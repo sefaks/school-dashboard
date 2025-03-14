@@ -116,11 +116,6 @@ const AIAnalysisSection: React.FC<AIAnalysisSectionProps> = ({
             color: '#16638e',
             margin: [0, 15, 0, 8]
           },
-          listItem: {
-            fontSize: 11,
-            color: '#ffd59e',
-            margin: [20, 3, 0, 3]
-          },
           paragraph: {
             fontSize: 11,
             color: '#2C3E50',
@@ -200,7 +195,7 @@ const AIAnalysisSection: React.FC<AIAnalysisSectionProps> = ({
           if (line.startsWith('-')) {
             docDefinition.content.push({
               text: line.slice(1).trim(),
-              style: 'listItem'
+              style: 'paragraph'
             });
             return;
           }

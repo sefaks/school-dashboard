@@ -107,17 +107,17 @@ const ClassForm = ({
     return (
       <form className="flex flex-col gap-8" onSubmit={handleSubmit(onSubmit)}>
         <h1 className="text-xl font-semibold">
-          {type === "create" ? "Create Class" : "Update Class"}
+          {type === "create" ? "Sınıf Oluştur" : "Sınıf Güncelle"}
         </h1>     
            <div className="flex justify-start flex-wrap gap-4">
           <InputField
-            label="Grade"
+            label="Sınıf Seviyesi"
             name="grade"
             register={register}
             error={errors.grade}
           />
           <InputField
-            label="Class Code"
+            label="Sınıf Kodu"
             name="class_code"
             register={register}
             error={errors.class_code}
@@ -128,7 +128,7 @@ const ClassForm = ({
           className="bg-blue-400 text-white p-2 rounded-md disabled:opacity-50 mt-4"
           disabled={!isValid}
         >
-          {type === "create" ? "Create" : "Update"}
+          {type === "create" ? "Oluştur" : "Güncelle"}
         </button>
       </form>
     );

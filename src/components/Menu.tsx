@@ -95,13 +95,13 @@ const menuItems = [
         icon: "/profile.png",
         label: "Profilim",
         href: "/my-profile",
-        visible: [ "teacher", "student", "parent"],
+        visible: ["admin", "teacher", "student", "parent"],
       },
       {
         icon: "/setting.png",
         label: "Ayarlar",
         href: "/settings",
-        visible: ["admin", "teacher", "student", "parent"],
+        visible: [  "student", "parent"],
       }
     ],
   },

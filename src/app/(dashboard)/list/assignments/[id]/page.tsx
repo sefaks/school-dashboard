@@ -124,6 +124,53 @@ const SingleAssignmentPage = async ({
                         documents: true,
                     },
                 },
+                //get assignment_student from assignment_student table
+                assignment_student: {
+                    include: {
+                        students: {
+                            select: {
+                                id: true,
+                                name: true,
+                                surname: true,
+                                student_submissions: {
+                                    select: {
+                                        id: true,
+                                        submitted_at: true,
+                                        assignment_id: true,
+                                        feedback: true,
+                                        score: true,
+                                        is_graded: true,
+                                        documents: {
+                                            select: {
+                                                name: true,
+                                                url: true,
+                                                id: true,
+                                            },
+                                        },
+                                    },
+                                    orderBy: {
+                                        submitted_at: "desc",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+
+                assignment_test: {
+                    include: {
+                        tests: {
+                            select: {
+                                id: true,
+                                name: true,
+                                test_no: true,
+                            },
+                        },
+                    },
+                },
+
+
+
                 comments: true,
             },
         }) as Assignment | null;

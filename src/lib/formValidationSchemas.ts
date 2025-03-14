@@ -204,10 +204,21 @@ export const scheduleCreateSchema = z.object({
   ),
 });
 
- 
-
 // Kullanıcıdan gelecek veriyi doğrulamak için kullanılacak tip
 export type ScheduleCreateSchema = z.infer<typeof scheduleCreateSchema>;
+
+
+const AdminUpdateSchema = z.object({
+  name: z.string().min(1, { message: "Name is required!" }).optional(),
+  email: z.string().email({ message: "Invalid email address" }).optional(),
+  password: z.string().min(6, { message: "Password must be at least 6 characters" }).optional(),
+  confirmPassword: z.string().optional(),
+}).refine(data => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+
+export type AdminUpdateSchema = z.infer<typeof AdminUpdateSchema>;
 
 
 

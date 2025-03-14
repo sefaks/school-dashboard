@@ -454,7 +454,7 @@ interface FileWithBase64 {
     select_grade: "Sınıf Seviyesi Seçin",
     ai_idea_applied: "Arf fikri forma uygulandı!",
     ai_feature: "ARF ile İnovatif Ödev Fikri Üretme",
-    ai_help_text: "Arf ile yaratıcı ödev fikirleri alın",
+    ai_help_text: "Arf ile ödev fikri üretebilirsiniz. Ünitenin kazanımlarına uygun olarak öğrencilerin ilgisini çekecek ödevler oluşturabilirsiniz.",
     additional_requirements: "Ek İstekler (İsteğe Bağlı)"
   };
 
@@ -783,7 +783,7 @@ interface FileWithBase64 {
           <div className="w-full lg:w-1/2 space-y-6">
             {/* Class Selection */}
             <div className="w-full bg-white p-4 rounded-lg shadow-sm">
-             <label className="block mb-2 text-sm font-medium">{currentLanguageContent.lesson_selection}</label>
+             <label className="block mb-2 text-sm font-medium">{currentLanguageContent.class_selection}</label>
                 <select
                   className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
                   multiple

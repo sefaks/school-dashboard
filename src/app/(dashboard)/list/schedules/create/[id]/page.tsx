@@ -106,8 +106,8 @@ const TeacherDashboard = () => {
 
           }
         } catch (error) {
-          console.error('Error fetching schedule:', error);
-          toast.error("Program bilgileri alınamadı");
+          console.error("Öğrenci programı getirilirken hata oluştu:", error);
+         
         }
         finally {
           setLoading(false);
