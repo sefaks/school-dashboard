@@ -33,7 +33,7 @@ const CountChartContainer = async () => {
       <div className="bg-white rounded-xl w-full h-full p-4">
         {/* TITLE */}
         <div className="flex justify-between items-center">
-          <h1 className="text-lg font-semibold">Students</h1>
+          <h1 className="text-lg font-semibold">Öğrenciler</h1>
           <img src="/moreDark.png" alt="More options" width={20} height={20} />
         </div>
         
@@ -46,14 +46,14 @@ const CountChartContainer = async () => {
           <div className="flex flex-col items-center gap-1">
             <div className="w-5 h-5 bg-[#A8DADC] rounded-full" />
             <h1 className="font-bold">{boys}</h1>
-            <h2 className="text-xs text-gray-500">Boys ({boysPercentage}%)</h2>
+            <h2 className="text-xs text-gray-500">Erkek ({boysPercentage}%)</h2>
           </div>
           
           {/* Girls Section */}
           <div className="flex flex-col items-center gap-1">
             <div className="w-5 h-5 bg-[#e7e1fc] rounded-full" />
             <h1 className="font-bold">{girls}</h1>
-            <h2 className="text-xs text-gray-500">Girls ({girlsPercentage}%)</h2>
+            <h2 className="text-xs text-gray-500">Kız ({girlsPercentage}%)</h2>
           </div>
         </div>
       </div>

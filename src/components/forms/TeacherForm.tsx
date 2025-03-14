@@ -94,22 +94,22 @@ const TeacherForm = ({
 
   return (
     <form className="flex flex-col gap-8" onSubmit={handleSubmit(onSubmit)}>
-      <h1 className="text-xl font-semibold">Add a new teacher</h1>
+      <h1 className="text-xl font-semibold">Yeni bir öğretmen ekleyin</h1>
       <div className="flex justify-start flex-wrap gap-4">
         <InputField
-          label="Email"
+          label="E-posta"
           name="email"
           register={register}
           error={errors.email}
         />
         <InputField
-          label="Validation Code"
+          label="Doğrulama Kodu"
           name="validation_code"
           register={register}
           error={errors.validation_code}
         />
        <p className="text-xs text-green-600">
-        The code will be the 5-digit sharing code found in the teacher&apos;s &quot;My Codes&quot; section.
+        Kod, öğretmenin "Kodlarım" bölümünde bulunan 5 haneli paylaşım kodu olacaktır.
       </p>
       </div>
       <button
@@ -117,7 +117,7 @@ const TeacherForm = ({
         className="bg-blue-400 text-white p-2 rounded-md disabled:opacity-50 mt-4"
         disabled={!isValid}
       >
-        {type === "create" ? "Create" : "Update"}
+        {type === "create" ? "Oluştur" : "Güncelle"}
       </button>
     </form>
   );

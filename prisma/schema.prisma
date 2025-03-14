@@ -82,13 +82,18 @@ model comments {
 model contents {
   id              Int               @id @default(autoincrement())
   unit_id         Int
-  content_count   Int?
   content_name    String?           @db.VarChar
   level           Int?
-  content_id      String            @unique @db.Uuid
+  content_id      String?           @unique @db.Uuid
   unit_no         Int
   order           Int?
   publish_id      Int
+  page_start      Int?
+  page_end        Int?
+  content_count   Int?
+  content_type    contenttype
+  content_url     String?           @db.VarChar
+  parent_id       Int?
   publishes       publishes         @relation(fields: [publish_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   units           units             @relation(fields: [unit_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   student_content student_content[]
@@ -166,7 +171,7 @@ model parents {
   email                String                 @db.VarChar
   phone                String                 @db.VarChar
   announcement_parents announcement_parents[]
-  parent_student       parent_student[]      
+  parent_student       parent_student[]       
 
   @@index([id], map: "ix_parents_id")
 }
@@ -220,25 +225,29 @@ model student_institution {
 }
 
 model students {
-  id                         Int                   @id @default(autoincrement())
-  name                       String                @db.VarChar
-  surname                    String                @db.VarChar
-  gender                     String?               @db.VarChar
-  email                      String                @unique @db.VarChar
-  password                   String                @db.VarChar
-  birth_date                 DateTime?             @db.Date
-  school_name                String?               @db.VarChar
+  id                         Int                         @id @default(autoincrement())
+  name                       String                      @db.VarChar
+  surname                    String                      @db.VarChar
+  gender                     String?                     @db.VarChar
+  email                      String                      @unique @db.VarChar
+  password                   String                      @db.VarChar
+  birth_date                 DateTime?                   @db.Date
+  school_name                String?                     @db.VarChar
   grade                      Int?
   is_active                  Boolean?
-  photo                      String?               @db.VarChar
-  school_no                  String?               @db.VarChar
-  validation_code            String?               @db.VarChar
-  validation_code_expiration DateTime?             @db.Timestamp(6)
+  photo                      String?                     @db.VarChar
+  school_no                  String?                     @db.VarChar
+  validation_code            String?                     @db.VarChar
+  validation_code_expiration DateTime?                   @db.Timestamp(6)
   assignment_student         assignment_student[]
-  parent_student             parent_student[]      
+  parent_student             parent_student[]            
+  student_analytics_summary  student_analytics_summary[]
+  student_badges             student_badges[]
   student_class              student_class[]
   student_content            student_content[]
+  student_game_progresses    student_game_progresses[]
   student_institution        student_institution[]
+  student_schedules          student_schedules[]
   student_submissions        student_submissions[]
   student_tests              student_tests[]
 
@@ -250,6 +259,7 @@ model subjects {
   subject_name    subject_name
   image           String?           @db.VarChar
   assignments     assignments[]
+  games           games[]
   lessons         lessons[]
   publishes       publishes[]
   teacher_subject teacher_subject[]
@@ -332,6 +342,7 @@ model tests {
   test_no                 Int?
   unit_id                 Int?
   publish_id              Int
+  test_type               String?                   @db.VarChar
   assignment_test         assignment_test[]
   questions               questions[]
   student_tests           student_tests[]
@@ -342,17 +353,21 @@ model tests {
   @@index([id], map: "ix_tests_id")
   @@index([name], map: "ix_tests_name")
   @@index([test_no], map: "ix_tests_test_no")
+  @@index([test_type], map: "ix_tests_test_type")
 }
 
 model units {
-  id         Int        @id @default(autoincrement())
-  name       String     @db.VarChar
-  grade      Int
-  unit_no    Int?
-  subject_id Int
-  contents   contents[]
-  tests      tests[]
-  subjects   subjects   @relation(fields: [subject_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id                Int              @id @default(autoincrement())
+  name              String           @db.VarChar
+  grade             Int
+  unit_no           Int?
+  subject_id        Int
+  source            String?          @db.VarChar
+  learning_outcomes Json?
+  contents          contents[]
+  homework_ideas    homework_ideas[]
+  tests             tests[]
+  subjects          subjects         @relation(fields: [subject_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([id], map: "ix_units_id")
 }
@@ -492,16 +507,17 @@ model publishes {
 }
 
 model student_submissions {
-  id            Int         @id @default(autoincrement())
+  id            Int              @id @default(autoincrement())
   student_id    Int
   assignment_id Int
-  submitted_at  DateTime    @default(now()) @db.Timestamp(6)
-  feedback      String?     @db.VarChar
+  submitted_at  DateTime         @default(now()) @db.Timestamp(6)
+  feedback      String?          @db.VarChar
   score         Int?
-  is_graded     Boolean     @default(false)
+  is_graded     Boolean          @default(false)
+  status        submissionstatus
   documents     documents[]
-  assignments   assignments @relation(fields: [assignment_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  students      students    @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  assignments   assignments      @relation(fields: [assignment_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  students      students         @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([id], map: "ix_student_submissions_id")
 }
@@ -510,12 +526,6 @@ model student_tests {
   id               Int                @id @default(autoincrement())
   student_id       Int
   test_id          Int
-  score            Int?
-  evaluation       String?
-  started_at       DateTime?          @db.Timestamp(6)
-  submitted_at     DateTime?          @db.Timestamp(6)
-  is_completed     Boolean?
-  status           teststatus?
   submit_count     Int?               @default(0)
   students         students           @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   tests            tests              @relation(fields: [test_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -557,6 +567,159 @@ model test_submissions {
   student_tests        student_tests          @relation(fields: [student_test_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([id], map: "ix_test_submissions_id")
+}
+
+model badges {
+  id             Int              @id @default(autoincrement())
+  name           String           @db.VarChar
+  description    String
+  image_url      String?          @db.VarChar
+  badge_type     badgetype
+  badge_level    badgelevel
+  created_at     DateTime         @db.Timestamptz(6)
+  updated_at     DateTime?        @db.Timestamptz(6)
+  criteria_type  String           @db.VarChar
+  criteria_value Int
+  game_id        Int?
+  games          games?           @relation(fields: [game_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  student_badges student_badges[]
+
+  @@index([id], map: "ix_badges_id")
+}
+
+model game_contents {
+  id                      Int                       @id @default(autoincrement())
+  content_data            Json
+  solution_data           Json
+  created_at              DateTime                  @db.Timestamptz(6)
+  updated_at              DateTime?                 @db.Timestamptz(6)
+  difficulty_level        Int?
+  points                  Int
+  game_id                 Int
+  games                   games                     @relation(fields: [game_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  student_game_progresses student_game_progresses[]
+
+  @@index([id], map: "ix_game_contents_id")
+}
+
+model games {
+  id            Int             @id @default(autoincrement())
+  name          String          @db.VarChar
+  description   String
+  created_at    DateTime        @db.Timestamptz(6)
+  updated_at    DateTime?       @db.Timestamptz(6)
+  grade         Int
+  game_type     gametype
+  subject_id    Int
+  badges        badges[]
+  game_contents game_contents[]
+  subjects      subjects        @relation(fields: [subject_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([id], map: "ix_games_id")
+}
+
+model homework_ideas {
+  id          Int       @id @default(autoincrement())
+  unit_id     Int
+  title       String    @db.VarChar
+  content     String
+  created_at  DateTime? @db.Timestamp(6)
+  likes_count Int?
+  usage_count Int?
+  units       units     @relation(fields: [unit_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([id], map: "ix_homework_ideas_id")
+}
+
+model materiels {
+  id                   Int          @id @default(autoincrement())
+  name                 String?      @db.VarChar
+  created_at           DateTime?    @db.Timestamp(6)
+  updated_at           DateTime?    @db.Timestamp(6)
+  is_active            Boolean?
+  materiel_type        materieltype
+  image_paths          Json?
+  subject              subjecttype
+  grade_list           Json?
+  reading_time_minutes Int?
+  materiel_content     Json?
+  title                String?      @db.VarChar
+  tags                 Json?
+
+  @@index([id], map: "ix_materiels_id")
+  @@index([name], map: "ix_materiels_name")
+}
+
+model student_analytics_summary {
+  id                       Int       @id @default(autoincrement())
+  student_id               Int?
+  week_start_date          DateTime? @db.Timestamp(6)
+  week_end_date            DateTime? @db.Timestamp(6)
+  total_assignments        Int?
+  total_tests              Int?
+  average_assignment_score Float?
+  average_test_score       Float?
+  total_assignment_score   Float?
+  total_test_score         Float?
+  report_details           Json?     @db.Json
+  created_at               DateTime? @db.Timestamp(6)
+  total_solved_questions   Int?
+  total_weekly_tasks       Int?
+  weekly_task_score        Float?
+  average_task_score       Float?
+  ai_analysis              String?
+  students                 students? @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model student_badges {
+  id          Int      @id @default(autoincrement())
+  acquired_at DateTime @db.Timestamptz(6)
+  student_id  Int
+  badge_id    Int
+  badges      badges   @relation(fields: [badge_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  students    students @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([id], map: "ix_student_badges_id")
+}
+
+model student_game_progresses {
+  id              Int           @id @default(autoincrement())
+  is_completed    Boolean?
+  student_answer  Json?
+  student_score   Int?
+  student_id      Int
+  game_content_id Int
+  game_contents   game_contents @relation(fields: [game_content_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  students        students      @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([id], map: "ix_student_game_progresses_id")
+}
+
+model student_schedules {
+  id            Int             @id @default(autoincrement())
+  created_at    DateTime?       @db.Timestamptz(6)
+  updated_at    DateTime?       @db.Timestamptz(6)
+  assignee_id   Int?
+  assignee_type assigneetype
+  student_id    Int
+  students      students        @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  student_tasks student_tasks[]
+
+  @@index([id], map: "ix_student_schedules_id")
+}
+
+model student_tasks {
+  id                Int               @id @default(autoincrement())
+  description       String            @db.VarChar
+  start_time        DateTime          @db.Time(6)
+  end_time          DateTime          @db.Time(6)
+  is_completed      Boolean?
+  schedule_id       Int
+  day_of_week       dayofweek
+  last_completed_at DateTime?         @db.Timestamp(6)
+  student_schedules student_schedules @relation(fields: [schedule_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([id], map: "ix_student_tasks_id")
 }
 
 enum assigneetype {
@@ -623,13 +786,16 @@ enum subject_name {
   INGILIZCE
   DIN_BILGISI
   COGRAFYA
-  TAR_H           @map("TARİH")
-  B_YOLOJ_        @map("BİYOLOJİ")
-  F_Z_K           @map("FİZİK")
-  K_MYA           @map("KİMYA")
-  GEOMETR_        @map("GEOMETRİ")
-  EDEB_YAT        @map("EDEBİYAT")
+  TAR_H                         @map("TARİH")
+  B_YOLOJ_                      @map("BİYOLOJİ")
+  F_Z_K                         @map("FİZİK")
+  K_MYA                         @map("KİMYA")
+  GEOMETR_                      @map("GEOMETRİ")
+  EDEB_YAT                      @map("EDEBİYAT")
+  REHBERL_K                     @map("REHBERLİK")
   REHBERLIK
+  T_RK_D_L__VE_EDEB_YATI        @map("TÜRK_DİLİ_VE_EDEBİYATI")
+  NK_LAP_TAR_H__VE_ATAT_RK__L_K @map("İNKİLAP_TARİHİ_VE_ATATÜRKÇÜLÜK")
 }
 
 enum publishertype {
@@ -652,4 +818,61 @@ enum teststatus {
   NOT_STARTED
   IN_PROGRESS
   COMPLETED
+}
+
+enum badgelevel {
+  LEVEL_1
+  LEVEL_2
+  LEVEL_3
+  LEVEL_4
+  LEVEL_5
+  LEVEL_6
+  LEVEL_7
+  LEVEL_8
+  LEVEL_9
+  LEVEL_10
+}
+
+enum badgetype {
+  PROGRESS
+  MASTERY
+  STREAK
+}
+
+enum contenttype {
+  KONU_OZETI
+  DERS_ANLATIM_KITABI
+  KAZANIM_KAVRAMA
+}
+
+enum gametype {
+  HATA_BULMA
+  SIRALAMA
+  E_LE_T_RME @map("EŞLEŞTİRME")
+}
+
+enum materieltype {
+  STORY
+  INFO
+  CARTOON
+  VIDEO
+  QUIZ
+  INTERACTIVE
+}
+
+enum subjecttype {
+  HISTORY
+  SCIENCE
+  TECHNOLOGY
+  SPORTS
+  ARTS
+  LITERATURE
+  MATH
+  SOCIAL_STUDIES
+  LANGUAGE
+}
+
+enum submissionstatus {
+  LATE
+  ON_TIME
 }

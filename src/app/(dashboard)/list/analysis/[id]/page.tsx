@@ -67,6 +67,10 @@ interface AnalysisDetail {
     const [error, setError] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState('overview');
 
+    // get role
+    const { data: session } = useSession();
+    const role = session?.user.role;
+
     const tabs = ['overview', 'assignments', 'tests', 'tasks', 'ai_analysis'];
 
 
@@ -80,13 +84,22 @@ interface AnalysisDetail {
     const currentLanguageContent = language === "en" ? en : tr;
 
 
-    const fetchAnalysisDetail = async (analyisId: string) => {
-
+    const fetchAnalysisDetail = async (analysisId: string) => {
       try {
         setLoading(true);
-        const response = await api.get(`/teachers/me/student-analysis/${analyisId}`);
-        setAnalysisData(response.data);
-        console.log(response.data);
+        
+        let response; 
+    
+        if (role === 'teacher') {
+          response = await api.get(`/teachers/me/student-analysis/${analysisId}`);
+        } else {
+          response = await api.get(`/admins/me/get-analysis/${analysisId}`);
+        }
+    
+        // Gelen veriyi state'e set et
+        setAnalysisData(response.data); 
+    
+        console.log("Fetched Analysis Data:", response.data);
       } catch (err) {
         setError('Analiz detayları yüklenirken bir hata oluştu.');
         console.error('Error fetching analysis detail:', err);
@@ -94,15 +107,14 @@ interface AnalysisDetail {
         setLoading(false);
       }
     };
-  
+    
     useEffect(() => {
-      // Get analysisId from the URL
       const analysisId = window.location.pathname.split('/').pop();
-      
       if (analysisId) {
         fetchAnalysisDetail(analysisId);
       }
     }, []);
+    
       
 
     if (loading) {
