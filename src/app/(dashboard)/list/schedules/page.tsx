@@ -33,36 +33,91 @@ const columns = [
 
 // Admin için satır render fonksiyonu
 const renderAdminRow = (item: ClassWithSchedule, role: string) => {
-  const schedule = item.schedules && item.schedules.length > 0 ? item.schedules[0] : null;
-  
+  // Eğer schedule yoksa tek satır göster
+  if (!item.schedules || item.schedules.length === 0) {
+    return (
+      <tr
+        key={item.id}
+        className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
+      >
+        <td className="flex items-center gap-4">
+          {`${item.class_code} Programı`}
+        </td>
+        <td>{item.class_code}</td>
+        <td className="hidden md:table-cell">
+          <span className="bg-gray-500 text-white py-1 px-3 rounded-full">
+            Program Yok
+          </span>
+        </td>
+        <td>
+          <div className="flex items-center gap-2">
+            <Link href={`/list/classes/${item.id}`}>
+              <button className="w-7 h-7 flex items-center justify-center rounded-full bg-lamaSky">
+                <Image src="/view.png" alt="" width={16} height={16} />
+              </button>
+            </Link>
+            <RedirectButton
+              type="update"
+              page_type="schedules"
+              overrideUrl={`/list/schedules/create-class-schedule?id=${item.id}`}
+            />
+            <FormContainer table="class" type="delete" id={item.id} />
+          </div>
+        </td>
+      </tr>
+    );
+  }
+
+  // Her schedule için AYRי TR (satır) oluştur
   return (
-    <tr
-      key={item.id}
-      className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
-    >
-      <td className="flex items-center gap-4">
-        {schedule ? schedule.name : `${item.class_code} Programı`}
-      </td>
-      <td>{item.class_code}</td>
-      <td className="hidden md:table-cell">
-        <span
-          className={`${schedule?.status === 'ACTIVE' ? 'bg-green-500' : 'bg-gray-500'} text-white py-1 px-3 rounded-full`}
+    <>
+      {item.schedules.map((schedule, index) => (
+        <tr
+          key={`${item.id}-${schedule.id}`}
+          className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
         >
-          {schedule?.status || 'Program Yok'}
-        </span>
-      </td>
-      <td>
-        <div className="flex items-center gap-2">
-          <Link href={`/list/classes/${item.id}`}>
-            <button className="w-7 h-7 flex items-center justify-center rounded-full bg-lamaSky">
-              <Image src="/view.png" alt="" width={16} height={16} />
-            </button>
-          </Link>
-          <FormContainer table="schedule" type="update" data={item} />
-          <FormContainer table="class" type="delete" id={item.id} />
-        </div>
-      </td>
-    </tr>
+          <td className="flex items-center gap-4">
+            {schedule.name || `${item.class_code} Programı`}
+          </td>
+          <td>{item.class_code}</td>
+          <td className="hidden md:table-cell">
+            <span
+              className={`${
+                schedule.status === 'ACTIVE'
+                  ? 'bg-green-500'
+                  : schedule.status === 'DRAFT'
+                  ? 'bg-yellow-500'
+                  : 'bg-gray-500'
+              } text-white py-1 px-3 rounded-full`}
+            >
+              {schedule.status === 'ACTIVE'
+                ? 'Aktif'
+                : schedule.status === 'DRAFT'
+                ? 'Taslak'
+                : schedule.status || 'Program Yok'}
+            </span>
+          </td>
+          <td>
+            <div className="flex items-center gap-2">
+              <Link href={`/list/classes/${item.id}`}>
+                <button className="w-7 h-7 flex items-center justify-center rounded-full bg-lamaSky">
+                  <Image src="/view.png" alt="" width={16} height={16} />
+                </button>
+              </Link>
+              <RedirectButton
+                type="update"
+                page_type="schedules"
+                overrideUrl={`/list/schedules/create-class-schedule?id=${schedule.id}`}
+              />
+              {/* Delete butonunu sadece ilk schedule'da göster */}
+              {index === 0 && (
+                <FormContainer table="class" type="delete" id={item.id} />
+              )}
+            </div>
+          </td>
+        </tr>
+      ))}
+    </>
   );
 };
 
@@ -99,6 +154,7 @@ const ScheduleListPage = async ({
   const { page, ...queryParams } = searchParams || {};
   const p = page ? parseInt(page) : 1;
 
+
   // Veri ve toplam sayı değişkenleri
   let data: ClassWithSchedule[] | StudentSchedule[] = [];
   let count = 0;
@@ -131,6 +187,7 @@ const ScheduleListPage = async ({
         where: classQuery,
       }),
     ]);
+
 
   } else if (role === "teacher") {
     // Öğretmenin öğrencilerini ve programlarını al
@@ -169,10 +226,10 @@ const ScheduleListPage = async ({
     const students = await prisma.students.findMany({
       where: studentQuery,
       include: {
-        student_schedule: {
+        student_schedules: {
           where: {
             assignee_id: parseInt(current_user_id),
-            assignee_type: "teacher",
+            assignee_type: "TEACHER",
           },
         },
       },
@@ -191,9 +248,11 @@ const ScheduleListPage = async ({
       surname: student.surname,
       grade: student.grade,
       school_no: student.school_no,
-      schedule: student.student_schedule[0] || null,
+      schedule: student.student_schedules[0] || null,
     }));
+
   }
+
 
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
@@ -209,7 +268,15 @@ const ScheduleListPage = async ({
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
-            {role === "admin" && <FormContainer table="schedule" type="create" />}
+            {role === "admin" && (
+        <RedirectButton
+          type="create"
+          page_type="schedules"
+          // özel URL override ediliyor
+          overrideUrl="/list/schedules/create-class-schedule"
+        />
+      )}
+
           </div>
         </div>
       </div>

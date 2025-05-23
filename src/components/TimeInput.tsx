@@ -48,7 +48,7 @@ const TimeInput = ({
   };
 
   const handleBlur = () => {
-    if (inputValue.length > 0 && !validateTime(inputValue)) {
+    if (inputValue && inputValue.length > 0 && !validateTime(inputValue)) {
       toast.error("Geçerli bir saat giriniz (ÖR: 09:00)");
       setInputValue(value); // Reset to last valid value
     }

@@ -999,12 +999,10 @@ export const getUnitsForSubjectAndGrade = async (subjectId:any, grade:any, token
   }
 };
 
-export const getPublishTestTypes = async (token: string,publish_id:number) => {
+export const getPublishTestTypes = async (publish_id:number) => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/teachers/me/publishes/${publish_id}/test-types`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+    const response = await axios.get(`${API_BASE_URL}/contents/publishes/${publish_id}/test-types`, {
+   
     });
 
 

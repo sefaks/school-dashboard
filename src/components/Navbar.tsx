@@ -101,7 +101,7 @@ const Navbar =  () => {
             {/* SEARCHBAR */}
             <div className="hidden md:flex items-center gap-2 text-cs rounded-full ring-[1.5px] ring-array-300 px-2">
                 <img src="/search.png" alt="" width={14} height={14} />
-                <input className="w-[200px] p-2 bg-transparent outline-none" type="text" placeholder="Search..." />
+                <input className="w-[200px] p-2 bg-transparent outline-none" type="text" placeholder="Arama..." />
             </div>
 
             {/* ICONS AND USER */}

@@ -1,5 +1,6 @@
 import AssignmentTests from "@/components/AssignmentPage/AssignmentTests";
 import DownloadDocumentButton from "@/components/DownloadDocumentButton";
+import MarkdownRenderer from "@/components/MarkdownRenderer";
 import SubmissionFeedbackForm from "@/components/SubmissionFeedbackForm";
 import CommentForm from "@/components/forms/CommentForm";
 import EditCommentForm from "@/components/forms/EditCommentForm";
@@ -342,7 +343,9 @@ const SingleAssignmentPage = async ({
                                    
                                 </div>
                             </div>
-                            <p className="text-md text-gray-500 mt-2">{assignment.description}</p>
+                            <p className="text-md text-gray-500 mt-2">
+                                <MarkdownRenderer content={assignment.description || ""} />
+                            </p>
                         </div>
 
                         <div className="bg-white p-6 rounded-md shadow">
@@ -537,7 +540,7 @@ const SingleAssignmentPage = async ({
                                                 </span>
                                                 {comment.user_type === "TEACHER" && (
                                                     <span className="text-xs text-white bg-lamaPurple px-2 py-1 rounded-md">
-                                                    Teacher
+                                                    Öğretmen
                                                     </span>
                                                 )}
                                             </div>

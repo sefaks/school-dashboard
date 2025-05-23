@@ -14,7 +14,7 @@ import Image from "next/image";
 import EmojiObjectsIcon from '@mui/icons-material/EmojiObjects'; // Ampul (fikir) ikonu
 
 import { useFormState } from 'react-dom';
-import api from "@/lib/apiClient_new";
+import { serverGet } from "@/lib/apiClient_new";
 import AIHomeworkIdeaModal from "@/components/AssignmentPage/AIHomeworkIdeaModal";
 
 //cant resolve watch from fs
@@ -111,15 +111,15 @@ interface FileWithBase64 {
     useEffect(() => {
         const fetchData = async () => {
           try {
-            const classesAndStudentsResponse = await api.get("/teachers/me/classes-students")
+            const classesAndStudentsResponse = await serverGet("/teachers/me/classes-students")
 
             console.log("Classes and Students Response:", classesAndStudentsResponse);
             
-            const teacherSubjectsResponse =await  api.get("/teachers/me/subjects")
+            const teacherSubjectsResponse =await serverGet("/teachers/me/subjects")
 
             console.log("Teacher Subjects Response:", teacherSubjectsResponse);
 
-            const teacherPublishesResponse = await api.get("/teachers/me/publishes")
+            const teacherPublishesResponse = await serverGet("/teachers/me/publishes")
 
             console.log("Teacher Publishes Response:", teacherPublishesResponse);
 
@@ -139,7 +139,7 @@ interface FileWithBase64 {
             // Update case için assignment detaylarını çek
             if (id) {
                 try {
-                  const assignmentResponse = await api.get(`/assignments/${id}`)
+                  const assignmentResponse = await serverGet(`/assignments/${id}`)
                   const assignmentData = assignmentResponse.data;
                   // Tüm assignment data'sını logla
                   console.log("Full Assignment Response:", assignmentResponse);

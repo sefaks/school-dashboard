@@ -1,19 +1,24 @@
-'use client'
+"use client"
+
 import { useRouter } from 'next/navigation'
 import { Edit, Plus, View } from 'lucide-react'
-import page from '@/app/(dashboard)/list/resources/[Inst_id]/tests/page';
 
 export type AssignmentCreateUpdateProps = {
   type: "create" | "update" 
   id?: number | string;
   page_type?: string;
+  overrideUrl?: string;
 };
 
-const RedirectButton = ({ type, id,page_type }: AssignmentCreateUpdateProps) => {
+const RedirectButton = ({ type, id,page_type,overrideUrl }: AssignmentCreateUpdateProps) => {
   const router = useRouter()
 
 
   const getRedirectUrl = () => {
+
+    if (overrideUrl) {
+      return overrideUrl;
+    }
 
     let baseUrl = ""; // baseUrl'i fonksiyonun başında tanımlıyoruz
     

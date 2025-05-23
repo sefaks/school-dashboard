@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';  
 import { User } from 'lucide-react'; // Profil fotoğrafı için icon  
 import TeacherProfileForm from '@/components/forms/TeacherProfileForm';  
-import api from '@/lib/apiClient_new';
+import { serverGet } from '@/lib/apiClient_new';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { getTeacherProfile } from '@/lib/actions';
@@ -53,7 +53,7 @@ export default function TeacherProfilePage() {
         }
         // else if role is admin, fetch admin data
         else if(session.user.role === 'admin') {
-          const adminResponse = await api.get('/admins/me/profile', {
+          const adminResponse = await serverGet('/admins/me/profile', {
             headers: {
               Authorization: `Bearer ${session.user.accessToken}`,
             },
