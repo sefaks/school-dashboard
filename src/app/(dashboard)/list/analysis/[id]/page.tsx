@@ -6,7 +6,7 @@ import React, { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import en from "@/app/messages/en.json";  
 import tr from "@/app/messages/tr.json"; 
-import api from '@/lib/apiClient_new';
+import { serverGet } from '@/lib/apiClient_new';
 import CombinedPerformanceChart from '@/components/Analysis/CombinedPerformanceChart';
 import TaskStatsWithChart from '@/components/Analysis/TasksWithChart';
 import AIAnalysisSection from '@/components/Analysis/AiAnalysis';
@@ -91,10 +91,11 @@ interface AnalysisDetail {
         let response; 
     
         if (role === 'teacher') {
-          response = await api.get(`/teachers/me/student-analysis/${analysisId}`);
+          return await serverGet(`/teachers/me/student-analysis/${analysisId}`);
         } else {
-          response = await api.get(`/admins/me/get-analysis/${analysisId}`);
+          return await serverGet(`/admins/me/get-analysis/${analysisId}`);
         }
+      
     
         // Gelen veriyi state'e set et
         setAnalysisData(response.data); 

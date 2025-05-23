@@ -386,7 +386,7 @@ const [assignmentsData, count] = await prisma.$transaction([
       {/* TOP */}
       <div className="flex items-center justify-between">
         <h1 className="hidden md:block text-lg font-semibold">
-          All Assignments
+          Ödevler
         </h1>
         <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
           <TableSearch />

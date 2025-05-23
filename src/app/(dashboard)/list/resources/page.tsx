@@ -29,7 +29,8 @@ const Page = () => {
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirectTo");
   const isTest = redirectTo === "tests";
-  
+
+
   const { data: session } = useSession();
   
   const handleBackClick = () => {
@@ -52,7 +53,12 @@ const Page = () => {
   useEffect(() => {
     const fetchLessons = async () => {
       try {
-        const response = await apiClient.get('teachers/me/institution/lessons-publishes', {
+        // Determine the endpoint based on user role
+        const endpoint = session?.user.role === 'admin' 
+          ? 'admins/institution/lessons-publishes' 
+          : 'teachers/me/institution/lessons-publishes';
+        
+        const response = await apiClient.get(endpoint, {
           headers: { Authorization: `Bearer ${session?.user.accessToken}` },
         });
         
@@ -83,6 +89,7 @@ const Page = () => {
       fetchLessons();
     }
   }, [session]);
+  
   
   if (loading) {
     return <Loading/>

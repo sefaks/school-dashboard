@@ -183,19 +183,27 @@ export const scheduleCreateSchema = z.object({
       day_of_week: z.string().refine((day) => day.includes(day), {
         message: "Geçerli bir gün seçmelisiniz",
       }),
-      start_time: z.string().regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, {
-        message: "Geçerli bir saat formatı giriniz (HH:MM)",
-      }),
-      end_time: z.string().regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, {
-        message: "Geçerli bir saat formatı giriniz (HH:MM)",
-      }),
+      start_time: z.string()
+        .regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/, {
+          message: "Geçerli bir saat formatı giriniz (HH:MM veya HH:MM:SS)",
+        })
+        .transform((time) => {
+          // Eğer saniye kısmı varsa, sadece HH:MM kısmını al
+          return time.length > 5 ? time.substring(0, 5) : time;
+        }),
+      end_time: z.string()
+        .regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/, {
+          message: "Geçerli bir saat formatı giriniz (HH:MM veya HH:MM:SS)",
+        })
+        .transform((time) => {
+          // Eğer saniye kısmı varsa, sadece HH:MM kısmını al
+          return time.length > 5 ? time.substring(0, 5) : time;
+        }),
     }).refine((data) => {
       const startTime = data.start_time.split(":").map(Number);
       const endTime = data.end_time.split(":").map(Number);
-    
       const startMinutes = startTime[0] * 60 + startTime[1];
       const endMinutes = endTime[0] * 60 + endTime[1];
-    
       return endMinutes > startMinutes;
     }, {
       message: "Bitiş saati, başlangıç saatinden sonra olmalıdır.",

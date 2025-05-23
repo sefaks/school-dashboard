@@ -8,6 +8,7 @@ import { getPublishTestTypes } from '@/lib/actions';
 import en from "@/app/messages/en.json";
 import tr from "@/app/messages/tr.json";
 import Loading from '../../loading';
+import { ArrowBackIos } from '@mui/icons-material';
 
 
 const TestTypesPage = () => {
@@ -26,17 +27,17 @@ const TestTypesPage = () => {
 
   useEffect(() => {
     const fetchTestTypes = async () => {
-        try {
-            setLoading(true);
+      try {
+        setLoading(true);
 
-            const data = await getPublishTestTypes(session?.user.accessToken ?? '', parseInt(publish_id));
-            
-            setTestTypes(data);
-        } catch (err) {
-            setError('Test tipleri yüklenirken bir hata oluştu.');
-        } finally {
-            setLoading(false);
-        }
+        const data = await getPublishTestTypes( parseInt(publish_id!));
+        
+        setTestTypes(data);
+      } catch (err) {
+        setError('Test tipleri yüklenirken bir hata oluştu.');
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchTestTypes();
@@ -70,7 +71,20 @@ const TestTypesPage = () => {
 
   return (
     <div className="w-full max-w-4xl mx-auto px-4 py-8">
-      <div className="mb-8">
+         <div className="flex flex-row gap-2 p-4 border-b items-center">
+
+      <button
+      onClick={() => router.back()}
+      className="bg-white border p-2 rounded-[10px] hover:bg-gray-300"
+      >
+      <ArrowBackIos className="ml-1" fontSize="small" />
+      </button>
+      <p className="font-semibold text-[24px] leading-[29px] text-textColor">
+      {currentLanguageContent.lessons}
+      </p>
+      </div>
+
+      <div className="mb-8 mt-4" >
         <h1 className="text-2xl font-bold text-gray-900">Test Tipleri</h1>
         <p className="text-gray-600 mt-2">Lütfen görüntülemek istediğiniz test tipini seçin</p>
       </div>
@@ -99,9 +113,13 @@ const TestTypesPage = () => {
       </div>
 
       {testTypes.length === 0 && (
+
+
+
         <div className="text-center py-12">
           <p className="text-gray-500 text-lg">Bu yayın için henüz test tipi bulunmuyor.</p>
         </div>
+
       )}
     </div>
   );
