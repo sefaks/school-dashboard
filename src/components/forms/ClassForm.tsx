@@ -1,3 +1,4 @@
+"use client"
 import { addClassToInstitution, updateClass } from "@/lib/actions";
 import { ClassSchema, classSchema } from "@/lib/formValidationSchemas";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,6 +10,7 @@ import { useFormState } from "react-dom";
 import { toast } from "react-toastify";
 import { useForm } from 'react-hook-form';
 import InputField from "../InputField";
+import { useEffect } from "react";
 
 
 const ClassForm = ({
@@ -39,14 +41,14 @@ const ClassForm = ({
   
     // Watch the 'grade' value
     const grade = watch("grade");
-  
-    // Automatically update the class code when grade changes
+
+    //watch the 'class_code' value and set uppercase
     React.useEffect(() => {
-      if (grade) {
-        // Set class code based on the grade
-        setValue("class_code", `${grade}-`);
+      const classCode = getValues("class_code");
+      if (classCode) {
+        setValue("class_code", classCode.toUpperCase());
       }
-    }, [grade, setValue]);
+    }, [grade, getValues, setValue]);
   
    
   
@@ -78,7 +80,7 @@ const ClassForm = ({
   
     React.useEffect(() => {
       if (state.success) {
-        toast.success(type === "create" ? "Class added successfully!" : "Class updated successfully!");
+        toast.success(type === "create" ? "Sınıf başarıyla oluşturuldu" : "Sınıf başarıyla güncellendi");
         setTimeout(() => {
           setOpen(false);
           router.refresh();
@@ -103,6 +105,9 @@ const ClassForm = ({
     };
   
     const isValid = Object.keys(errors).length === 0;
+
+    console.log("Data class code:", data?.class_code);
+
   
     return (
       <form className="flex flex-col gap-8" onSubmit={handleSubmit(onSubmit)}>
@@ -121,6 +126,7 @@ const ClassForm = ({
             name="class_code"
             register={register}
             error={errors.class_code}
+            defaultValue={data?.class_code || `${watch("grade")}-`}
           />
         </div>
         <button

@@ -33,14 +33,6 @@ const renderRow = (item: ClassList,role:string) => (
     <td className="flex items-center gap-4 p-4">{item.class_code}</td>
     <td className="hidden md:table-cell">{item.student_class?.length || 0}</td>
     <td className="hidden md:table-cell">{item.grade}</td>
-    <td className="hidden md:table-cell">
-      {item.teacher_class?.map((teacher_item: { teachers: teachers }, index: number) => (
-        <span key={teacher_item.teachers.id}>
-          {teacher_item.teachers.name} {teacher_item.teachers.surname}
-          {index < item.teacher_class.length - 1 && ', '}
-        </span>
-      ))}
-    </td> 
     <td>
       <div className="flex items-center gap-2">
       <Link href={`/list/classes/${item.id}`}>
@@ -70,7 +62,7 @@ const ClassListPage = async ({searchParams}:{searchParams:{[key:string]:string} 
       accessor: "name",
     },
     {
-      header: "Kapasite",
+      header: "Mevcut",
       accessor: "capacity",
       className: "hidden md:table-cell",
     },
@@ -79,15 +71,10 @@ const ClassListPage = async ({searchParams}:{searchParams:{[key:string]:string} 
       accessor: "grade",
       className: "hidden md:table-cell",
     },
-    {
-      header: "Öğretmenler",
-      accessor: "teachers",
-      className: "hidden md:table-cell",
-    },
     // actions for admin role
     ...(role === "admin" ? 
   [{
-     header: "Actions" ,
+     header: "Aksiyonlar" ,
       accessor: "actions",
     }] : []),
   ];

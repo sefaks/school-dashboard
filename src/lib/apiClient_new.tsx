@@ -1,19 +1,17 @@
 // lib/serverApi.ts
-import { headers, cookies } from 'next/headers';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/auth';
 
 export async function serverApi(endpoint: string, options: RequestInit = {}) {
   // Sunucu tarafında token alma seçeneği 1: Cookie'den alma
-  const cookieStore = cookies();
-  const cookieToken = cookieStore.get('next-auth.session-token')?.value;
+
   
   // Sunucu tarafında token alma seçeneği 2: Session'dan alma
   const session = await getServerSession(authOptions);
   const sessionToken = session?.user?.accessToken;
   
   // Hangi token varsa onu kullan
-  const token = sessionToken || cookieToken;
+  const token = sessionToken;
   
   if (!token) {
     throw new Error('Authentication token not found');

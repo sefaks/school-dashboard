@@ -217,7 +217,7 @@ export const updateClass = async (formData: ClassSchema, token: string, class_id
 
     if (error.response) {
       console.error("API Error:", error.response.data);
-      throw new Error(error.response.data.detail || "Failed to update class!");
+      throw new Error(error.response.data.detail || "Sınıf güncellenemedi!");
     } else if (error.request) {
       console.error("No response received from server:", error.request);
       throw new Error("No response from server.");
@@ -718,12 +718,16 @@ export const createSchedule = async (formData: ScheduleCreateSchema, token: stri
 
     return response.data;
   } catch (error: any) {
-    if (error.response) {
-      console.error("API Response Error:", error.response);
-      throw new Error(error.response.data.detail || "Failed to create schedule!");
-    }
-    console.error("Network Error:", error);
-    throw new Error("An unexpected error occurred!");
+      console.error("API Error:", error.response)
+      const custom_error = {
+        success: false,
+        status: error.response?.status || 500,
+        message: error.response?.data?.detail || "Failed to create schedule!"
+      }
+
+      return custom_error;
+      
+    
   }
 }
 
@@ -735,15 +739,39 @@ export const updateSchedule = async (formData: ScheduleCreateSchema, token: stri
         Authorization: `Bearer ${token}`,
       },
     });
+    return response.data;
+  } catch (error: any) {
+    console.error("API Error:", error);
+
+    const custom_error = {
+      success: false,
+      status: error.response?.status || 500,
+      message: error.response?.data?.detail || "Failed to update schedule!"
+    };
+
+    return custom_error;
+
+  }
+};
+
+
+export const deleteSchedule = async (scheduleId: number, token: string) => {
+  try {
+    const response = await axios.delete(`${API_BASE_URL}/admins/schedules/delete-schedule/${scheduleId}`, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
     return response.data;
   } catch (error: any) {
+    console.error("API Error:", error);
+
     if (error.response) {
-      console.error("API Response Error:", error.response);
-      throw new Error(error.response.data.detail || "Failed to update schedule!");
+      throw new Error(error.response.data.detail || "Failed to delete schedule!");
     }
-    console.error("Network Error:", error);
-    throw new Error("An unexpected error occurred!");
+    throw new Error("An unexpected error occurred while deleting schedule!");
   }
 }
 

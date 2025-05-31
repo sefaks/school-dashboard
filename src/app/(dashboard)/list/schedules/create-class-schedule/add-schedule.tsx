@@ -12,6 +12,7 @@ import { useFormState } from 'react-dom';
 import { useRouter, useSearchParams } from 'next/navigation';
 import TimeInput from '@/components/TimeInput';
 import Link from 'next/link';
+import WeeklySchedule from '@/components/schedules/WeeklySchedule';
 
 const SchedulePage = ({
   data,
@@ -25,7 +26,11 @@ const SchedulePage = ({
   const router = useRouter();
   const searchParams = useSearchParams();
   const scheduleId = searchParams.get('id');
-  
+
+  console.log("Schedule id is", scheduleId);
+  console.log("Type is", type);
+  console.log("Data received:", data);
+
   const {
     register,
     handleSubmit,
@@ -187,31 +192,46 @@ const SchedulePage = ({
       
       if (type === "create") {
         response = await createSchedule(finalData, session?.user.accessToken || "");
-        toast.success('Program başarıyla oluşturuldu');
+        if (response.status == 400 && response.success === false) {
+
+          toast.error("Hali hazırda aktif bir program var. Lütfen aktif programı arşivleyin veya silin.");  
+          return ;
+        }
+        toast.success("Program başarıyla oluşturuldu.");
+        setTimeout(() => {
+          router.push('/list/schedules');
+        }, 1000);
+
       } else if (type === "update") {
         console.log("Updating schedule with ID:", data.id);
         console.log("Lesson schedules:", lessonSchedules);
         response = await updateSchedule(finalData, session?.user.accessToken || "", data.id);
-        toast.success('Program başarıyla güncellendi');
+
+        if (response.success === false) {
+          toast.error(response.message);
+         
+          return;
+        }
+        toast.success("Program başarıyla güncellendi.");
+        setTimeout(() => {
+          console.log("Redirecting to create class schedule with ID:", scheduleId);
+          router.push('/list/schedules/create-class-schedule' + `?id=${scheduleId}`);
+        }, 1000);
+
       }
-  
-      // Redirect after successful form submission
-      setTimeout(() => {
-        router.push('/list/schedules');
-      }, 1000);
-  
+        
       return {
         success: true,
         error: false,
         data: response
       };
     } catch (error: any) {
-      console.error("Form Action Error:", error.message);
-      toast.error(error.message || "Bir hata oluştu");
+      console.log("Unexpected error:", error);
+      toast.error("Beklenmeyen bir hata oluştu.");
       
       return {
         success: false,
-        error: error.message || "Bir hata oluştu.",
+        error: "Beklenmeyen bir hata oluştu.",
         data: null
       };
     }
@@ -222,6 +242,19 @@ const SchedulePage = ({
   });
 
   const handleAddLesson = useCallback((lessonData: { lesson_id: number; teacher_id: number; day_of_week: string; start_time: string; end_time: string; }) => {
+
+    // eğer hali hazırda ders saatinde çakışma varsa kullanıcıyı uyar ve ekleme
+    const existingLesson = lessonSchedules.find(schedule => 
+      schedule.day_of_week === lessonData.day_of_week &&
+      ((schedule.start_time < lessonData.end_time && schedule.end_time > lessonData.start_time) ||
+       (lessonData.start_time < schedule.end_time && lessonData.end_time > schedule.start_time))
+    );
+    if (existingLesson) {
+      toast.error("Bu ders saatinde zaten bir ders var. Lütfen farklı bir saat seçin.");
+      // hata fırlat
+      throw new Error("Ders saatinde çakışma var");
+    }
+
     setLessonSchedules((prev) => [
       ...prev,
       lessonData,
@@ -237,6 +270,7 @@ const SchedulePage = ({
       return prev.filter(schedule => schedule !== scheduleToRemove);
     });
   };
+
       
   const toggleDay = (day: string) => {
     setOpenDays(prev => ({
@@ -333,8 +367,14 @@ const SchedulePage = ({
           toast.error("Lütfen tüm alanları doldurun");
           return;
         }
+
+        try {
+          handleAddLesson(lessonData);
+        } catch (error) {
+          console.error("Error adding lesson:", error);
+          return;
+        }
   
-        handleAddLesson(lessonData);
         
         // Reset the form for this day
         setSelectedLessons(prev => ({
@@ -439,10 +479,11 @@ const SchedulePage = ({
             .map((schedule, index) => (
               <div key={index} className="flex justify-between items-center border p-2 rounded my-2">
                 <span>
-                  {relatedData?.lessons?.find((l: any) => l.id === schedule.lesson_id)?.name} -{" "}
-                  {relatedData?.teachers?.find((t: any) => t.id === schedule.teacher_id)?.name} -{" "}
+                  {relatedData?.lessons?.find((l: any) => l.id === schedule.lesson_id)?.name} - {""}
+                  {relatedData?.teachers?.find((t: any) => t.id === schedule.teacher_id)?.name} {relatedData?.teachers?.find((t: any) => t.id === schedule.teacher_id)?.surname}  / {""}
                   {formatViewTime(schedule.start_time)} - {formatViewTime(schedule.end_time)}
                 </span>
+                <div>
                 <button
                   type="button"
                   onClick={() => handleRemoveLesson(day,index)}
@@ -450,6 +491,8 @@ const SchedulePage = ({
                 >
                   Sil
                 </button>
+                </div>
+               
               </div>
             ))}
         </div>
@@ -548,6 +591,10 @@ const SchedulePage = ({
               {type === "create" ? "Takvim Oluştur" : "Takvimi Güncelle"}
             </button>
           </div>
+          <WeeklySchedule 
+          lessonSchedules={lessonSchedules}
+          relatedData={relatedData}
+          />
         </form>
       </div>
     </div>

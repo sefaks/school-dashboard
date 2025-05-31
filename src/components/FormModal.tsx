@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Dispatch, SetStateAction, useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { FormContainerProps } from "./FormContainer";
-import { deleteAnnoucementAdmin, deleteAnnoucementTeacher, deleteClass, deleteStudent, deleteTeacher } from "@/lib/actions";
+import { deleteAnnoucementAdmin, deleteAnnoucementTeacher, deleteClass, deleteStudent, deleteTeacher,deleteSchedule } from "@/lib/actions";
 import React from "react";
 import { useSession } from "next-auth/react";
 import en from "@/app/messages/en.json";  
@@ -165,7 +165,7 @@ const currentLanguageContent = language === "en" ? en : tr;
       }
     },
     class: deleteClass,
-    schedule : deleteClass,
+    schedule : deleteSchedule
   }; 
 
   const handleDelete = async () => {
@@ -178,8 +178,8 @@ const currentLanguageContent = language === "en" ? en : tr;
       const deleteAction = deleteActionMap[table as keyof typeof deleteActionMap];
       if (deleteAction && id) {
         await deleteAction(id as number, token);
-        setState({ success: true, error: false, message: `${table} deleted successfully!` });
-        toast.success(`${table} deleted successfully!`);
+        setState({ success: true, error: false, message: `${table} başarıyla silindi!` });
+        toast.success(`Başarıyla silindi!`);
         setOpen(false);
         router.refresh();
       } else {
