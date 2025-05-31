@@ -43,7 +43,6 @@ const AdminProfileForm = ({ initialData }: { initialData: any }) => {
       delete formData.confirmPassword;
     }
 
-    // Şema doğrulama
     try {
         const validatedData = AdminUpdateSchema.parse(formData);
 

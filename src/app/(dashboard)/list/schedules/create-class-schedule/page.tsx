@@ -32,8 +32,6 @@ export default async function SchedulePageWrapper({
       teachers,
       lessons,
     };
-
-    console.log('Related Data:', relatedData);
     
     return (
       <SchedulePage

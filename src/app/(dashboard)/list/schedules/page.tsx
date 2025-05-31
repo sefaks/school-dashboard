@@ -94,7 +94,9 @@ const renderAdminRow = (item: ClassWithSchedule, role: string) => {
                 ? 'Aktif'
                 : schedule.status === 'DRAFT'
                 ? 'Taslak'
-                : schedule.status || 'Program Yok'}
+                : schedule.status === 'ARCHIVED'
+                ? 'Arşiv'
+                : '-'}
             </span>
           </td>
           <td>
@@ -110,9 +112,7 @@ const renderAdminRow = (item: ClassWithSchedule, role: string) => {
                 overrideUrl={`/list/schedules/create-class-schedule?id=${schedule.id}`}
               />
               {/* Delete butonunu sadece ilk schedule'da göster */}
-              {index === 0 && (
-                <FormContainer table="class" type="delete" id={item.id} />
-              )}
+                <FormContainer table="schedule" type="delete" id={schedule.id} />
             </div>
           </td>
         </tr>
@@ -188,6 +188,8 @@ const ScheduleListPage = async ({
       }),
     ]);
 
+    // data'da schedule olmayan sınıfları filtrele
+    data = data.filter(item => item.schedules && item.schedules.length > 0);
 
   } else if (role === "teacher") {
     // Öğretmenin öğrencilerini ve programlarını al
