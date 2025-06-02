@@ -11,6 +11,8 @@ import CombinedPerformanceChart from '@/components/Analysis/CombinedPerformanceC
 import TaskStatsWithChart from '@/components/Analysis/TasksWithChart';
 import AIAnalysisSection from '@/components/Analysis/AiAnalysis';
 import Loading from '../../loading';
+import { ArrowRight } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 interface AnalysisDetail {
     student_name: string;
@@ -26,6 +28,7 @@ interface AnalysisDetail {
       weekly_task_score: number;
       average_task_score: number;
       ai_analysis:string;
+      student_id: number;
       report_details: {
         total_assignments: number;
         total_solved_questions: number;
@@ -50,6 +53,7 @@ interface AnalysisDetail {
           correct_count: number;
           false_count: number;
           empty_count: number;
+          submission_id: number;
         }>;
         summary_stats: {
           total_assignment_score: number;
@@ -66,12 +70,11 @@ interface AnalysisDetail {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState('overview');
-
     // get role
     const { data: session } = useSession();
     const role = session?.user.role;
-
     const tabs = ['overview', 'assignments', 'tests', 'tasks', 'ai_analysis'];
+    const router = useRouter();
 
 
     const [language, setLanguage] = useState("en");
@@ -91,12 +94,20 @@ interface AnalysisDetail {
         let response; 
     
         if (role === 'teacher') {
-          return await serverGet(`/teachers/me/student-analysis/${analysisId}`);
+          response= await apiClient.get(`/teachers/me/get-analysis/${analysisId}`, {
+            headers: {
+              Authorization: `Bearer ${session?.user.accessToken}`
+            }
+          });
         } else {
-          return await serverGet(`/admins/me/get-analysis/${analysisId}`);
+          console.log("Fetching analysis for admin role");
+          response= await apiClient.get(`/admins/me/get-analysis/${analysisId}`, {
+            headers: {
+              Authorization: `Bearer ${session?.user.accessToken}`
+            }
+          });
         }
       
-    
         // Gelen veriyi state'e set et
         setAnalysisData(response.data); 
     
@@ -115,8 +126,10 @@ interface AnalysisDetail {
         fetchAnalysisDetail(analysisId);
       }
     }, []);
-    
-      
+
+    const routeEvaluation = (testId: number,student_id:number) => {
+      router.push(`/list/resources/tests?resultId=${testId}&userId=${student_id}&showEvaluation=true`);
+    }
 
     if (loading) {
       return <Loading/>
@@ -249,10 +262,6 @@ interface AnalysisDetail {
           <p className='text-sm text-blue-600'>{currentLanguageContent.status}:</p>
           <p className="text-sm font-md ">  {assignment.status === 'submitted' ? '✔️' : '❌'}</p>
           </div>
-
-
-          
-          
         </div>
       ))
     ) : (
@@ -272,14 +281,24 @@ interface AnalysisDetail {
           <h4 className="font-medium"> {test.test_no} - {test.test_name} </h4>
           <p className='text-xs'>{currentLanguageContent.unit}: {test.unit_name}</p>
           <div className="flex justify-between items-center mt-2">
-          <p className="text-sm text-gray-500">
-            {test.submitted_at ? new Date(test.submitted_at).toLocaleDateString("tr-TR") : 'Tarih bilgisi yok'}
-          </p>
-
+            <p className="text-sm text-gray-500">
+              {test.submitted_at ? new Date(test.submitted_at).toLocaleDateString("tr-TR") : 'Tarih bilgisi yok'}
+            </p>
             <p className="text-grey ">{test.questions_count} Soru</p>
             <p className="text-sm text-green-600">{test.correct_count} Doğru</p>
             <p className='text-sm text-red-600'>{test.false_count} Yanlış</p>
             <p className='text-sm text-yellow-600'>{test.empty_count} Boş</p>
+          </div>
+          
+          {/* Review Button */}
+          <div className="mt-4 flex justify-end">
+            <button 
+              onClick={() => routeEvaluation(test.test_id,analysisData.report.student_id)}
+              className="px-4 py-2 bg-[#702DFF] text-white rounded-md hover:bg-purple-700 flex items-center gap-2"
+            >
+              <span className='text-sm'>{currentLanguageContent.review_evaluation || "Sonucu İncele"}</span>
+              <ArrowRight fontSize="small" />
+            </button>
           </div>
         </div>
       ))
@@ -290,6 +309,7 @@ interface AnalysisDetail {
     )}
   </div>
 )}
+
   {/* Haftalık Tak Sekmesi */}
   <TaskStatsWithChart analysisData={analysisData} activeTab= {activeTab} />
 

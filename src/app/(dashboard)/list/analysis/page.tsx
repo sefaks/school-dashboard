@@ -58,9 +58,7 @@ const renderRow = (item: StudentWithAnalysis, role: string) => (
             <Image src="/view.png" alt="" width={16} height={16} />
           </button>
         </Link>
-        {role === "teacher" && (
-          <FormContainer table="assignment" type="delete" id={item.report.id} />
-        )}
+
       </div>
     </td>
   </tr>
