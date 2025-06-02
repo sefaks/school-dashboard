@@ -1,3 +1,4 @@
+"use client"
 import React, { useState, useEffect, useRef } from 'react';
 import html2canvas from 'html2canvas';
 import { toast } from 'react-toastify';
@@ -167,7 +168,7 @@ const viewLessonStartAndEndTime = (start: any, end: any) => {
         </button>
     </div>
       
-      <div className="grid grid-cols-8 border-b">
+    <div className="grid grid-cols-8 border-b min-w-[800px]">
         {/* Saat göstergesi sütunu */}
         <div className="border-r py-2 px-1 text-center font-medium">Saat</div>
         
@@ -181,7 +182,7 @@ const viewLessonStartAndEndTime = (start: any, end: any) => {
       
       {/* Takvim gövdesi */}
       <div className="relative">
-        <div className="grid grid-cols-8" ref={scheduleRef}>
+      <div className="grid grid-cols-8 min-w-[800px]" ref={scheduleRef}>
           {/* Saat göstergesi sütunu */}
           <div className="border-r">
             {hourMarkers.map((timeMarker, index) => {
