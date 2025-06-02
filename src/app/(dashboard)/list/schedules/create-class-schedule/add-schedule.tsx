@@ -27,10 +27,6 @@ const SchedulePage = ({
   const searchParams = useSearchParams();
   const scheduleId = searchParams.get('id');
 
-  console.log("Schedule id is", scheduleId);
-  console.log("Type is", type);
-  console.log("Data received:", data);
-
   const {
     register,
     handleSubmit,

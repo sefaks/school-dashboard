@@ -6,8 +6,7 @@ import { classes, students } from "@prisma/client";
 import Image from "next/image";
 import Link from "next/link";
 import Performance from "@/components/Performance";
-
-
+import WeeklySchedule from "@/components/schedules/WeeklySchedule";
 
 
 const singleClassPage = async ({
@@ -58,6 +57,71 @@ const singleClassPage = async ({
                         notFound: true,
                 };
         }
+
+        const rawSchedules = await prisma.lesson_schedules.findMany({
+            where: {
+                schedules: {
+                    class_id: parseInt(id),
+                    status: "ACTIVE"
+                }
+            }
+        });
+
+        // Ders programını WeeklySchedule bileşeninin beklediği formata dönüştür
+        const dayOfWeekMap: Record<string, string> = {
+                Monday: "Pazartesi",
+                Tuesday: "Salı",
+                Wednesday: "Çarşamba",
+                Thursday: "Perşembe",
+                Friday: "Cuma",
+                Saturday: "Cumartesi",
+                Sunday: "Pazar",
+        };
+
+        const lessonSchedules = rawSchedules.map(schedule => {
+                let startTime: string | Date = schedule.start_time;
+                let endTime: string | Date = schedule.end_time;
+                
+                // Tarih nesnesi ise string formatına dönüştür
+                if (startTime instanceof Date) {
+                    startTime = `${startTime.getHours().toString().padStart(2, '0')}:${startTime.getMinutes().toString().padStart(2, '0')}`;
+                }
+                
+                if (endTime instanceof Date) {
+                    endTime = `${endTime.getHours().toString().padStart(2, '0')}:${endTime.getMinutes().toString().padStart(2, '0')}`;
+                }
+                
+                // İngilizce gün adını Türkçe'ye çevir
+                const dayOfWeek = dayOfWeekMap[schedule.day_of_week] || schedule.day_of_week;
+                
+                return {
+                        ...schedule,
+                        start_time: startTime,
+                        end_time: endTime,
+                        day_of_week: dayOfWeek
+                };
+        });
+
+        const lessons = await prisma.lessons.findMany({
+            where: { 
+                    id: { 
+                            in: lessonSchedules.map(schedule => schedule.lesson_id) 
+                    } 
+            }
+        });
+
+        const teachers = await prisma.teachers.findMany({
+            where: { 
+                    id: { 
+                            in: lessonSchedules.map(schedule => schedule.teacher_id) 
+                    } 
+            }
+        });
+
+        const relatedData = {
+            lessons: lessons,
+            teachers: teachers
+        };
 
 
         return (
@@ -145,9 +209,9 @@ const singleClassPage = async ({
                             </div>
                         </div>
                         {/* CLASS SCHEDULE */}
-                        <div className="mt-4">
-                            <BigCalendarContainer type="class_id" id={classModel?.id} />
-                        </div>
+                        <div className="mt-4 overflow-x-auto">
+                        <WeeklySchedule lessonSchedules={lessonSchedules} relatedData={relatedData} />
+                    </div>
                     </div>
                     {/* RIGHT */}
                     <div className="w-full xl:w-1/3 flex flex-col gap-4">
