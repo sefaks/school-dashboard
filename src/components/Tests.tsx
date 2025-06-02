@@ -44,6 +44,29 @@ type Test = {
   
 };
 
+type TestResult = {
+  test_id: number;
+  test_name: string;
+  test_no: number;
+  total_questions: number;
+  correct_answers: number;
+  wrong_answers: number;
+  score: number;
+  time_taken: string; // Format: "HH:mm:ss"
+  is_passed: boolean;
+};
+
+type AnswerMap = {
+  [questionId: number]: number;
+};
+
+const answersMap = {
+  0: "A",
+  1: "B",
+  2: "C",
+  3: "D"
+}
+
 const Tests: React.FC = () => {
   const [tests, setTests] = useState<Test[]>([]);
 
@@ -51,10 +74,8 @@ const Tests: React.FC = () => {
   const [selectedTestId, setSelectedTestId] = useState<number | null>(null); // Track the selected test
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [activeQuestionIndex, setActiveQuestionIndex] = useState(0); // Track active question index
-  const [isTestFinish, setIsTestFinish] = useState(false);
-  const [showExplanation, setShowExplanation] = useState(false); // Cevap açıklamalarını göstermek için state
   const [initialLoading, setInitialLoading] = useState(true);
-  const [reviewActiveQuestionIndex, setReviewActiveQuestionIndex] = useState(0);
+  const [answers, setAnswers] = useState<AnswerMap>({}); // Store user's answers
 
   const router = useRouter();
 
@@ -64,13 +85,19 @@ const Tests: React.FC = () => {
   const storedLanguage = localStorage.getItem("language") || "en";
   const [language, setLanguage] = useState(storedLanguage);
   const currentLanguageContent = language === "en" ? en : tr;
+  const submission_id = searchParams.get('submission_id');
+  const testId = searchParams.get('testId') ? parseInt(searchParams.get('testId')!) : null;
+  const resultId = searchParams.get('resultId') ? parseInt(searchParams.get('resultId')!) : null;
+  const userId = searchParams.get('userId') ? parseInt(searchParams.get('userId')!) : null;
+  const showEvaluation = searchParams.get('showEvaluation') === 'true';
 
   const { data: session } = useSession();
 
   // Fetch the tests when the component mounts
   useEffect(() => {
     const fetchTests = async () => {
-      if (publish_id) {
+
+      if (publish_id && session?.user.role === 'teacher' && !showEvaluation) {
         try {
           setIsLoading(true);
           const response = await apiClient.get(
@@ -87,21 +114,136 @@ const Tests: React.FC = () => {
         } finally {
           setIsLoading(false);
         }
-      }
-    };
-
+      } 
     fetchTests();
-  }, [publish_id]);
+  }
+    }
+  , [publish_id]);
+
+  useEffect(() => {
+
+    const fetchTest = async () => {
+
+      console.log("resultId is ", resultId)
+      console.log("testId is ", testId)
+      console.log("userId is ", userId)
+      console.log("showEvaluation is ", showEvaluation)
+      console.log("session is ", session?.user.role)
+
+      if (resultId && showEvaluation && userId) {
+         if(session?.user.role === 'admin' ) {
+        try {
+          setInitialLoading(false);
+          setIsLoading(true);
+          const response = await apiClient.get(
+            `/admins/students/${userId}/student-test-submission/${resultId}`,
+            {
+              headers: { Authorization: `Bearer ${session?.user.accessToken}` },
+            }
+          );
+          setSelectedTestId(resultId);
+  
+          const questions = await apiClient.get(`/questions/test-questions/${resultId}`);
+  
+          const fetchedQuestions = questions.data;
+  
+          // Fetch questions with images and user answers
+          const questionsWithImages = await Promise.all(
+            fetchedQuestions.map(async (question: any) => {
+              const questionResponse = await apiClient.get(
+                `/questions/get-question/${question.id}`,
+                { responseType: 'blob' }
+              );
+              const imageUrl = URL.createObjectURL(questionResponse.data);
+              return { 
+                ...question, 
+                question_url: imageUrl,
+                is_correct: question.user_answer === question.correct_answers[0].id
+              };
+            })
+          );
+  
+          setQuestions(questionsWithImages);
+          const answers  = response.data.answers.reduce(
+            (acc: any, answer: { question_id: number, given_answer: string }) => {
+              acc[answer.question_id] = answer.given_answer;
+              return acc;
+            },
+            {}
+          );
+          setAnswers(answers);
+          console.log("answers are ", answers)
+          setIsLoading(false);
+        } catch (error: any) {
+          toast.error("Test sonuçlarını alırken bir hata oluştu", error);
+          console.error("Error fetching test results:", error);
+        }
+  
+      }
+      else if (session?.user.role ==='teacher' && resultId && showEvaluation) {
+        try {
+
+
+          setInitialLoading(false);
+          setIsLoading(true);
+
+          const response = await apiClient.get(
+            `/teachers/students/${userId}/student-test-submission/${resultId}`,
+            {
+              headers: { Authorization: `Bearer ${session?.user.accessToken}` },
+            }
+          );
+          setSelectedTestId(resultId);
+
+          const questions = await apiClient.get(`/questions/test-questions/${resultId}`);
+          const fetchedQuestions = questions.data;
+          // Fetch questions with images and user answers
+          const questionsWithImages = await Promise.all(
+            fetchedQuestions.map(async (question: any) => {
+              const questionResponse = await apiClient.get(
+                `/questions/get-question/${question.id}`,
+                { responseType: 'blob' }
+              );
+              const imageUrl = URL.createObjectURL(questionResponse.data);
+              return { 
+                ...question, 
+                question_url: imageUrl,
+                is_correct: question.user_answer === question.correct_answers[0].id
+              };
+            })
+          );
+          setQuestions(questionsWithImages);
+          const answers  = response.data.answers.reduce(
+            (acc: any, answer: { question_id: number, given_answer: string }) => {
+              acc[answer.question_id] = answer.given_answer;
+              return acc;
+            },
+            {}
+          );
+          setAnswers(answers);
+
+          setIsLoading(false);
+
+        } catch (error: any) {
+          toast.error("Test sonuçlarını alırken bir hata oluştu", error);
+          console.error("Error fetching test results:", error);
+        }
+      }
+    }
+
+    }
+    fetchTest();
+
+  }, [resultId, showEvaluation, userId]);
+
 
 
   // if testId is in the URL, set the selectedTestId and wait for the test to load
   useEffect(() => {
     const loadInitialTest = async () => {
       const testId = searchParams.get('testId');
-      if (testId) {
-        // URL'den test durumunu da alabiliriz
-       
-        await handleTestClick(parseInt(testId));
+      if (testId && !showEvaluation) {
+          await handleTestClick(parseInt(testId));
       }
       setInitialLoading(false);
     };
@@ -115,7 +257,6 @@ const Tests: React.FC = () => {
     setSelectedTestId(testId);
     
     try {
-      const selectedTest = tests.find(test => test.id === testId);
       
       // URL'yi güncelle
       const newParams = new URLSearchParams(searchParams.toString());
@@ -147,6 +288,7 @@ const Tests: React.FC = () => {
       );
       
       setQuestions(questionsWithImages);
+      console.log("questions with images are ", questionsWithImages)
 
       // Action'a göre işlem yap      
     } catch (error: any) {
@@ -166,7 +308,6 @@ const Tests: React.FC = () => {
     if (!selectedTestId) {
 
       const sortedTests = [...tests].sort((a, b) => a.test_no - b.test_no);
-
       console.log("sorted tests are ", sortedTests)
 
       return (
@@ -213,6 +354,22 @@ const Tests: React.FC = () => {
             className="w-full  h-full object-cover rounded-lg"
           />
         </div>
+        <div className={`grid ${currentQuestion.options?.choices?.length <= 4 ? 'grid-cols-4' : 'grid-cols-5'} gap-2 mb-6`}>
+        {currentQuestion.options?.choices?.map((choice:any) => (
+          <span
+            key={choice.id}
+            className={`p-3 text-sm text-center rounded-[10px] border
+              ${choice.id === currentQuestion?.correct_answers?.[0]?.id
+                ? "bg-green-500 text-white border-green-500"
+                : choice.id === answers[currentQuestion.id]
+                  ? "bg-red-500 text-white border-red-500"
+                  : "border-[#702DFF40]"
+              }`}
+          >
+            {choice.id}
+          </span>
+        ))}
+      </div>
 
         <div className="mb-6">
            
@@ -226,12 +383,9 @@ const Tests: React.FC = () => {
             <MarkdownRenderer content={currentQuestion.explanation} />
             </div>
               </div>
-              
 
             )}
-            
           </div>
-        
 
         {/* Right Side: Question Text */}
         {/* <div className="lg:w-1/2 w-full">
@@ -244,26 +398,8 @@ const Tests: React.FC = () => {
   };
 
   // Handle user's answer selection
-  
-  // Handle Previous/Next question navigation
-  const handleNextQuestion = () => {
-    if (activeQuestionIndex < questions.length - 1) {
-      setActiveQuestionIndex((prev) => prev + 1);
-    }
-    else {
-      let count = 0
-      // alert("You have reached the end of the quiz!");
-      setIsTestFinish(true)
-     
-      console.log("count is ", count)
-    }
-  };
 
-  const handlePreviousQuestion = () => {
-    if (activeQuestionIndex > 0) {
-      setActiveQuestionIndex((prev) => prev - 1);
-    }
-  };
+
 
   return (
   <div className="flex flex-col gap-8 lg:flex-row">
@@ -277,27 +413,18 @@ const Tests: React.FC = () => {
           {(isLoading || initialLoading) ? (
             <Loading/>
           ) : (
-            questions.length > 0 ? renderActiveQuestion() : 
+            questions.length > 0 ? 
+            <TestReview
+            questions={questions}
+            answers={answers}
+            answersMap={answersMap}
+            currentLanguageContent={currentLanguageContent}
+            activeQuestionIndex={activeQuestionIndex}
+            setActiveQuestionIndex={setActiveQuestionIndex}
+          /> : 
             <p className="text-md italic">{currentLanguageContent.no_questions_available}</p>
           )}
-          {/* Navigation Buttons */}
-          {questions.length > 0 && (
-            <div className="flex justify-between mt-4">
-              <button
-                disabled={activeQuestionIndex === 0}
-                onClick={handlePreviousQuestion}
-                className="px-4 py-2 bg-gray-300 rounded-md text-gray-800 hover:bg-gray-400 disabled:opacity-50"
-              >
-                {currentLanguageContent.previous}
-              </button>
-              <button
-                onClick={handleNextQuestion}
-                className="px-4 py-2 bg-[#702DFF] text-white rounded-md hover:bg-purple-700"
-              >
-                {activeQuestionIndex === questions.length - 1 ? 'Finish' : currentLanguageContent.next}
-              </button>
-            </div>
-          )}
+         
         </div>
       </div>
     )}
@@ -308,29 +435,34 @@ const Tests: React.FC = () => {
         <Loading/>
       ) : (
         questions ? (
-          <>
-            {/* Geri butonu ve başlık row */}
-            <div className="flex items-center gap-4 mb-6">
-              <button
-                onClick={() => router.back()}
-                className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-              >
-                <ArrowBackIos className="text-gray-600" fontSize="small" />
-              </button>
-              <h1 className="text-2xl font-semibold text-gray-900">
-                {currentLanguageContent.lessons}
-              </h1>
-            </div>
 
-            {/* Testler */}
-            {renderTests()}
-          </>
+          <QuestionNumbersNav
+          questions={questions}
+          answers={answers}
+          answersMap={answersMap}
+          activeQuestionIndex={activeQuestionIndex}
+          setActiveQuestionIndex={setActiveQuestionIndex}
+          currentLanguageContent={currentLanguageContent}
+        />
+         
         ) : (
-          <div className="flex flex-col items-center justify-center min-h-[400px]">
-            <p className="text-gray-500 text-lg">
-              {currentLanguageContent.no_test_available}
-            </p>
+          <>
+          {/* Geri butonu ve başlık row */}
+          <div className="flex items-center gap-4 mb-6">
+            <button
+              onClick={() => router.back()}
+              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              <ArrowBackIos className="text-gray-600" fontSize="small" />
+            </button>
+            <h1 className="text-2xl font-semibold text-gray-900">
+              {currentLanguageContent.lessons}
+            </h1>
           </div>
+
+          {/* Testler */}
+          {renderTests()}
+        </>
         )
       )}
     </div>

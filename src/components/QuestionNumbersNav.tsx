@@ -2,6 +2,8 @@ import React from 'react';
 
 const QuestionNumbersNav = ({ 
   questions,
+  answers,
+  answersMap,
   activeQuestionIndex,
   setActiveQuestionIndex,
   currentLanguageContent 
@@ -18,8 +20,10 @@ const QuestionNumbersNav = ({
           const userAnswer = answers[question.id];
           
           // Direkt olarak userAnswer ile correct_answer'ı karşılaştırıyoruz
-          const isCorrect = userAnswer === question.correct_answers[0].id;
-          
+          const isCorrect = question?.correct_answers?.length > 0 
+          ? userAnswer === question.correct_answers[0].id 
+          : false;
+                
           return (
             <button
               key={question.id}
