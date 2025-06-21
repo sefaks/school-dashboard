@@ -59,7 +59,7 @@
     "which_student":"Program oluşturacağınız öğrenciyi seçiniz.",
     "student_not_found":"Öğrenci bulunamadı",
     "no_acces_to_add_schedule" : "Bu öğrencinin programını ekleme yetkiniz yok.",
-    "already_have_schedule": "Öğrencinin zaten bir programı var, güncelleyebilirsiniz.",
+    "already_have_schedule": "Öğrencinin zaten aktif bir programı var, güncelleyebilirsiniz.",
     "add_task": "Görev Ekle",
     "schedules": "Programlar",
     "not_completed": "Henüz Tamamlanmadı",

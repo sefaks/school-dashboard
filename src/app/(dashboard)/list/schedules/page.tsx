@@ -9,6 +9,8 @@ import { ITEM_PER_PAGE } from "@/lib/settings";
 import { getRoleAndUserIdAndInstitutionId } from "@/lib/utils";
 import FormContainer from "@/components/FormContainer";
 import RedirectButton from "@/components/AssignmentPage/RedirectButton";
+import { DateTime } from "luxon";
+import { parse } from "path";
 
 // Tip tanımlamaları
 type ClassWithSchedule = classes & {
@@ -20,8 +22,10 @@ type StudentSchedule = {
   name: string;
   surname: string;
   grade: number;
+  created_at: Date;
   school_no: string;
-  schedule: student_schedules | null;
+  // array schedules
+  student_schedules?: schedules[];
 };
 
 const columns = [
@@ -34,8 +38,7 @@ const columns = [
 // Admin için satır render fonksiyonu
 const renderAdminRow = (item: ClassWithSchedule, role: string) => {
   // Eğer schedule yoksa tek satır göster
-  if (!item.schedules || item.schedules.length === 0) {
-    return (
+  !item.schedules || item.schedules.length === 0 ? (
       <tr
         key={item.id}
         className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
@@ -60,11 +63,7 @@ const renderAdminRow = (item: ClassWithSchedule, role: string) => {
           </div>
         </td>
       </tr>
-    );
-  }
-
-  // Her schedule için AYRי TR (satır) oluştur
-  return (
+    ) : (
     <>
       {item.schedules.map((schedule, index) => (
         <tr
@@ -96,7 +95,6 @@ const renderAdminRow = (item: ClassWithSchedule, role: string) => {
           </td>
           <td>
             <div className="flex items-center gap-2">
-
               <RedirectButton
                 type="update"
                 page_type="schedules"
@@ -114,23 +112,81 @@ const renderAdminRow = (item: ClassWithSchedule, role: string) => {
 
 // Öğretmen için satır render fonksiyonu
 const renderTeacherRow = (item: StudentSchedule) => (
-  <tr
+
+  // öğrencinin her bir programı için ayrı satır oluştur
+  // Eğer öğrenci programı yoksa tek satır göster
+  
+  (!item.student_schedules || item.student_schedules.length ===0) ? (
+    <tr
+      key={item.id}
+      className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
+    >
+      <td className="flex items-center gap-4">{`${item.name} ${item.surname}`}</td>
+      <td>{item.grade}. Sınıf</td>
+      <td className="hidden md:table-cell">
+        <span className="bg-gray-500 text-white py-1 px-3 rounded-full">
+          Program Yok
+        </span>
+      </td>
+      <td>
+        <div className="flex items-center gap-2">
+          <RedirectButton
+            type="create"
+            page_type="schedules"
+            overrideUrl={`/list/schedules/create?student_id=${item.id}`}
+          />
+        </div>
+      </td>
+    </tr>
+  ) : 
+
+  item.student_schedules.map((schedule) => (
+    <tr
     key={item.id}
     className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
   >
     <td className="flex items-center gap-4">{`${item.name} ${item.surname}`}</td>
-    <td>{item.grade}. Sınıf</td>
     <td className="hidden md:table-cell">
-      <span className={`bg-green-500 text-white py-1 px-3 rounded-full`}>
-        {item.schedule ? 'Aktif' : 'Program Yok'}
-      </span>
+      {schedule.created_at ? new Date(schedule.created_at).toLocaleString('tr-TR', {
+        year: 'numeric',
+        month: 'long',
+        day: '2-digit',
+      }) : 'Tarih Yok'}
     </td>
+    
+    <td>{item.grade}. Sınıf</td>
+      {schedule.is_active ? (
+         <td className="hidden md:table-cell">
+         <span className={`bg-green-500 text-white py-1 px-3 rounded-full`}>
+            Aktif
+         </span>
+       </td>
+      ) : (
+        <td className="hidden md:table-cell">
+          <span className={`bg-yellow-600 text-white py-1 px-3 rounded-full`}>
+            Pasif
+          </span>
+        </td>
+      )}
+
     <td>
       <div className="flex items-center gap-2">
-        <RedirectButton type="update" id={item.id} page_type="schedules" />
+      <RedirectButton 
+          type="update" 
+          page_type="schedules" 
+          overrideUrl={`/list/schedules/create?id=${schedule ? schedule.id : ''}`} 
+        />
+         <RedirectButton
+          type="create"
+          page_type="schedules"
+          // özel URL override ediliyor
+          overrideUrl={`/list/schedules/create?student_id=${item.id}`} 
+        />
       </div>
     </td>
   </tr>
+  ))
+    
 );
 
 const ScheduleListPage = async ({
@@ -196,7 +252,49 @@ const ScheduleListPage = async ({
     const classIds = teacherClasses.map(tc => tc.class_id);
 
     // Öğrencileri sorgula
-    const studentQuery: Prisma.studentsWhereInput = {
+    let studentQuery: Prisma.studentsWhereInput = {
+      student_class: {
+        some: {
+          class_id: {
+            in: classIds,
+          },
+        },
+      },
+      
+    };
+  
+    // Arama parametresi
+    // Arama parametresi
+  if (queryParams.search && queryParams.search.trim() !== "") {
+    const searchTerm = queryParams.search.trim();
+    const gradeNumber = parseInt(searchTerm);
+    
+    // Önceki koşulları koru ve AND ile birleştir
+    studentQuery = {
+      AND: [
+        // Önceki sınıf koşulu
+        {
+          student_class: {
+            some: {
+              class_id: {
+                in: classIds,
+              },
+            },
+          },
+        },
+        // Arama koşulu
+        {
+          OR: [
+            { name: { contains: searchTerm, mode: "insensitive" } },
+            { surname: { contains: searchTerm, mode: "insensitive" } },
+            ...((!isNaN(gradeNumber)) ? [{ grade: gradeNumber }] : []),
+          ],
+        },
+      ],
+    };
+  } else {
+    // Arama yoksa sadece sınıf koşulunu kullan
+    studentQuery = {
       student_class: {
         some: {
           class_id: {
@@ -205,45 +303,38 @@ const ScheduleListPage = async ({
         },
       },
     };
-
-    // Arama parametresi
-    if (queryParams.search) {
-      studentQuery.OR = [
-        { name: { contains: queryParams.search, mode: "insensitive" } },
-        { surname: { contains: queryParams.search, mode: "insensitive" } },
-        { school_no: { contains: queryParams.search, mode: "insensitive" } },
-      ];
-    }
+  }
 
     // Öğrencileri al
-    const students = await prisma.students.findMany({
+    const allStudents = await prisma.students.findMany({
       where: studentQuery,
       include: {
-        student_schedules: {
-          where: {
-            assignee_id: parseInt(current_user_id),
-            assignee_type: "TEACHER",
-          },
-        },
+        student_schedules: true,
       },
       take: ITEM_PER_PAGE,
       skip: (p - 1) * ITEM_PER_PAGE,
     });
-
+    
+    // Görüntülenecek satırları belirle
+    const displayedStudents = allStudents.filter(student => 
+      !student.student_schedules || student.student_schedules.length === 0 || 
+      student.student_schedules.some(schedule => true) // Burada ek filtreler ekleyebilirsin
+    );
+    
+    // Gerçek count'u hesapla
     count = await prisma.students.count({
       where: studentQuery,
     });
-
-    // Öğrenci verilerini dönüştür
-    data = students.map(student => ({
+  
+    data = displayedStudents.map(student => ({
       id: student.id,
       name: student.name,
       surname: student.surname,
       grade: student.grade,
       school_no: student.school_no,
-      schedule: student.student_schedules[0] || null,
+      student_schedules: student.student_schedules,
     }));
-
+    
   }
 
 
@@ -269,7 +360,6 @@ const ScheduleListPage = async ({
           overrideUrl="/list/schedules/create-class-schedule"
         />
       )}
-
           </div>
         </div>
       </div>
@@ -277,7 +367,17 @@ const ScheduleListPage = async ({
       {/* LİSTE */}
       {data.length > 0 ? (
         <Table
-          columns={columns}
+          columns= {
+            role === "admin" 
+              ? columns 
+              : [
+                  { header: "Öğrenci Adı", accessor: "name" },
+                  { header: "Oluşturulma Tarihi", accessor: "created_at", className: "hidden md:table-cell" },
+                  { header: "Sınıf", accessor: "grade" },
+                  { header: "Durum", accessor: "status", className: "hidden md:table-cell" },
+                  { header: "Aksiyonlar", accessor: "actions" },
+                ]
+          }
           renderRow={role === "admin" 
             ? (item) => renderAdminRow(item as ClassWithSchedule, role) 
             : (item) => renderTeacherRow(item as StudentSchedule)

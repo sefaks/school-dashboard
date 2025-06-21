@@ -9,7 +9,7 @@ import AccountActivationModal from "@/components/AccountActivationModal";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "Arf School Management Dashboard",
+  title: "Arf - Okul",
   description: "Next.js School Management System",
 };
 

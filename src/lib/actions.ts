@@ -946,6 +946,30 @@ export const addScheduleToStudent = async (formData: any, token: string, student
   }
 };
 
+export const updateScheduleToStudent = async (formData: any, token: string, scheduleId: number) => {
+  try {
+    const response = await axios.put(
+      `${API_BASE_URL}/teachers/me/update-student-schedule/${scheduleId}`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error: any) {
+    if (error.response) {
+      console.error("API Response Error:", error.response);
+      throw new Error(error.response.data.detail || "Failed to update schedule to student!");
+    }
+    console.error("Network Error:", error);
+    throw new Error("An unexpected error occurred!");
+  }
+}
+
 export const adminClasses = async (token: string) => {
   try {
     const response = await axios.get(`${API_BASE_URL}/admins/me/classes`, {
@@ -967,9 +991,9 @@ export const adminClasses = async (token: string) => {
   }
 }
 
-export const getStudentSchedule = async (student_id: number, token: string) => {
+export const getStudentSchedule = async (schedule_id: number, token: string) => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/teachers/me/student-schedule/${student_id}`, {
+    const response = await axios.get(`${API_BASE_URL}/teachers/me/student-schedule/${schedule_id}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -980,6 +1004,25 @@ export const getStudentSchedule = async (student_id: number, token: string) => {
     if (error.response) {
       console.error("API Response Error:", error.response);
       throw new Error(error.response.data.detail || "Failed to get student schedule!");
+    }
+    console.error("Network Error:", error);
+    throw new Error("An unexpected error occurred!");
+  }
+}
+
+export const getStudent = async (student_id: number, token: string) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/teachers/students/${student_id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return response.data;
+  } catch (error: any) {
+    if (error.response) {
+      console.error("API Response Error:", error.response);
+      throw new Error(error.response.data.detail || "Failed to get student!");
     }
     console.error("Network Error:", error);
     throw new Error("An unexpected error occurred!");

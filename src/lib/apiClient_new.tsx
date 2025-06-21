@@ -64,3 +64,10 @@ export async function serverPut(endpoint: string, data: any) {
 export async function serverDelete(endpoint: string) {
   return serverApi(endpoint, { method: 'DELETE' });
 }
+
+export async function serverPatch(endpoint: string, data: any) {
+  return serverApi(endpoint, { 
+    method: 'PATCH',
+    body: JSON.stringify(data)
+  });
+}

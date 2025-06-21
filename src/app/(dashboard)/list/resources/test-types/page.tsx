@@ -33,6 +33,7 @@ const TestTypesPage = () => {
         const data = await getPublishTestTypes( parseInt(publish_id!));
         
         setTestTypes(data);
+
       } catch (err) {
         setError('Test tipleri yüklenirken bir hata oluştu.');
       } finally {
@@ -71,7 +72,7 @@ const TestTypesPage = () => {
 
   return (
     <div className="w-full max-w-4xl mx-auto px-4 py-8">
-         <div className="flex flex-row gap-2 p-4 border-b items-center">
+         <div className="flex flex-row gap-2 py-4 border-b items-center">
 
       <button
       onClick={() => router.back()}

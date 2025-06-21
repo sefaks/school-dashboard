@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "react-toastify";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import api from "@/lib/apiClient_new";
+import { serverPatch } from "@/lib/apiClient_new";
 
 const AdminUpdateSchema = z.object({
   name: z.string().min(1, { message: "Name is required!" }).optional(),
@@ -45,17 +45,10 @@ const AdminProfileForm = ({ initialData }: { initialData: any }) => {
 
     try {
         const validatedData = AdminUpdateSchema.parse(formData);
-
-        // API'ye gönderim
-        const response = await api.patch('/admins/me/update-profile', validatedData, {
-          headers: {
-            Authorization: `Bearer ${session?.user.accessToken}`
-          }
-        });
+        const response = await serverPatch('/admins/me/update-profile', validatedData);
 
         if (response.status === 200) {
             toast.success("Profil başarıyla güncellendi.");
-            // 1 saniye sonra sayfayı yenile
             setTimeout(() => {
                 router.refresh();
             }, 1000);

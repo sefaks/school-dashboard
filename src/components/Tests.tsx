@@ -96,39 +96,51 @@ const Tests: React.FC = () => {
   // Fetch the tests when the component mounts
   useEffect(() => {
     const fetchTests = async () => {
-
       if (publish_id && session?.user.role === 'teacher' && !showEvaluation) {
         try {
           setIsLoading(true);
           const response = await apiClient.get(
             `/teachers/me/publishes/${publish_id}/tests?test_type=${test_type}`,
             {
-              headers: { Authorization: `Bearer ${session?.user.accessToken}` },
+              headers: { Authorization: `Bearer ${session?.user.accessToken}` }, d
             }
-          );   
-
-        setTests(response.data); // Store the test list
-        } catch (error: any) { // Explicitly type the error parameter
+          );
+          setTests(response.data);
+        } catch (error: any) {
           toast.error("Testleri ulaşırken bir hata meydana geldi ", error);
           console.error("Error fetching tests:", error);
         } finally {
           setIsLoading(false);
         }
-      } 
-    fetchTests();
-  }
-    }
-  , [publish_id]);
+      } else if (publish_id && session?.user.role === 'admin' && !showEvaluation) {
+        try {
+          console.log("publish_id is ", publish_id)
+          console.log("session is ", session.user.role)
+          setIsLoading(true);
+          const response = await apiClient.get(
+            `/admins/me/publishes/${publish_id}/tests?test_type=${test_type}`,
+            {
+              headers: { Authorization: `Bearer ${session?.user.accessToken}` },
+            }
+          );
+          console.log("response is ", response.data)
+          setTests(response.data);
+        } catch (error: any) {
+          toast.error("Testleri ulaşırken bir hata meydana geldi ", error);
+          console.error("Error fetching tests:", error);
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+  
+    fetchTests(); 
+  }, [publish_id]);
+  
 
   useEffect(() => {
 
     const fetchTest = async () => {
-
-      console.log("resultId is ", resultId)
-      console.log("testId is ", testId)
-      console.log("userId is ", userId)
-      console.log("showEvaluation is ", showEvaluation)
-      console.log("session is ", session?.user.role)
 
       if (resultId && showEvaluation && userId) {
          if(session?.user.role === 'admin' ) {
@@ -305,6 +317,7 @@ const Tests: React.FC = () => {
 
 
   const renderTests = () => {
+    console.log("Rendering tests")
     if (!selectedTestId) {
 
       const sortedTests = [...tests].sort((a, b) => a.test_no - b.test_no);
@@ -402,72 +415,67 @@ const Tests: React.FC = () => {
 
 
   return (
-  <div className="flex flex-col gap-8 lg:flex-row">
-    {/* Sol: Test Detayları - Sadece bir test seçildiğinde görünür */}
-    {selectedTestId && (
-      <div className="lg:w-2/3 bg-[#FFFFFF] p-4 shadow-custom-black rounded-[12px]">
-        <div>
-          <h2 className="font-semibold text-[16px] leading-[20px] mb-4">
-            {currentLanguageContent.test_questions}
-          </h2>
-          {(isLoading || initialLoading) ? (
-            <Loading/>
-          ) : (
-            questions.length > 0 ? 
-            <TestReview
+    <div className="flex flex-col gap-8 lg:flex-row">
+      {/* Left: Test Details - Only visible when a test is selected */}
+      {selectedTestId && (
+        <div className="lg:w-2/3 bg-[#FFFFFF] p-4 shadow-custom-black rounded-[12px]">
+          <div>
+            <h2 className="font-semibold text-[16px] leading-[20px] mb-4">
+              {currentLanguageContent.test_questions}
+            </h2>
+            {(isLoading || initialLoading) ? (
+              <Loading/>
+            ) : (
+              questions.length > 0 ? 
+              <TestReview
+                questions={questions}
+                answers={answers}
+                answersMap={answersMap}
+                currentLanguageContent={currentLanguageContent}
+                activeQuestionIndex={activeQuestionIndex}
+                setActiveQuestionIndex={setActiveQuestionIndex}
+              /> : 
+              <p className="text-md italic">{currentLanguageContent.no_questions_available}</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Right: Test List - Full width when no test is selected */}
+      <div className={`${selectedTestId ? 'lg:w-1/3' : 'lg:w-full'} bg-[#FFFFFF] max-h-[calc(100vh-200px)] overflow-y-auto p-6 shadow-custom-black rounded-[12px]`}>
+        {isLoading ? (
+          <Loading/>
+        ) : selectedTestId && questions.length > 0 ? (
+          <QuestionNumbersNav
             questions={questions}
             answers={answers}
             answersMap={answersMap}
-            currentLanguageContent={currentLanguageContent}
             activeQuestionIndex={activeQuestionIndex}
             setActiveQuestionIndex={setActiveQuestionIndex}
-          /> : 
-            <p className="text-md italic">{currentLanguageContent.no_questions_available}</p>
-          )}
-         
-        </div>
-      </div>
-    )}
-
-    {/* Sağ: Test Listesi - Test seçili değilken tam genişlik */}
-    <div className={`${selectedTestId ? 'lg:w-1/3' : 'lg:w-full'} bg-[#FFFFFF] max-h-[calc(100vh-200px)] overflow-y-auto p-6 shadow-custom-black rounded-[12px]`}>
-      {isLoading ? (
-        <Loading/>
-      ) : (
-        questions ? (
-
-          <QuestionNumbersNav
-          questions={questions}
-          answers={answers}
-          answersMap={answersMap}
-          activeQuestionIndex={activeQuestionIndex}
-          setActiveQuestionIndex={setActiveQuestionIndex}
-          currentLanguageContent={currentLanguageContent}
-        />
-         
+            currentLanguageContent={currentLanguageContent}
+          />
         ) : (
           <>
-          {/* Geri butonu ve başlık row */}
-          <div className="flex items-center gap-4 mb-6">
-            <button
-              onClick={() => router.back()}
-              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-            >
-              <ArrowBackIos className="text-gray-600" fontSize="small" />
-            </button>
-            <h1 className="text-2xl font-semibold text-gray-900">
-              {currentLanguageContent.lessons}
-            </h1>
-          </div>
+            {/* Back button and title row */}
+            <div className="flex items-center gap-4 mb-6">
+              <button
+                onClick={() => router.back()}
+                className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <ArrowBackIos className="text-gray-600" fontSize="small" />
+              </button>
+              <h1 className="text-2xl font-semibold text-gray-900">
+                {currentLanguageContent.lessons}
+              </h1>
+            </div>
 
-          {/* Testler */}
-          {renderTests()}
-        </>
-        )
-      )}
+            {/* Tests */}
+            {renderTests()}
+          </>
+        )}
+      </div>
     </div>
-  </div>
-);
+  );
 }
 
 export default Tests;

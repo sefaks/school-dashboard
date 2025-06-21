@@ -356,6 +356,7 @@ const TeacherDashboard = () => {
 
  
   return (
+    
     <div className="container mx-auto p-4">
       <div className="mb-6 flex justify-between items-center">
       <button
@@ -363,16 +364,19 @@ const TeacherDashboard = () => {
             className="bg-white border p-2 rounded-[10px] hover:bg-gray-300"
           >
             <ArrowBackIos className="ml-1" fontSize="small" />
-          </button>
+        </button>
         <h3 className="text-xl font-bold text-lamaPurple">
           {studentData?.student_name} {studentData?.student_surname} İçin Haftalık Program
         </h3>
+
         <button
           onClick={() => setView(view === 'list' ? 'calendar' : 'list')}
           className="px-4 py-2 bg-lamaBlue  rounded-lg transition-all text-gray-900 text-sm  hover:text-gray-900"
         >
           {view === 'list' ? 'Takvim Görünümü' : 'Liste Görünümü'}
         </button>
+
+       
       </div>
 
       {view === 'calendar' ? (
