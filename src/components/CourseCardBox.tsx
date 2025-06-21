@@ -36,6 +36,8 @@ const CourseCardBox: React.FC<CourseCardProps> = ({ lesson, resourceId, isTest, 
     console.log(year);
 
     if (publisher) {
+      console.log("Is Test:", isTest);
+
       // Redirect to the publisher's page using their ID
       if (isTest !== false) {
         router.push(`/list/resources/test-types?publish_id=${publisher.id}`);  // ✅ isTest'e göre yönlendirme yapıldı

@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { AnnouncementSchema, AssignmentSchema, ClassSchema, CommentSchema, ScheduleCreateSchema, StudentSchema, TeacherRegisterSchema, TeacherSchema, TeacherUpdateSchema, studentSchema, } from './formValidationSchemas';
 import { toast } from 'react-toastify';
 import axios from "axios";
+import { serverGet, serverPatch } from './apiClient_new';
 
 // request for add student to institution 
 
@@ -1117,5 +1118,59 @@ export const getHomeworkIdeaWithAI = async (unitId:any, additionalRequirements:a
 };
 
 
+export async function fetchClassesAndStudents() {
+  return await serverGet("/teachers/me/classes-students");
+}
 
+export async function fetchTeacherSubjects() {
+  return await serverGet("/teachers/me/subjects");
+}
 
+export async function fetchTeacherPublishes() {
+  return await serverGet("/teachers/me/publishes");
+}
+
+export async function fetchAssignmentDetails(id: string) {
+  return await serverGet(`/assignments/${id}`);
+}
+
+export async function getAdminProfile(){
+  return await serverGet("/admins/me/profile");
+}
+
+export async function updateAdminProfile(data:any){
+  return await serverPatch("/admins/me/update-profile", data);
+}  
+
+export async function getContentTypes(publisherId: number) {
+  return await serverGet(`/lessons/publishes/${publisherId}/content-types`);
+}
+
+export async function getPublishContents(publisherId:number,content_type:string) {
+  return await serverGet(`/lessons/publishes/${publisherId}/contents/${content_type}`);
+}
+
+export const fetchPdfContent = async (topicId: string) => {
+  try {
+    console.log('Fetching PDF with fetch API for topicId:', topicId);
+    
+    // Fetch API ile istek gönder
+    const response = await fetch(`${API_BASE_URL}/lessons/contents/${topicId}`);
+    
+    // Yanıt durumunu kontrol et
+    if (!response.ok) {
+      if (response.status === 401) throw new Error('Unauthorized');
+      if (response.status === 404) throw new Error('Not Found');
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    // Blob olarak yanıtı al
+    const blobData = await response.blob();
+    console.log('Fetched PDF blob size:', blobData.size);
+    
+    return blobData; // Doğrudan blob döndür
+  } catch (error) {
+    console.error('Error fetching PDF:', error);
+    throw error;
+  }
+};

@@ -8,7 +8,6 @@ import { Avatar, Box, Button, Checkbox, CircularProgress, Container, Grid, Grid2
 import en from "@/app/messages/en.json";
 import tr from "@/app/messages/tr.json";
 import { Clock, DeleteIcon, Plus, Trash2, UserSearch } from 'lucide-react';
-import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import AddIcon from '@mui/icons-material/Add';
@@ -16,6 +15,8 @@ import { toast } from 'react-toastify';
 import { set } from 'date-fns';
 import { ArrowBackIos } from '@mui/icons-material';
 import Loading from '../../loading';
+import { format } from 'path';
+import WeeklySchedule from '@/components/schedules/WeeklySchedule';
 
 const theme = createTheme({  
     palette: {  
@@ -58,7 +59,6 @@ const WEEK_DAYS = [
   'Pazar'
 ];
 
- 
 
 const TeacherDashboard = () => {  
   const [selectedStudent, setSelectedStudent] = useState(null);  
@@ -77,11 +77,11 @@ const searchParams = useSearchParams();
 const scheduleId = searchParams.get('id') as string | null;
 const studentId = searchParams.get('student_id') as string | null;
 
-const [newTask, setNewTask] = useState({
-        day: '',
-        startTime: '',
-        endTime: '',
-        description: ''
+
+    const [lessonSchedules, setLessonSchedules] = useState([]);
+    const [relatedData, setRelatedData] = useState({
+      lessons: [],
+      teachers: []
     });
 
     //Language State
@@ -122,6 +122,36 @@ const [newTask, setNewTask] = useState({
                   is_completed: task.is_completed
                 }));
                 setTasks(formattedTasks);
+
+                console.log("Formatted Tasks:", formattedTasks);
+
+
+                const lessonSchedulesData = formattedTasks.map((task, index) => ({
+                  id: task.id || `temp-${Date.now()}-${index}`,
+                  day_of_week: task.day,
+                  start_time: task.startTime + ':00',
+                  end_time: task.endTime + ':00',
+                  lesson_id: index + 1, // Benzersiz bir lesson_id için index kullan
+                  teacher_id: 1
+                }))
+
+                setLessonSchedules(lessonSchedulesData);
+
+                const lessonsData = formattedTasks.map((task, index) => ({
+                  id: index + 1,
+                  name: task.description || 'Görev',
+                  subject_id: index % 9
+                }));
+
+                setRelatedData({
+                  lessons: lessonsData,
+                  teachers: [{
+                    id: 1,
+                    name: "",
+                    surname: ""
+                  }]
+                });
+
               }
             } catch (error) {
               console.error("Öğrenci programı getirilirken hata oluştu:", error);
@@ -163,6 +193,13 @@ const [newTask, setNewTask] = useState({
       };
       
       setTasks([...tasks, newTask]);
+      // Yeni görev eklendiğinde lessonSchedules ve relatedData'yi güncelle
+      updateWeeklyScheduleData([...tasks, newTask]);
+      // Eğer takvim görünümündeysek, takvimi güncelle
+      if (view === 'calendar') {
+        const calendarEvents = createCalendarEvents([...tasks, newTask]);
+        setLessonSchedules(calendarEvents);
+      }
     };
   
   const handleDescriptionChange = (day: string, taskIndex: number, value: string) => {
@@ -224,7 +261,56 @@ const [newTask, setNewTask] = useState({
       return task;
     });
     setTasks(newTasks);
+
+    updateWeeklyScheduleData(newTasks);
   };
+
+  const updateWeeklyScheduleData = (updatedTasks) => {
+    // Task'ları doğrudan lessonSchedules formatına dönüştür
+    const lessonSchedulesData = updatedTasks.map((task, index) => {
+      // Geçerli zaman formatı kontrolü
+      let startTime = task.startTime;
+      let endTime = task.endTime;
+      
+      // HH:MM formatında değilse, WeeklySchedule'a gönderme
+      if (!/^\d{2}:\d{2}$/.test(startTime)) {
+        startTime = null;
+      }
+      
+      if (!/^\d{2}:\d{2}$/.test(endTime)) {
+        endTime = null;
+      }
+      
+      return {
+        id: task.id || `temp-${Date.now()}-${index}`,
+        day_of_week: task.day,
+        start_time: startTime ? startTime + ':00' : null,
+        end_time: endTime ? endTime + ':00' : null,
+        lesson_id: index + 1, // Benzersiz bir lesson_id için index kullan
+        teacher_id: 1
+      };
+    });
+    
+    setLessonSchedules(lessonSchedulesData);
+    
+    // Her task için bir lesson oluştur
+    const lessonsData = updatedTasks.map((task, index) => ({
+      id: index + 1, // lesson_id ile eşleşmesi için
+      name: task.description || 'Görev',
+      subject_id: index % 9 // Renk çeşitliliği için
+    }));
+    
+    // Basit bir relatedData nesnesi oluştur
+    setRelatedData({
+      lessons: lessonsData,
+      teachers: [{
+        id: 1,
+        name: "",
+        surname: ""
+      }]
+    });
+  };
+  
   
   // Görüntüleme için saat formatı fonksiyonu
   const formatTimeDisplay = (value: string): string => {
@@ -405,6 +491,9 @@ const [newTask, setNewTask] = useState({
     }));
   }
 
+  console.log("lessonSchedules", lessonSchedules);
+  console.log("relatedData", relatedData);
+
 
   if (scheduleId  && !loading) {
     return (
@@ -470,20 +559,8 @@ const [newTask, setNewTask] = useState({
     
           {view === 'calendar' ? (
             <div className="h-[600px] bg-white rounded-lg shadow-lg p-4">
-              <FullCalendar
-                plugins={[dayGridPlugin, timeGridPlugin]}
-                initialView="timeGridWeek"
-                headerToolbar={{
-                  left: 'prev,next today',
-                  center: 'title',
-                  right: 'timeGridWeek,timeGridDay'
-                }}
-                events={createCalendarEvents(tasks)}
-                slotMinTime="06:00:00"
-                slotMaxTime="22:00:00"
-                allDaySlot={false}
-                locale="tr"
-              />
+            <WeeklySchedule lessonSchedules={lessonSchedules} relatedData={relatedData} header={schedule?.name || ''} />
+
             </div>
           ) : (
             <div className="space-y-6">
@@ -639,20 +716,7 @@ const [newTask, setNewTask] = useState({
     
               {view === 'calendar' ? (
             <div className="h-[600px] bg-white rounded-lg shadow-lg p-4">
-              <FullCalendar
-                plugins={[dayGridPlugin, timeGridPlugin]}
-                initialView="timeGridWeek"
-                headerToolbar={{
-                  left: 'prev,next today',
-                  center: 'title',
-                  right: 'timeGridWeek,timeGridDay'
-                }}
-                events={createCalendarEvents(tasks)}
-                slotMinTime="06:00:00"
-                slotMaxTime="22:00:00"
-                allDaySlot={false}
-                locale="tr"
-              />
+             <WeeklySchedule lessonSchedules={lessonSchedules} relatedData={relatedData} header={schedule?.name || ''} />
             </div>
           ) : (
             <div className="space-y-6">

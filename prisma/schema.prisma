@@ -757,6 +757,7 @@ enum assignmentstatus {
   COMPLETED
   PENDING
   PAST_DUE
+  DRAFT
 }
 
 enum dayofweek {

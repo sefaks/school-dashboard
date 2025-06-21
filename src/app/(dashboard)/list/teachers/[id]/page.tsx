@@ -1,6 +1,4 @@
 import Announcements from "@/components/Announcements";
-import BigCalendar from "@/components/BigCalender";
-import BigCalendarContainer from "@/components/BigCalenderContainer";
 import FormContainer from "@/components/FormContainer";
 import FormModal from "@/components/FormModal";
 import Performance from "@/components/Performance";
@@ -111,9 +109,16 @@ const SingleTeacherPage = async ({
     },
   });
 
+  const teachers = await prisma.teachers.findMany({
+    where: {
+      id: parseInt(id),
+    },
+  });
+
   const related_data = {
     lessons: lessons,
     classes: classes,
+    teachers: teachers,
   };
 
   
@@ -173,7 +178,7 @@ const SingleTeacherPage = async ({
               />
               <div className="">
                 <h1 className="text-xl font-semibold">90%</h1>
-                <span className="text-sm text-gray-400">Attendance</span>
+                <span className="text-sm text-gray-400">Katılım</span>
               </div>
             </div>
             {/* CARD */}
@@ -205,7 +210,7 @@ const SingleTeacherPage = async ({
                 <h1 className="text-xl font-semibold">
                   {count_classes}
                 </h1>
-                <span className="text-sm text-gray-400">Lessons</span>
+                <span className="text-sm text-gray-400">Dersler</span>
               </div>
             </div>
             {/* CARD */}
@@ -221,14 +226,13 @@ const SingleTeacherPage = async ({
                 <h1 className="text-xl font-semibold">
                   {count_classes}
                 </h1>
-                <span className="text-sm text-gray-400">Classes</span>
+                <span className="text-sm text-gray-400">Sınıflar</span>
               </div>
             </div>
           </div>
         </div>
         {/* BOTTOM */}
         <div className="mt-4 bg-white rounded-md p-4 h-[800px]">
-          <h1>Teacher&apos;s Schedule</h1>
           <WeeklySchedule relatedData={related_data} lessonSchedules={lessonSchedules} />
         </div>
       </div>
@@ -265,7 +269,7 @@ const SingleTeacherPage = async ({
               className="p-3 rounded-md bg-lamaSkyLight"
               href={`/list/assignments?teacherId=${teacher.id}`}
             >
-              Teacher&apos;in Ödevleri
+              Öğretmen&apos;in Ödevleri
             </Link>
           </div>
         </div>

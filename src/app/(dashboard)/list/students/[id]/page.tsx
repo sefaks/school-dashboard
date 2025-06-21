@@ -1,8 +1,8 @@
-import Announcements from "@/components/Announcements";
-import BigCalendarContainer from "@/components/BigCalenderContainer";
+
 import FormContainer from "@/components/FormContainer";
 import Performance from "@/components/Performance";
 import ClassCodeDisplay from "@/components/StudentPage/ClassCodeUpdate";
+import WeeklySchedule from "@/components/schedules/WeeklySchedule";
 import prisma from "@/lib/prisma";
 import { getRoleAndUserIdAndInstitutionId } from "@/lib/utils";
 import { auth } from "@clerk/nextjs/server";
@@ -82,6 +82,71 @@ const SingleStudentPage = async ({
   }
 
   const class_count = student?.student_class?.length || 0;
+
+  // fetching lesson schedules with the first class id for the student
+  const rawSchedules = await prisma.lesson_schedules.findMany({
+    where:{
+      schedules: {
+        class_id: firstClass?.id,
+        status: "ACTIVE"
+      },
+    }
+  });
+
+  const dayOfWeekMap: Record<string, string> = {
+    Monday: "Pazartesi",
+    Tuesday: "Salı",
+    Wednesday: "Çarşamba",
+    Thursday: "Perşembe",
+    Friday: "Cuma",
+    Saturday: "Cumartesi",
+    Sunday: "Pazar",
+};
+
+const lessonSchedules = rawSchedules.map(schedule => {
+  let startTime: string | Date = schedule.start_time;
+  let endTime: string | Date = schedule.end_time;
+  
+  // Tarih nesnesi ise string formatına dönüştür
+  if (startTime instanceof Date) {
+      startTime = `${startTime.getHours().toString().padStart(2, '0')}:${startTime.getMinutes().toString().padStart(2, '0')}`;
+  }
+  
+  if (endTime instanceof Date) {
+      endTime = `${endTime.getHours().toString().padStart(2, '0')}:${endTime.getMinutes().toString().padStart(2, '0')}`;
+  }
+  
+  // İngilizce gün adını Türkçe'ye çevir
+  const dayOfWeek = dayOfWeekMap[schedule.day_of_week] || schedule.day_of_week;
+  
+  return {
+          ...schedule,
+          start_time: startTime,
+          end_time: endTime,
+          day_of_week: dayOfWeek
+  };
+});
+
+const teachers = await prisma.teachers.findMany({
+  where: { 
+          id: { 
+                  in: lessonSchedules.map(schedule => schedule.teacher_id) 
+          } 
+  }
+});
+
+const lessons = await prisma.lessons.findMany({
+  where: { 
+          id: { 
+                  in: lessonSchedules.map(schedule => schedule.lesson_id) 
+          } 
+  }
+});
+
+const relatedData = {
+  teachers: teachers,
+  lessons: lessons,
+};
 
 
   return (
@@ -196,7 +261,7 @@ const SingleStudentPage = async ({
         </div>
         {/* BOTTOM */}
         <div className="mt-2">
-        <BigCalendarContainer type="class_id" id={firstClass?.id ?? 0} />
+       <WeeklySchedule lessonSchedules={lessonSchedules} relatedData={relatedData} />
 
         </div>
       </div>

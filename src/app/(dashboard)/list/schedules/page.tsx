@@ -36,34 +36,37 @@ const columns = [
 ];
 
 // Admin için satır render fonksiyonu
+// Admin için satır render fonksiyonu
 const renderAdminRow = (item: ClassWithSchedule, role: string) => {
-  // Eğer schedule yoksa tek satır göster
-  !item.schedules || item.schedules.length === 0 ? (
-      <tr
-        key={item.id}
-        className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
-      >
-        <td className="flex items-center gap-4">
-          {`${item.class_code} Programı`}
-        </td>
-        <td>{item.class_code}</td>
-        <td className="hidden md:table-cell">
-          <span className="bg-gray-500 text-white py-1 px-3 rounded-full">
-            Program Yok
-          </span>
-        </td>
-        <td>
-          <div className="flex items-center gap-2">
-            <RedirectButton
-              type="update"
-              page_type="schedules"
-              overrideUrl={`/list/schedules/create-class-schedule?id=${item.id}`}
-            />
-            <FormContainer table="class" type="delete" id={item.id} />
-          </div>
-        </td>
-      </tr>
-    ) : (
+  console.log("Item:", item);
+  
+  // Eğer schedule yoksa tek satır göster, varsa schedule'ları listele
+  return !item.schedules || item.schedules.length === 0 ? (
+    <tr
+      key={item.id}
+      className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
+    >
+      <td className="flex items-center gap-4">
+        {`${item.class_code} Programı`}
+      </td>
+      <td>{item.class_code}</td>
+      <td className="hidden md:table-cell">
+        <span className="bg-gray-500 text-white py-1 px-3 rounded-full">
+          Program Yok
+        </span>
+      </td>
+      <td>
+        <div className="flex items-center gap-2">
+          <RedirectButton
+            type="update"
+            page_type="schedules"
+            overrideUrl={`/list/schedules/create-class-schedule?id=${item.id}`}
+          />
+          <FormContainer table="class" type="delete" id={item.id} />
+        </div>
+      </td>
+    </tr>
+  ) : (
     <>
       {item.schedules.map((schedule, index) => (
         <tr
@@ -101,7 +104,7 @@ const renderAdminRow = (item: ClassWithSchedule, role: string) => {
                 overrideUrl={`/list/schedules/create-class-schedule?id=${schedule.id}`}
               />
               {/* Delete butonunu sadece ilk schedule'da göster */}
-                <FormContainer table="schedule" type="delete" id={schedule.id} />
+              <FormContainer table="schedule" type="delete" id={schedule.id} />
             </div>
           </td>
         </tr>
@@ -233,10 +236,13 @@ const ScheduleListPage = async ({
       prisma.classes.count({
         where: classQuery,
       }),
+      
     ]);
 
     // data'da schedule olmayan sınıfları filtrele
     data = data.filter(item => item.schedules && item.schedules.length > 0);
+
+    console.log("Data:", data);
 
   } else if (role === "teacher") {
     // Öğretmenin öğrencilerini ve programlarını al
@@ -309,10 +315,20 @@ const ScheduleListPage = async ({
     const allStudents = await prisma.students.findMany({
       where: studentQuery,
       include: {
-        student_schedules: true,
+        student_schedules: {
+          orderBy: {
+            is_active: 'desc', // Aktif programlar önce gelsin
+          },
+        }
+      },
+      orderBy: {
+        student_schedules: {
+          _count: 'desc', // Programı olan öğrenciler önce gelsin
+        },
       },
       take: ITEM_PER_PAGE,
       skip: (p - 1) * ITEM_PER_PAGE,
+     
     });
     
     // Görüntülenecek satırları belirle

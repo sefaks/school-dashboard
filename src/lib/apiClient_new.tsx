@@ -44,6 +44,7 @@ export async function serverGet(endpoint: string) {
   return serverApi(endpoint, { method: 'GET' });
 }
 
+
 // POST isteği için kısa yol
 export async function serverPost(endpoint: string, data: any) {
   return serverApi(endpoint, { 

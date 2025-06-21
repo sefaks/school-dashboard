@@ -61,6 +61,13 @@ interface AnalysisDetail {
           total_test_score: number;
           average_test_score: number;
         };
+        tasks: Array<{
+          task_id: number;
+          task_name: string;
+          description: string;
+          is_completed: boolean;
+          day_of_week: string;
+        }>;
       };
     };
   }
@@ -311,7 +318,7 @@ interface AnalysisDetail {
 )}
 
   {/* Haftalık Tak Sekmesi */}
-  <TaskStatsWithChart analysisData={analysisData} activeTab= {activeTab} />
+  <TaskStatsWithChart analysisData={analysisData.report.report_details} activeTab= {activeTab} />
 
   <AIAnalysisSection 
   analysis={analysisData?.report?.ai_analysis || ''}

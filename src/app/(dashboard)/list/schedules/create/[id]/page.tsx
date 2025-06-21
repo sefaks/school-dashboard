@@ -16,6 +16,7 @@ import { toast } from 'react-toastify';
 import { set } from 'date-fns';
 import { ArrowBackIos } from '@mui/icons-material';
 import Loading from '../../../loading';
+import WeeklySchedule from '@/components/schedules/WeeklySchedule';
 
 const theme = createTheme({  
     palette: {  
@@ -58,11 +59,11 @@ const TeacherDashboard = () => {
   const [studentData, setStudentData] = useState(null);
 
 
-  const [newTask, setNewTask] = useState({
-    day: '',
-    startTime: '',
-    endTime: '',
-    description: ''
+
+  const [lessonSchedules, setLessonSchedules] = useState([]);
+  const [relatedData, setRelatedData] = useState({
+    lessons: [],
+    teachers: []
   });
 
 
@@ -102,6 +103,32 @@ const TeacherDashboard = () => {
               setTasks(formattedTasks);
             }
 
+            const lessonSchedulesData = formattedTasks.map((task, index) => ({
+              id: task.id || `temp-${Date.now()}-${index}`,
+              day_of_week: task.day,
+              start_time: task.startTime + ':00',
+              end_time: task.endTime + ':00',
+              lesson_id: index + 1, // Benzersiz bir lesson_id için index kullan
+              teacher_id: 1
+            }))
+
+            setLessonSchedules(lessonSchedulesData);
+
+            const lessonsData = formattedTasks.map((task, index) => ({
+              id: index + 1,
+              name: task.description || 'Görev',
+              subject_id: index % 9
+            }));
+
+            setRelatedData({
+              lessons: lessonsData,
+              teachers: [{
+                id: 1,
+                name: "",
+                surname: ""
+              }]
+            });
+
             setLoading(false);
 
           }
@@ -132,6 +159,11 @@ const TeacherDashboard = () => {
       };
       
       setTasks([...tasks, newTask]);
+      updateWeeklyScheduleData([...tasks, newTask]); // Yeni görevi ekledikten sonra güncelle
+      if (view === 'calendar') {
+        const calendarEvents = createCalendarEvents([...tasks, newTask]);
+        setLessonSchedules(calendarEvents);
+      }
     };
   
   const handleDescriptionChange = (day: string, taskIndex: number, value: string) => {
@@ -193,6 +225,52 @@ const TeacherDashboard = () => {
       return task;
     });
     setTasks(newTasks);
+  };
+
+  const updateWeeklyScheduleData = (updatedTasks) => {
+    // Task'ları doğrudan lessonSchedules formatına dönüştür
+    const lessonSchedulesData = updatedTasks.map((task, index) => {
+      // Geçerli zaman formatı kontrolü
+      let startTime = task.startTime;
+      let endTime = task.endTime;
+      
+      // HH:MM formatında değilse, WeeklySchedule'a gönderme
+      if (!/^\d{2}:\d{2}$/.test(startTime)) {
+        startTime = null;
+      }
+      
+      if (!/^\d{2}:\d{2}$/.test(endTime)) {
+        endTime = null;
+      }
+      
+      return {
+        id: task.id || `temp-${Date.now()}-${index}`,
+        day_of_week: task.day,
+        start_time: startTime ? startTime + ':00' : null,
+        end_time: endTime ? endTime + ':00' : null,
+        lesson_id: index + 1, // Benzersiz bir lesson_id için index kullan
+        teacher_id: 1
+      };
+    });
+    
+    setLessonSchedules(lessonSchedulesData);
+    
+    // Her task için bir lesson oluştur
+    const lessonsData = updatedTasks.map((task, index) => ({
+      id: index + 1, // lesson_id ile eşleşmesi için
+      name: task.description || 'Görev',
+      subject_id: index % 9 // Renk çeşitliliği için
+    }));
+    
+    // Basit bir relatedData nesnesi oluştur
+    setRelatedData({
+      lessons: lessonsData,
+      teachers: [{
+        id: 1,
+        name: "",
+        surname: ""
+      }]
+    });
   };
   
   // Görüntüleme için saat formatı fonksiyonu
@@ -381,19 +459,8 @@ const TeacherDashboard = () => {
 
       {view === 'calendar' ? (
         <div className="h-[600px] bg-white rounded-lg shadow-lg p-4">
-          <FullCalendar
-            plugins={[dayGridPlugin, timeGridPlugin]}
-            initialView="timeGridWeek"
-            headerToolbar={{
-              left: 'prev,next today',
-              center: 'title',
-              right: 'timeGridWeek,timeGridDay'
-            }}
-            events={createCalendarEvents(tasks)}
-            slotMinTime="06:00:00"
-            slotMaxTime="22:00:00"
-            allDaySlot={false}
-            locale="tr"
+         <WeeklySchedule 
+          lessonSchedules={lessonSchedules} relatedData={relatedData} header={schedule?.name  || "Haftalık Program"}
           />
         </div>
       ) : (

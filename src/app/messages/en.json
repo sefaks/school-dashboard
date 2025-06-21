@@ -97,7 +97,8 @@
     "close": "Close",
     "ai_homework_idea": "AI Homework Idea",
     "loading_message_homework": "Our AI is creating a creative homework idea based on the selected unit...",
-    "regenerate_idea": "Regenerate Idea"
+    "regenerate_idea": "Regenerate Idea",
+    "no_publishes_available": "No publishers found"
     
 
 

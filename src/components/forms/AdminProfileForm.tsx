@@ -7,6 +7,7 @@ import { toast } from "react-toastify";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { serverPatch } from "@/lib/apiClient_new";
+import { updateAdminProfile } from "@/lib/actions";
 
 const AdminUpdateSchema = z.object({
   name: z.string().min(1, { message: "Name is required!" }).optional(),
@@ -45,9 +46,9 @@ const AdminProfileForm = ({ initialData }: { initialData: any }) => {
 
     try {
         const validatedData = AdminUpdateSchema.parse(formData);
-        const response = await serverPatch('/admins/me/update-profile', validatedData);
+        const response = await updateAdminProfile(validatedData)
 
-        if (response.status === 200) {
+        if (response) {
             toast.success("Profil başarıyla güncellendi.");
             setTimeout(() => {
                 router.refresh();
@@ -59,6 +60,7 @@ const AdminProfileForm = ({ initialData }: { initialData: any }) => {
       if (error instanceof ZodError) {
         toast.error("Doğrulama hatası. Lütfen bilgileri kontrol edin.");
       } else {
+        console.error("Error updating profile:", error);
         toast.error("Bir hata oluştu.");
       }
     }

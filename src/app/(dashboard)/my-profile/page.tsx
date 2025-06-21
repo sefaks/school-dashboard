@@ -5,7 +5,7 @@ import TeacherProfileForm from '@/components/forms/TeacherProfileForm';
 import { serverGet } from '@/lib/apiClient_new';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { getTeacherProfile } from '@/lib/actions';
+import { getAdminProfile, getTeacherProfile } from '@/lib/actions';
 import en from "@/app/messages/en.json";
 import tr from "@/app/messages/tr.json";
 import Loading from '../list/loading';
@@ -13,9 +13,15 @@ import { el } from 'date-fns/locale';
 import AdminProfileForm from '@/components/forms/AdminProfileForm';
 
 
+type Admin = {
+  id: string;
+  name: string;
+  institution_id: string;
+};
+
 export default function TeacherProfilePage() {
   const [teacher, setTeacher] = useState(null);
-  const [admin, setAdmin] = useState(null);
+  const [admin, setAdmin] = useState<Admin | null>(null);
   const router = useRouter();
   const { data: session } = useSession(); // Get the session (which includes the token)
   const [language, setLanguage] = useState("en");
@@ -43,9 +49,9 @@ export default function TeacherProfilePage() {
         }
         // else if role is admin, fetch admin data
         else if(session.user.role === 'admin') {
-          const adminResponse = await serverGet('/admins/me/profile');
-          console.log(adminResponse.data);
-          setAdmin(adminResponse.data);
+          const adminResponse = await getAdminProfile();
+          console.log(adminResponse);
+          setAdmin(adminResponse);
           setLoading(false);
         }
       } catch (error) {
@@ -157,7 +163,7 @@ export default function TeacherProfilePage() {
             
             {/* Sağ Kolon - Form */}
             <div className="md:col-span-2">
-              {role === 'teacher' && <TeacherProfileForm initialData={teacher} />}
+              {session?.user?.role === 'teacher' && <TeacherProfileForm initialData={teacher} />}
             </div>
           </div>
         </div>

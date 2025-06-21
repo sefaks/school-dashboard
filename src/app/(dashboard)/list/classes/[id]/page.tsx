@@ -1,4 +1,3 @@
-import BigCalendarContainer from "@/components/BigCalenderContainer";
 import FormContainer from "@/components/FormContainer";
 import prisma from "@/lib/prisma";
 import { getRoleAndUserIdAndInstitutionId } from "@/lib/utils";
@@ -210,7 +209,7 @@ const singleClassPage = async ({
                         </div>
                         {/* CLASS SCHEDULE */}
                         <div className="mt-4 overflow-x-auto">
-                        <WeeklySchedule lessonSchedules={lessonSchedules} relatedData={relatedData} />
+                        <WeeklySchedule lessonSchedules={lessonSchedules} relatedData={relatedData} header={`Sınıf Programı: ${classModel.class_code}`} />
                     </div>
                     </div>
                     {/* RIGHT */}

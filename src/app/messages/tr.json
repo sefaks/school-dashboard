@@ -96,7 +96,8 @@
     "close": "Kapat",
     "ai_homework_idea": "Arf - Akıllı Ödev Fikri",
     "loading_message":"Yapay zekamız seçilen üniteye göre yaratıcı bir ödev fikri oluşturuyor...",
-    "regenerate_idea": "Fikri Yeniden Oluştur"
+    "regenerate_idea": "Fikri Yeniden Oluştur",
+    "no_publishes_available": "Yayınevi bulunamadı"
 
 
 
