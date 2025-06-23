@@ -5,7 +5,7 @@ import TeacherProfileForm from '@/components/forms/TeacherProfileForm';
 import { serverGet } from '@/lib/apiClient_new';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { getTeacherProfile } from '@/lib/actions';
+import { getAdminProfile, getTeacherProfile } from '@/lib/actions';
 import en from "@/app/messages/en.json";
 import tr from "@/app/messages/tr.json";
 import Loading from '../list/loading';
@@ -13,24 +13,22 @@ import { el } from 'date-fns/locale';
 import AdminProfileForm from '@/components/forms/AdminProfileForm';
 
 
+type Admin = {
+  id: string;
+  name: string;
+  institution_id: string;
+};
+
 export default function TeacherProfilePage() {
   const [teacher, setTeacher] = useState(null);
-  const [admin, setAdmin] = useState(null);
+  const [admin, setAdmin] = useState<Admin | null>(null);
   const router = useRouter();
-  const [role, setRole] = useState(null);
   const { data: session } = useSession(); // Get the session (which includes the token)
   const [language, setLanguage] = useState("en");
   
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const storedLanguage = localStorage.getItem("language") || "en";
-      setLanguage(storedLanguage);
-    }
-  }, []);
-  
   const currentLanguageContent = language === "en" ? en : tr;
   //loading
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   
   useEffect(() => {
     async function fetchData() {
@@ -40,9 +38,7 @@ export default function TeacherProfilePage() {
           router.push('/login');
           return;
         }
-        
-        setRole(session.user.role);
-        
+                
         if (session.user.role === 'teacher') {
           // fetch teacher data
           const teacherResponse = await getTeacherProfile(session.user.accessToken);
@@ -53,13 +49,9 @@ export default function TeacherProfilePage() {
         }
         // else if role is admin, fetch admin data
         else if(session.user.role === 'admin') {
-          const adminResponse = await serverGet('/admins/me/profile', {
-            headers: {
-              Authorization: `Bearer ${session.user.accessToken}`,
-            },
-          });
-          console.log(adminResponse.data);
-          setAdmin(adminResponse.data);
+          const adminResponse = await getAdminProfile();
+          console.log(adminResponse);
+          setAdmin(adminResponse);
           setLoading(false);
         }
       } catch (error) {
@@ -67,7 +59,7 @@ export default function TeacherProfilePage() {
       }
     }
     fetchData();
-  }, [session, router]);
+  }, [session?.user.role]);
   
   if (!session) {
     return null;
@@ -78,7 +70,7 @@ export default function TeacherProfilePage() {
   }
   
   // Admin görünümü için ayrı bir render
-  if (role === 'admin' && admin) {
+  if (session?.user?.role === 'admin' && admin) {
     return (
       <div className="container mx-auto py-8 px-4">
         <div className="max-w-4xl mx-auto">
@@ -134,45 +126,51 @@ export default function TeacherProfilePage() {
   }
   
   // Öğretmen görünümü (orijinal)
-  return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="max-w-4xl mx-auto">
-        {/* Profil Başlığı */}
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-800">Profil Bilgileri</h1>
-          <p className="text-gray-600">
-            Kişisel bilgilerinizi buradan görüntüleyebilir ve güncelleyebilirsiniz.
-          </p>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Sol Kolon - Avatar ve İsim */}
-          <div className="md:col-span-1 bg-white p-6 rounded-lg shadow-md">
-            <div className="flex flex-col items-center">
-              {teacher.photo ? (
-                <img
-                  src={teacher.photo}
-                  alt="Profil Fotoğrafı"
-                  className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg"
-                />
-              ) : (
-                <div className="w-32 h-32 rounded-full bg-gray-100 flex items-center justify-center">
-                  <User className="w-16 h-16 text-gray-400" />
-                </div>
-              )}
-              <h2 className="mt-4 text-xl font-semibold text-gray-800">
-                {teacher.name && teacher.surname ? `${teacher.name} ${teacher.surname}` : 'İsim Belirtilmemiş'}
-              </h2>
-              <p className="text-gray-600">{teacher.title || 'Ünvan Belirtilmemiş'}</p>
-            </div>
+  if (session?.user?.role === 'teacher' && teacher) {
+
+    return (
+      <div className="container mx-auto py-8 px-4">
+        <div className="max-w-4xl mx-auto">
+          {/* Profil Başlığı */}
+          <div className="mb-8">
+            <h1 className="text-2xl font-bold text-gray-800">Profil Bilgileri</h1>
+            <p className="text-gray-600">
+              Kişisel bilgilerinizi buradan görüntüleyebilir ve güncelleyebilirsiniz.
+            </p>
           </div>
           
-          {/* Sağ Kolon - Form */}
-          <div className="md:col-span-2">
-            {role === 'teacher' && <TeacherProfileForm initialData={teacher} />}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Sol Kolon - Avatar ve İsim */}
+            <div className="md:col-span-1 bg-white p-6 rounded-lg shadow-md">
+              <div className="flex flex-col items-center">
+                {teacher.photo ? (
+                  <img
+                    src={teacher.photo}
+                    alt="Profil Fotoğrafı"
+                    className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg"
+                  />
+                ) : (
+                  <div className="w-32 h-32 rounded-full bg-gray-100 flex items-center justify-center">
+                    <User className="w-16 h-16 text-gray-400" />
+                  </div>
+                )}
+                <h2 className="mt-4 text-xl font-semibold text-gray-800">
+                  {teacher.name && teacher.surname ? `${teacher.name} ${teacher.surname}` : 'İsim Belirtilmemiş'}
+                </h2>
+                <p className="text-gray-600">{teacher.title || 'Ünvan Belirtilmemiş'}</p>
+              </div>
+            </div>
+            
+            {/* Sağ Kolon - Form */}
+            <div className="md:col-span-2">
+              {session?.user?.role === 'teacher' && <TeacherProfileForm initialData={teacher} />}
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  }
+
+  
 }
+

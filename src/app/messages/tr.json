@@ -59,7 +59,7 @@
     "which_student":"Program oluşturacağınız öğrenciyi seçiniz.",
     "student_not_found":"Öğrenci bulunamadı",
     "no_acces_to_add_schedule" : "Bu öğrencinin programını ekleme yetkiniz yok.",
-    "already_have_schedule": "Öğrencinin zaten bir programı var, güncelleyebilirsiniz.",
+    "already_have_schedule": "Öğrencinin zaten aktif bir programı var, güncelleyebilirsiniz.",
     "add_task": "Görev Ekle",
     "schedules": "Programlar",
     "not_completed": "Henüz Tamamlanmadı",
@@ -96,7 +96,13 @@
     "close": "Kapat",
     "ai_homework_idea": "Arf - Akıllı Ödev Fikri",
     "loading_message":"Yapay zekamız seçilen üniteye göre yaratıcı bir ödev fikri oluşturuyor...",
-    "regenerate_idea": "Fikri Yeniden Oluştur"
+    "regenerate_idea": "Fikri Yeniden Oluştur",
+    "no_publishes_available": "Yayınevi bulunamadı",
+    "noteAddedSuccessfully": "Not başarıyla eklendi.",
+    "save": "Kaydet",
+    "cancel": "İptal",
+    "noteDeletedSuccessfully": "Not başarıyla silindi.",
+    "notes": "Notlar"
 
 
 

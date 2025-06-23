@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import html2canvas from 'html2canvas';
 import { toast } from 'react-toastify';
 
-const WeeklySchedule = ({ lessonSchedules, relatedData }) => {
+const WeeklySchedule = ({ lessonSchedules, relatedData, header }: { lessonSchedules: any; relatedData: any; header: string }) => {
   const [scheduleMap, setScheduleMap] = useState({});
   const scheduleRef = useRef(null);
   const days = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"];
@@ -54,6 +54,12 @@ const WeeklySchedule = ({ lessonSchedules, relatedData }) => {
         endTime,
         color: generateColor(subjectId)
       };
+
+      if (lessonInfo.name ==='Sosyal Bilgiler' || lessonInfo.name ==='Sosyal Bilgiler '){
+        lessonInfo.name = 'Sosyal B.';
+      }
+
+      console.log("lessonInfo",lessonInfo);
       
       if (!map[day]) {
         map[day] = [];
@@ -150,9 +156,9 @@ const viewLessonStartAndEndTime = (start: any, end: any) => {
     }
 
   return (
-    <div className="mt-8 border rounded-lg overflow-hidden">
+    <div className="mt-8 bg-white border rounded-lg overflow-hidden">
     <div className="flex justify-between items-center bg-gray-50 border-b p-4">
-        <h2 className="text-xl font-bold">Haftalık Ders Programı</h2>
+        <h2 className="text-xl font-bold">{header}</h2>
         <button 
           onClick={() => {
             console.log("Butona tıklandı");

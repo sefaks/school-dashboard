@@ -5,7 +5,7 @@ import { ArrowBackIos } from "@mui/icons-material";
 import en from "@/app/messages/en.json";
 import tr from "@/app/messages/tr.json";
 import { AssignmentSchema, assignmentSchema } from "@/lib/formValidationSchemas";
-import { addAssignment, getAssignment, getUnitsForSubjectAndGrade, teacherStudentsandClasses, teacherSubjects, updateAssignment } from "@/lib/actions";
+import { addAssignment, fetchAssignmentDetails, fetchClassesAndStudents, fetchTeacherPublishes, fetchTeacherSubjects, getAssignment, getUnitsForSubjectAndGrade, teacherStudentsandClasses, teacherSubjects, updateAssignment } from "@/lib/actions";
 import { useSession } from "next-auth/react";
 import { toast } from "react-toastify";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,6 +16,9 @@ import EmojiObjectsIcon from '@mui/icons-material/EmojiObjects'; // Ampul (fikir
 import { useFormState } from 'react-dom';
 import { serverGet } from "@/lib/apiClient_new";
 import AIHomeworkIdeaModal from "@/components/AssignmentPage/AIHomeworkIdeaModal";
+import { is } from "date-fns/locale";
+import Loading from "../../loading";
+import { subject } from "@prisma/client";
 
 //cant resolve watch from fs
 
@@ -64,9 +67,14 @@ interface FileWithBase64 {
   const startDateValue = watch("start_date");
   const deadlineDateValue = watch("deadline_date");
   const [selectedPublishId, setSelectedPublishId] = useState<number | null>(null);
+  const [selectedSubjectId, setSelectedSubjectId] = useState<number | null>(null);
+
+  const [tests, setTests] = useState<any[]>([]);
 
   const { data: session } = useSession(); // Get the session (which includes the token)
   const router = useRouter();
+
+  const [error, setError] = useState(null);
 
  
 
@@ -109,37 +117,31 @@ interface FileWithBase64 {
 
 
     useEffect(() => {
+        setIsLoading(true);
+
         const fetchData = async () => {
+          console.log("Fetching related data for type:", type, "and id:", id);
           try {
-            const classesAndStudentsResponse = await serverGet("/teachers/me/classes-students")
+
+            const classesAndStudentsResponse = await fetchClassesAndStudents();
+            const teacherSubjectsResponse = await fetchTeacherSubjects();
+            const teacherPublishesResponse = await fetchTeacherPublishes();
 
             console.log("Classes and Students Response:", classesAndStudentsResponse);
-            
-            const teacherSubjectsResponse =await serverGet("/teachers/me/subjects")
-
             console.log("Teacher Subjects Response:", teacherSubjectsResponse);
-
-            const teacherPublishesResponse = await serverGet("/teachers/me/publishes")
-
             console.log("Teacher Publishes Response:", teacherPublishesResponse);
-
-      
-            // Tüm data yüklendikten sonra state'i güncelle
-            const classesAndStudentsResponseData =  classesAndStudentsResponse;
-            const teacherSubjectsResponseData =  teacherSubjectsResponse;
-            const teacherPublishesResponseData = teacherPublishesResponse;
-
+  
             setRelatedData({
-              classes: classesAndStudentsResponseData.data.classes,
-              students: classesAndStudentsResponseData.data.students,
-              subjects: teacherSubjectsResponseData.data,
-              publishes: teacherPublishesResponseData.data
+              classes: classesAndStudentsResponse.classes,
+              students: classesAndStudentsResponse.students,
+              subjects: teacherSubjectsResponse,
+              publishes: teacherPublishesResponse,
             });
       
             // Update case için assignment detaylarını çek
             if (id) {
                 try {
-                  const assignmentResponse = await serverGet(`/assignments/${id}`)
+                  const assignmentResponse = await fetchAssignmentDetails(id);
                   const assignmentData = assignmentResponse.data;
                   // Tüm assignment data'sını logla
                   console.log("Full Assignment Response:", assignmentResponse);
@@ -203,12 +205,12 @@ interface FileWithBase64 {
               }
           } catch (error) {
             setError(error as any);
-          } finally {
-            setIsLoading(false);
-          }
+            console.error("Error fetching related data:", error);
+          } 
         };
       
         fetchData();
+        setIsLoading(false);
       }, [type, id]);
       
       // Render kısmında loading state'ini kontrol et
@@ -226,15 +228,27 @@ interface FileWithBase64 {
         console.log("Updated Related Data:", relatedData);
         console.log("Selected Classes:", selectedClasses);
         console.log("Selected Students:", selectedStudents);
+        console.log("Publishes tests", relatedData.publishes);
     }, [relatedData]);
 
-    // eğer assignmentData varsa, selected files'i set et
+    // selectedPublishId değiştiğinde ilgili testleri güncelle
+    
     
  
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
             setValue(e.target.name, e.target.value);
         }
+
+    const handleSubjectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+      // Set the selected subject ID
+      const subjectId = parseInt(e.target.value);
+      setSelectedSubjectId(subjectId);
+      setValue(e.target.name, e.target.value);
+
+    }
+
+
 
     const fileToBase64 = (file: File): Promise<string> => {
             return new Promise((resolve, reject) => {
@@ -496,6 +510,28 @@ interface FileWithBase64 {
   };
 
 
+  // eğer publishId seçilmişse testleri güncelle
+  useEffect(() => {
+    console.log("subject ıd changed")
+    if(selectedPublishId && relatedData.publishes) {
+    const selectedPublish = relatedData.publishes.find(p => p.id === selectedPublishId);
+    if (selectedPublish && selectedPublish.tests) {
+        setTests(selectedPublish.tests);
+      } else {
+        setTests([]);
+      }
+    }
+  }
+  , [selectedPublishId, relatedData.publishes,selectedSubjectId]);
+
+
+
+  if (isLoading) {
+    return (
+      <Loading></Loading>
+    );
+  }
+
   
   
     return (
@@ -618,13 +654,19 @@ interface FileWithBase64 {
                 <select
                     {...register("subject_id", { valueAsNumber: true })}
                     className="border rounded-md p-2 w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    onChange={handleChange}
+                    onChange={handleSubjectChange}
                 >
-                    {relatedData.subjects.map((subject: { id: number, subject_name: string }) => (
-                        <option key={subject.id} value={subject.id}>
-                            {subject.subject_name}
-                        </option>
-                    ))}
+                 {!isLoading && relatedData.subjects && relatedData.subjects.length > 0 ? (
+                  relatedData.subjects.map((subject: { id: number; subject_name: string }) => (
+                    <option key={subject.id} value={subject.id}>
+                      {subject.subject_name}
+                    </option>
+                  ))
+                ) : (
+                  <option value="" disabled>
+                    {currentLanguageContent.no_subjects_available}
+                  </option>
+                )}
                 </select>
                 </div>
               </div>
@@ -648,20 +690,25 @@ interface FileWithBase64 {
                     }}
                   >
                     <option value="">Yayın Seçiniz</option>
-                    {relatedData.publishes
-                      .filter((publish: any) => publish.subject_id === watch("subject_id"))
-                      .map((publish: { id: number, publisher: string }) => (
-                        <option key={publish.id} value={publish.id}>
-                          {publish.publisher} - {publish.curriculum_year} / {publish.grade === 0 ? "Hazırlık" : publish.grade}. Sınıf
-                        </option>
-                      ))}
+                    {!isLoading && relatedData.publishes && relatedData.publishes.length > 0 ? (
+                      relatedData.publishes
+                        .filter((publish: any) => publish.subject_id === watch("subject_id"))
+                        .map((publish: { id: number, publisher: string }) => (
+                          <option key={publish.id} value={publish.id}>
+                            {publish.publisher} - {publish.curriculum_year} / {publish.grade === 0 ? "Hazırlık" : publish.grade}. Sınıf
+                          </option>
+                        ))
+                    ) : (
+                      <option value="" disabled>
+                        {currentLanguageContent.no_publishes_available}
+                      </option>
+                    )}
+                    
                   </select>
-                </div>
-
-                {/* Çoklu test seçimi */}
-               
+                </div>               
               </div>
 
+              {/* Çoklu test seçimi */}
               {selectedPublishId && (
                 <div className="flex flex-col sm:flex-row gap-4 mt-3">
 
@@ -676,9 +723,7 @@ interface FileWithBase64 {
                       value={selectedTests.map(String)}
                       onChange={(e) => handleTestSelect(parseInt(e.target.value))}
                     >
-                      {relatedData.publishes
-                        .find((publish: any) => publish.id === selectedPublishId)
-                        ?.tests?.map((test: { id: number, name: string }) => (
+                      {tests?.map((test: { id: number, name: string }) => (
                           <option key={test.id} value={test.id}>
                             {test.name}
                           </option>

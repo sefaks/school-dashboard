@@ -542,8 +542,8 @@ const SchedulePage = ({
             {errors.class_id && <span className="text-red-500 text-sm">{String(errors.class_id.message)}</span>}
           </div>
 
-          <div className="space-y-4">
-            <label htmlFor="status">Durum</label>
+          <div className="space-y-2">
+            <label htmlFor="status" className='underline'>Durum</label>
             <select
               {...register("status")}
               id="status"
@@ -590,6 +590,7 @@ const SchedulePage = ({
           <WeeklySchedule 
           lessonSchedules={lessonSchedules}
           relatedData={relatedData}
+          header={ type === "create" ? "Yeni Program" : "Program Düzenle"}
           />
         </form>
       </div>

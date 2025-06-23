@@ -263,7 +263,7 @@ const AIAnalysisSection: React.FC<AIAnalysisSectionProps> = ({
         <div className="flex justify-end mb-4">
         <button
           onClick={handleDownloadPDF}
-          className="flex items-center gap-2 px-3 py-1 bg-[#A78BFA] text-white rounded-lg hover:bg-[#D4A9F6] transition-colors"
+          className="flex items-center gap-2 px-3 py-1 bg-[#A78BFA] text-white rounded-lg hover:bg-[#D449F6] transition-colors"
         >
           <svg 
             className="w-5 h-5" 

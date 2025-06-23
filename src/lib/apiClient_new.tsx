@@ -44,6 +44,7 @@ export async function serverGet(endpoint: string) {
   return serverApi(endpoint, { method: 'GET' });
 }
 
+
 // POST isteği için kısa yol
 export async function serverPost(endpoint: string, data: any) {
   return serverApi(endpoint, { 
@@ -63,4 +64,11 @@ export async function serverPut(endpoint: string, data: any) {
 // DELETE isteği için kısa yol
 export async function serverDelete(endpoint: string) {
   return serverApi(endpoint, { method: 'DELETE' });
+}
+
+export async function serverPatch(endpoint: string, data: any) {
+  return serverApi(endpoint, { 
+    method: 'PATCH',
+    body: JSON.stringify(data)
+  });
 }

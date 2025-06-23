@@ -54,7 +54,8 @@ type AssignmentList = assignments & {
     ASSIGNED: "ATANDI",
     COMPLETED: "TAMAMLANDI",
     PENDING: "BEKLEMEDE",
-    PAST_DUE: "GEÇMİŞ"
+    PAST_DUE: "GEÇMİŞ",
+    DRAFT: "TASLAK"
   };
     
 
@@ -286,29 +287,29 @@ if (queryParams.classId) {
 // Role based conditions
 switch (role) {
   case "admin":
-    roleConditions = [
+    query.OR = [
       {
-        assignment_class: { 
-          some: { 
-            classes: { 
-              institution_id: parseInt(institution_id) 
-            } 
-          } 
-        },
+        assignment_class: {
+          some: {
+            classes: {
+              institution_id: parseInt(institution_id)
+            }
+          }
+        }
       },
       {
-        assignment_student: { 
-          some: { 
-            students: { 
-              student_institution: { 
-                some: { 
-                  institution_id: parseInt(institution_id) 
-                } 
-              } 
-            } 
-          } 
-        },
-      },
+        assignment_student: {
+          some: {
+            students: {
+              student_institution: {
+                some: {
+                  institution_id: parseInt(institution_id)
+                }
+              }
+            }
+          }
+        }
+      }
     ];
     break;
 
@@ -335,7 +336,7 @@ if (searchConditions.length > 0 && roleConditions.length > 0) {
 
 // Add date filter
 const currentDate = new Date();
-const oneMonthAgo = new Date(currentDate.setMonth(currentDate.getMonth() - 1));
+const oneMonthAgo = new Date(currentDate.setMonth(currentDate.getMonth() - 3));
 
 // Use the query in transaction
 const [assignmentsData, count] = await prisma.$transaction([
@@ -367,7 +368,7 @@ const [assignmentsData, count] = await prisma.$transaction([
     take: ITEM_PER_PAGE,
     skip: (p - 1) * ITEM_PER_PAGE,
     orderBy: {
-      deadline_date: "asc",
+      deadline_date: "desc",
     },
   }),
   prisma.assignments.count({

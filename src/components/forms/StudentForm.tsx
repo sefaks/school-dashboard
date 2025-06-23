@@ -93,10 +93,15 @@ const StudentForm = ({
       router.refresh();
     }, 2000); // 2 saniye bekle
   } catch (error: any) {
-    console.error("Error Details:", error); // Hata detaylarını yazdır
+    console.error("Error Details:", error); 
     if (error.response?.data?.detail) {
+      console.error("Error Response:", error.response.data.detail);
       toast.error(error.response.data.detail);
-    } else if (error.message) {
+    } else if(error.message ==="Student not found") {
+      toast.error(currentLanguageContent.student_not_found);
+    }
+    else if (error.message) {
+      console.error("Error Message:", error.message); 
       toast.error(error.message);
     } else {
       toast.error("An unexpected error occurred!");
@@ -133,6 +138,10 @@ const handleRemoveParent = (index: number) => {
 
   const formParents = watch('parents') || [];
 
+  useEffect(() => {
+    console.log("Form Errors:", errors);
+  }, [errors, isValid]);
+
 
 
   return (
@@ -144,13 +153,16 @@ const handleRemoveParent = (index: number) => {
       {/* Authentication Information */}
       <span className="text-sm text-gray-400 font-medium">{currentLanguageContent.authentication_information}</span>
 
+      {type === "create" && (
       <div className="flex justify-start flex-wrap gap-4">
-        <InputField label="Email" name="email" register={register} error={errors?.email} />
-        <InputField label={currentLanguageContent.student_code} name="student_code" register={register} error={errors?.student_code} />
-        <p className="text-xs text-green-600">
-              Kod öğrencinin profilindeki kodlarım bölgesinde olan 5 haneli paylaşım kodudur.
+         <InputField label="Email" name="email" register={register} error={errors?.email} />
+         <InputField label={currentLanguageContent.student_code} name="student_code" register={register} error={errors?.student_code} />
+         <p className="text-xs text-green-600">
+               Kod öğrencinin profilindeki kodlarım bölgesinde olan 5 haneli paylaşım kodudur.
             </p>
       </div>
+            )}
+
 
       {/* Class Selection */}
       <span className="text-sm text-gray-400 font-medium">{currentLanguageContent.class_selection}</span>
@@ -224,7 +236,6 @@ const handleRemoveParent = (index: number) => {
       <button
         type="submit"
         className="bg-blue-400 text-white p-2 rounded-md disabled:opacity-50 mt-4"
-        disabled={!isValid}
       >
         {type === "create" ? currentLanguageContent.create : currentLanguageContent.update}
       </button>

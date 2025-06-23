@@ -77,7 +77,6 @@ const Page = () => {
         const sortedGrades = grades.sort((a, b) => parseInt(a) - parseInt(b));
         setAvailableGrades(sortedGrades);
         
-        console.log("response data", fetchedLessons);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching lessons:", error);

@@ -2,8 +2,8 @@ import { z } from "zod";
 
 export const studentSchema = z.object({
 // email, class_id and share_code are required fields
-    email: z.string().email({ message: "Invalid email address!" }),
-    student_code: z.string().length(5, { message: "Share code must be 5 characters!" }),
+    email: z.string().email({ message: "Geçersiz eposta adresi!" }).optional(),
+    student_code: z.string().length(5, { message: "Paylaşım kodu 5 haneli olmalı!" }).optional(),
     class_id: z.union([
       z.string().transform(val => Number(val)),
       z.number()
@@ -13,15 +13,15 @@ export const studentSchema = z.object({
     parents: z
       .array(
         z.object({
-          name: z.string().min(1, { message: "Name is required" }),
-          surname: z.string().min(1, { message: "Surname is required" }),
+          name: z.string().min(1, { message: "İsim gerekli" }),
+          surname: z.string().min(1, { message: "Soy isim gerekli" }),
           email: z
             .string()
             .email({ message: "Invalid email address for parent!" }),
           phone: z.string()
-            .min(1, { message: "Phone number is required" })
+            .min(1, { message: "Telefon numarası gerekli" })
             .transform(val => val.replace(/\s+/g, '')) // Boşlukları kaldır
-            .refine(val => /^\d{11}$/.test(val), { message: "Phone number must be 11 digits" })
+            .refine(val => /^\d{11}$/.test(val), { message: "Telefon numarası 11 haneli olmalı: 554 242 242 32 " })
         })
       )
       .optional(),  // parents is optional
@@ -32,15 +32,15 @@ export type StudentSchema = z.infer<typeof studentSchema>;
 
 
 export const teacherSchema = z.object({
-  email: z.string().email({ message: "Invalid email address!" }),
-  validation_code: z.string().length(5, { message: "Validation code must be 5 characters!" })
+  email: z.string().email({ message: "Geçersiz eposta adresi!" }),
+  validation_code: z.string().length(5, { message: "Paylaşım kodu 5 haneli olmalı!" })
 });
 
 export type TeacherSchema = z.infer<typeof teacherSchema>;
 
 
 export const classSchema = z.object({
-  class_code: z.string().min(1, { message: "Class code is required!" }),
+  class_code: z.string().min(1, { message: "Sınıf kodu gerekli!" }),
   // grade number and required fields
   grade: z.union([
     z.string().transform(val => Number(val)),

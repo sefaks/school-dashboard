@@ -45,6 +45,12 @@ const menuItems = [
         visible: ["admin", "teacher", "student", "parent"],
       },
       {
+        icon: "/exam.png",
+        label: "Testler",
+        href: "/list/resources?redirectTo=tests",
+        visible: ["admin", "teacher", "student", "parent"],
+      },
+      {
         icon: "/assignment.png",
         label: "Ödevler",
         href: "/list/assignments",
@@ -67,12 +73,6 @@ const menuItems = [
         label: "Veliler",
         href: "/list/parents",
         visible: ["admin", "teacher"],
-      },
-      {
-        icon: "/exam.png",
-        label: "Testler",
-        href: "/list/resources?redirectTo=tests",
-        visible: ["admin", "teacher", "student", "parent"],
       },
       {
         icon: "/message.png",

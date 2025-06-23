@@ -21,10 +21,18 @@ export type Content = {
     content_id: string;
     content_count: number;
     content_name: string;
+    name: string;
     level: number;
     unit_id: number;
     src:string;
     subcontents:subcontents[]
+    content_number?: string; // Numbering system indicating hierarchy (e.g., "1", "1.1", "1.1.1")
+    page_start?: number,
+    page_end?: number,
+    min_page_start?: number; // Optional field for minimum page start
+    children?: Content[]; // Optional array of child contents (nested content)
+    is_completed?: boolean; // Optional field to indicate if the content is completed
+
 
     
 };
@@ -33,11 +41,8 @@ export interface StudentContent {
   student_id: number,
   content_id: string,
   name: string,
-
   unit_no: number,
   order: number,
- 
-
   content_name: string; // Name of the content item
   level: number; // Level in the hierarchy (0 = top-level, 1 = one level nested, etc.)
   content_number: string; // Numbering system indicating hierarchy (e.g., "1", "1.1", "1.1.1")
@@ -62,6 +67,20 @@ export type subcontents=
   order: number,
   content_number: string
  }     
+
+ export type contents = {
+  id: number;
+  content_id: string;
+  name: string;
+  content_name: string;
+  level: number;
+  content_number: string;
+  page_start?: number;
+  page_end?: number;
+  min_page_start?: number; // Optional field for minimum page start
+  children?: contents[]; // Optional array of child contents (nested content)
+  is_completed?: boolean; // Optional field to indicate if the content is completed
+ }
 
  export type publishes=
   {

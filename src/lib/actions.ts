@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { AnnouncementSchema, AssignmentSchema, ClassSchema, CommentSchema, ScheduleCreateSchema, StudentSchema, TeacherRegisterSchema, TeacherSchema, TeacherUpdateSchema, studentSchema, } from './formValidationSchemas';
 import { toast } from 'react-toastify';
 import axios from "axios";
+import { serverGet, serverPatch } from './apiClient_new';
 
 // request for add student to institution 
 
@@ -946,6 +947,30 @@ export const addScheduleToStudent = async (formData: any, token: string, student
   }
 };
 
+export const updateScheduleToStudent = async (formData: any, token: string, scheduleId: number) => {
+  try {
+    const response = await axios.put(
+      `${API_BASE_URL}/teachers/me/update-student-schedule/${scheduleId}`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error: any) {
+    if (error.response) {
+      console.error("API Response Error:", error.response);
+      throw new Error(error.response.data.detail || "Failed to update schedule to student!");
+    }
+    console.error("Network Error:", error);
+    throw new Error("An unexpected error occurred!");
+  }
+}
+
 export const adminClasses = async (token: string) => {
   try {
     const response = await axios.get(`${API_BASE_URL}/admins/me/classes`, {
@@ -967,9 +992,9 @@ export const adminClasses = async (token: string) => {
   }
 }
 
-export const getStudentSchedule = async (student_id: number, token: string) => {
+export const getStudentSchedule = async (schedule_id: number, token: string) => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/teachers/me/student-schedule/${student_id}`, {
+    const response = await axios.get(`${API_BASE_URL}/teachers/me/student-schedule/${schedule_id}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -980,6 +1005,25 @@ export const getStudentSchedule = async (student_id: number, token: string) => {
     if (error.response) {
       console.error("API Response Error:", error.response);
       throw new Error(error.response.data.detail || "Failed to get student schedule!");
+    }
+    console.error("Network Error:", error);
+    throw new Error("An unexpected error occurred!");
+  }
+}
+
+export const getStudent = async (student_id: number, token: string) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/teachers/students/${student_id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return response.data;
+  } catch (error: any) {
+    if (error.response) {
+      console.error("API Response Error:", error.response);
+      throw new Error(error.response.data.detail || "Failed to get student!");
     }
     console.error("Network Error:", error);
     throw new Error("An unexpected error occurred!");
@@ -1074,5 +1118,63 @@ export const getHomeworkIdeaWithAI = async (unitId:any, additionalRequirements:a
 };
 
 
+export async function fetchClassesAndStudents() {
+  return await serverGet("/teachers/me/classes-students");
+}
 
+export async function fetchTeacherSubjects() {
+  return await serverGet("/teachers/me/subjects");
+}
 
+export async function fetchTeacherPublishes() {
+  return await serverGet("/teachers/me/publishes");
+}
+
+export async function fetchAssignmentDetails(id: string) {
+  return await serverGet(`/assignments/${id}`);
+}
+
+export async function getAdminProfile(){
+  return await serverGet("/admins/me/profile");
+}
+
+export async function updateAdminProfile(data:any){
+  return await serverPatch("/admins/me/update-profile", data);
+}  
+
+export async function getContentTypes(publisherId: number) {
+  return await serverGet(`/lessons/publishes/${publisherId}/content-types`);
+}
+
+export async function getPublishContents(publisherId:number,content_type:string) {
+  return await serverGet(`/lessons/publishes/${publisherId}/contents/${content_type}`);
+}
+
+export async function getPublishTeacherContents(publisherId:number,content_type:string) {
+  return await serverGet(`/teachers/me/publishes/${publisherId}/contents?content_type=${content_type}`);
+}
+
+export const fetchPdfContent = async (topicId: string) => {
+  try {
+    console.log('Fetching PDF with fetch API for topicId:', topicId);
+    
+    // Fetch API ile istek gönder
+    const response = await fetch(`${API_BASE_URL}/lessons/contents/${topicId}`);
+    
+    // Yanıt durumunu kontrol et
+    if (!response.ok) {
+      if (response.status === 401) throw new Error('Unauthorized');
+      if (response.status === 404) throw new Error('Not Found');
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    // Blob olarak yanıtı al
+    const blobData = await response.blob();
+    console.log('Fetched PDF blob size:', blobData.size);
+    
+    return blobData; // Doğrudan blob döndür
+  } catch (error) {
+    console.error('Error fetching PDF:', error);
+    throw error;
+  }
+};
