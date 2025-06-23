@@ -156,7 +156,7 @@ const viewLessonStartAndEndTime = (start: any, end: any) => {
     }
 
   return (
-    <div className="mt-8 border rounded-lg overflow-hidden">
+    <div className="mt-8 bg-white border rounded-lg overflow-hidden">
     <div className="flex justify-between items-center bg-gray-50 border-b p-4">
         <h2 className="text-xl font-bold">{header}</h2>
         <button 

@@ -98,7 +98,12 @@
     "ai_homework_idea": "AI Homework Idea",
     "loading_message_homework": "Our AI is creating a creative homework idea based on the selected unit...",
     "regenerate_idea": "Regenerate Idea",
-    "no_publishes_available": "No publishers found"
+    "no_publishes_available": "No publishers found",
+    "noteAddedSuccessfully": "Note added successfully.",
+    "save": "Save",
+    "cancel": "Cancel",
+    "noteDeletedSuccessfully": "Note deleted successfully.",
+    "notes": "Notes"
     
 
 

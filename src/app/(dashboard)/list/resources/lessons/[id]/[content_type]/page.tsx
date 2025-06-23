@@ -8,9 +8,13 @@ import { useParams } from "next/navigation";
 import { useRouter } from 'next/navigation';
 import en from "@/app/messages/en.json";  
 import tr from "@/app/messages/tr.json";
-import { getPublishContents } from "@/lib/actions";
+import { getPublishContents, getPublishTeacherContents } from "@/lib/actions";
 import Loading from "@/app/(dashboard)/list/loading";
 import CourseContent from "@/components/LessonsPage/CourseContent";
+import { useSession } from "next-auth/react";
+import apiClient from "@/lib/apiClient";
+import { set } from "date-fns";
+import { AxiosResponse } from "axios";
 
 // const students_contents2 = [
 //   { id: 1, content_name: "BİR KAHRAMAN DOĞUYOR", level: 0, content_number: "1" },
@@ -37,24 +41,42 @@ const Page = () => {
   const storedLanguage = localStorage.getItem("language") || "en";
   const [language, setLanguage] = useState(storedLanguage);
   const currentLanguageContent = language === "en" ? en : tr; 
+  const { data: session } = useSession();
+  const content_type = params.content_type || 'pdf'; // Default to 'pdf' if not found
+
 
   useEffect(() => {
-    const fetchLessonAndOtherLessons = async () => {
-    setLoading(true);
-    try {
-        // Content type'ı URL'den alalım (params'dan)
+      let lessonResponse: AxiosResponse<any, any>;
+      let data: any;
 
-        const publisherId = Array.isArray(id) ? id[0] : id;
-        const contentType = Array.isArray(params.content_type) ? params.content_type[0] : params.content_type;
-        const lessonResponse = await getPublishContents(parseInt(publisherId as string), contentType);
-        console.log("lessonResponse", lessonResponse);
-        if (lessonResponse) {
-            const lessons = lessonResponse as Content[];
-            setContents(lessons);
-            console.log("Contents:", lessons);
-        } else {
-            console.error("No lesson data found");
-        }
+      console.log("useEffect triggered with id:", id, "and content_type:", content_type);
+
+      const fetchPublishContents = async (publisherId: number, contentType: string) => {
+        setLoading(true);
+    try {
+
+          console.log("Fetching contents for publisherId:", publisherId, "and contentType:", contentType);
+
+            if(session?.user.role && session?.user.role == 'teacher') {
+              // request with 
+              lessonResponse = await apiClient.get(`/teachers/me/publishes/${Array.isArray(id) ? id[0] : id}/contents?content_type=${content_type}`,
+              {
+                headers: {
+                  Authorization: `Bearer ${session?.user.accessToken}`
+                }
+              });
+              data = lessonResponse.data.teacher_contents || [];
+
+            } else if(session?.user.role && session?.user.role === 'admin') {
+              console.log("Fetching contents for admin role");
+                lessonResponse = await apiClient.get(`/lessons/publishes/${publisherId}/contents/${content_type}`)
+              data = lessonResponse.data || [];
+            } 
+            
+            const response_data = data
+            console.log("Fetched contents:", data);
+            setContents(response_data);
+
 
     } catch (err) {
         console.log(err);
@@ -62,9 +84,14 @@ const Page = () => {
         setLoading(false);
     }
     };
+    if (session?.user.accessToken) {
+      fetchPublishContents(
+        parseInt(Array.isArray(id) ? id[0] : id),
+        Array.isArray(content_type) ? content_type[0] : content_type
+      );
+    }
   
-    fetchLessonAndOtherLessons();
-  }, [id, instId]);
+  }, [id, instId,session?.user.role]);
 
 
   return (

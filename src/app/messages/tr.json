@@ -97,7 +97,12 @@
     "ai_homework_idea": "Arf - Akıllı Ödev Fikri",
     "loading_message":"Yapay zekamız seçilen üniteye göre yaratıcı bir ödev fikri oluşturuyor...",
     "regenerate_idea": "Fikri Yeniden Oluştur",
-    "no_publishes_available": "Yayınevi bulunamadı"
+    "no_publishes_available": "Yayınevi bulunamadı",
+    "noteAddedSuccessfully": "Not başarıyla eklendi.",
+    "save": "Kaydet",
+    "cancel": "İptal",
+    "noteDeletedSuccessfully": "Not başarıyla silindi.",
+    "notes": "Notlar"
 
 
 

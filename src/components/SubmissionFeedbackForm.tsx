@@ -1,6 +1,7 @@
 "use client"
 
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 
@@ -20,7 +21,7 @@ const SubmissionFeedbackForm = ({
     const [loading, setLoading] = useState(false);
     const { data: session } = useSession();
     const [isFormVisible, setIsFormVisible] = useState(false);
-  
+    const router = useRouter();
     // Veri çekme işlemi için useEffect
   
     const handleFormSubmit = async (e: React.FormEvent) => {
@@ -60,9 +61,7 @@ const SubmissionFeedbackForm = ({
         toast.success("Başarıyla değerlendirildi.");
         // Sayfayı yenilemek yerine router.refresh() kullanabilirsiniz,1 saniye sonra sayfa yenilenecek
         // router refres
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
+        router.refresh();
 
 
 

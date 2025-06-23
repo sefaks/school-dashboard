@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+import React, { use, useState } from "react";
 import { contents, students_contents } from "@/app/types/Lesson";
 import Image from "next/image";
 import { toast } from "react-toastify";
+import apiClient from "@/lib/apiClient";
+import { useSession } from "next-auth/react";
 
 interface TopicListCardProps {
   topic: contents;
@@ -18,6 +20,7 @@ const TopicListCard: React.FC<TopicListCardProps> = ({
 }) => {
   const isSelected = selectedTopic.content_id === topic.content_id;
   const [loading, setLoading] = useState(false);
+  const session = useSession();
   
   // İçerik tamamlama durumunu güncelle
   const handleCompleteToggle = async (e: React.MouseEvent) => {
@@ -29,14 +32,22 @@ const TopicListCard: React.FC<TopicListCardProps> = ({
       setLoading(true);
       
       const endpoint = topic.is_completed 
-        ? `/students/me/contents/${topic.content_id}/reverse-complete`
-        : `/students/me/contents/${topic.content_id}/complete`;
-      
-      await apiClient.post(endpoint);
+        ? `/teachers/me/contents/${topic.content_id}/reverse-complete`
+        : `/teachers/me/contents/${topic.content_id}/complete`;
+
+      console.log("accessToken", session.data?.user.accessToken);
+
+      await apiClient.post(
+            endpoint,
+            {}, // Request body (empty in this case)
+            {
+              headers: {
+                Authorization: `Bearer ${session.data?.user.accessToken}`,
+              },
+            }
+          );
       
       topic.is_completed = !topic.is_completed;
-      
-      
       
     } catch (error) {
       console.error("İçerik durumu güncellenirken hata:", error);
@@ -55,7 +66,8 @@ const TopicListCard: React.FC<TopicListCardProps> = ({
     >
       <div className="flex items-center gap-2">
         {/* Completion Checkbox - Udemy stili mor kutu */}
-        <div
+        {session.data?.user.role === "teacher" && (
+          <div
           onClick={handleCompleteToggle}
           className={`w-[16px] h-[16px] flex items-center justify-center rounded-[4px] cursor-pointer ${
             loading 
@@ -73,14 +85,17 @@ const TopicListCard: React.FC<TopicListCardProps> = ({
             <div className="w-[10px] h-[10px] border-2 border-white border-t-transparent rounded-full animate-spin"></div>
           )}
         </div>
-        
+        )}
+          
+          {/* Topic Number */}
         <span className="font-medium text-[12px] leading-[12px] text-[#00000066]">
           {topic.content_number}
         </span>
       </div>
-      
+
+      {/* Topic Name */}
       <p className="text-[#000000] font-semibold text-[14px] leading-[16px] mt-[5px] ml-[23px]">
-        {topic.content_name}
+        {topic.name}
       </p>
     </div>
   );

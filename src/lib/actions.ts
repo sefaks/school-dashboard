@@ -1150,6 +1150,10 @@ export async function getPublishContents(publisherId:number,content_type:string)
   return await serverGet(`/lessons/publishes/${publisherId}/contents/${content_type}`);
 }
 
+export async function getPublishTeacherContents(publisherId:number,content_type:string) {
+  return await serverGet(`/teachers/me/publishes/${publisherId}/contents?content_type=${content_type}`);
+}
+
 export const fetchPdfContent = async (topicId: string) => {
   try {
     console.log('Fetching PDF with fetch API for topicId:', topicId);

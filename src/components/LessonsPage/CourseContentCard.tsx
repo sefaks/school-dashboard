@@ -6,6 +6,8 @@ import { Content, StudentContent } from "@/app/types/Lesson";
 import { useSearchParams } from "next/navigation";
 import en from "@/app/messages/en.json";  
 import tr from "@/app/messages/tr.json"; 
+import { CheckCircle } from 'lucide-react';
+
 
 interface CourseContentCardProps {
   content: Content;
@@ -64,16 +66,28 @@ const CourseContentCard: React.FC<CourseContentCardProps> = ({
                 alt="arrow"
                 className={`${isExpanded ? "rotate-90" : ""}`}
                 />
-            <p className="font-semibold text-[#000000] truncate-2-lines text-[14px] lg:text-[16px] leading-[19.36px]">
-              {content.content_number} - {content.content_name}
+                <div className="flex items-center gap-2">
+                <p className="font-semibold text-[#000000] truncate-2-lines text-[14px] lg:text-[16px] leading-[19.36px]">
+              {content.content_number} - {content.name}
             </p>
+            {content.is_completed  && (
+              <CheckCircle className="text-[#702DFF] w-5 h-5" />
+              )}
+                </div>
+           
           </div>
+          <div className="flex items-center gap-3">
+          
           <p
             onClick={() => handleViewClick(minPageStart)}
             className="font-normal rounded-[8px] px-[10px] py-[8px] text-[14px] leading-[16px] bg-[#702DFF14] text-[#702DFF] cursor-pointer"
           >
             {currentLanguageContent.view || "Görüntüle"}
           </p>
+
+          </div>
+
+         
         </div>
       </div>
 

@@ -1,5 +1,8 @@
 import Announcements from "@/components/Announcements";
 import BigCalenderContainer from "@/components/BigCalenderContainer";
+import LastContents from "@/components/home/LastContents";
+import RecentAssignments from "@/components/home/RecentAssignmentSubmission";
+import TeacherQuote from "@/components/home/TeacherQuote";
 import WeeklySchedule from "@/components/schedules/WeeklySchedule";
 import prisma from "@/lib/prisma";
 import { getRoleAndUserIdAndInstitutionId } from "@/lib/utils";
@@ -90,12 +93,23 @@ const relatedData = {
     <div className="flex-1 p-4 flex gap-4 flex-col xl:flex-row">
       {/* LEFT */}
       <div className="w-full xl:w-2/3">
-        <div className="h-full bg-white p-4 rounded-md">
-          <WeeklySchedule lessonSchedules={lessonSchedules} relatedData={relatedData} />
+      
+        <div className="h-full rounded-md flex flex-col gap-4 ">
+                <div className="lg:h-1/3">
+                <LastContents />
+                </div>
+                <div>
+                  <TeacherQuote />
+                </div>
+                <div>
+                <WeeklySchedule lessonSchedules={lessonSchedules} relatedData={relatedData} header={"Haftalık Ders Programı"} />
+                </div>
+
         </div>
       </div>
       {/* RIGHT */}
       <div className="w-full xl:w-1/3 flex flex-col gap-8">
+        <RecentAssignments />
         <Announcements />
       </div>
     </div>

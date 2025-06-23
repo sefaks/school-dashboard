@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Edit, Save } from "lucide-react";
 import { toast } from "react-toastify";
 import { useSession } from "next-auth/react";
-import api from "@/lib/apiClient_new";
+import apiClient from "@/lib/apiClient";
 
 interface ClassCodeDisplayProps {
   firstClass: any;
@@ -29,7 +29,7 @@ const ClassCodeDisplay: React.FC<ClassCodeDisplayProps> = ({
   const handleSave = async () => {
     try {
       setLoading(true);
-      const response = await api.patch(`admins/update-student-class-code/${id}`, {
+      const response = await apiClient.patch(`admins/update-student-class-code/${id}`, {
         //uppercase class_code
         class_code: editedClassCode.toUpperCase(),
         student_id: id,

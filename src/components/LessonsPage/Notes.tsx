@@ -3,6 +3,11 @@ import React, { useState, useEffect, KeyboardEvent } from "react";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import { toast } from "react-toastify";
+import apiClient from "@/lib/apiClient";
+import { useSession } from "next-auth/react";
+import NotesItem from "./NotesItem";
+import en from "@/app/messages/en.json";  
+import tr from "@/app/messages/tr.json";
 
 interface Note {
   id: number;
@@ -22,6 +27,11 @@ const Notes: React.FC<NotesProps> = ({ id }) => {
   const topicId = params.topicId || 1; // Use 1 as fallback if topicId is undefined
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const session = useSession();
+
+  const storedLanguage = localStorage.getItem("language") || "en";
+  const [language, setLanguage] = useState(storedLanguage);
+  const currentLanguageContent = language === "en" ? en : tr; 
 
   // Fetch notes when the component loads
   useEffect(() => {
@@ -36,10 +46,14 @@ const Notes: React.FC<NotesProps> = ({ id }) => {
       setError(null);
       
       try {
-        console.log("Fetching notes with content ID:", id);
-        console.log("Request URL:", `/students/me/contents/${id}/notes`);
         
-        const response = await apiClient.get(`/students/me/contents/${id}/notes`);
+        const response = await apiClient.get(`/teachers/me/contents/${id}/notes`,
+          {
+            headers: {
+              Authorization: `Bearer ${session.data?.user.accessToken}`,
+            },
+          }
+        );
         console.log("Notes API response:", response.data);
         setNotes(response.data);
       } catch (error: any) {
@@ -80,14 +94,19 @@ const Notes: React.FC<NotesProps> = ({ id }) => {
    
     try {
       const response = await apiClient.post(
-        `/students/me/contents/${id}/add-note`,
+        `/teachers/me/contents/${id}/add-note`,
         {
           note: inputValue.trim(),
-        }
-      );
-
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${session.data ? session.data.user.accessToken : ''}`
+          }
+        });
+        
       const newNote = response.data; // Assuming the API returns the created note
       setNotes((prev) => [...prev, newNote]);
+      toast.success(currentLanguageContent.noteAddedSuccessfully || "Note added successfully");
       setInputValue("");
     } catch (error) {
       console.error("Error adding note:", error);
@@ -98,11 +117,16 @@ const Notes: React.FC<NotesProps> = ({ id }) => {
   const handleDeleteNote = async (noteId: number) => {
     try {
       // Add API call to delete if needed
-      const response = await apiClient.delete(`/students/me/delete-note/${noteId}`);
+      const response = await apiClient.delete(`/teachers/me/delete-note/${noteId}`, {
+        headers: {
+          Authorization: `Bearer ${session.data?.user.accessToken}`,
+        },
+      });
 
       // if response is successful, remove the note from local state
       if (response.status === 200) {
         setNotes((prev) => prev.filter((note) => note.id !== noteId));
+        toast.success(currentLanguageContent.noteDeletedSuccessfully || "Note deleted successfully");
       } else {
         toast.error("Failed to delete note");
       }
@@ -116,9 +140,17 @@ const Notes: React.FC<NotesProps> = ({ id }) => {
   // Edit a note (update via API)
   const handleEditNote = async (id: number, newText: string) => {
     try {
-      const response = await apiClient.patch(`/students/me/update-note/${id}`, {
+      const response = await apiClient.patch(`/teachers/me/update-note/${id}`, {
         note: newText,
-      });
+      },
+      {        headers: {
+        Authorization: `Bearer ${session.data?.user.accessToken}`,
+
+
+      }
+      }
+
+      );
 
       if (response.status === 200) {
         // Update the note in the local state after successful update
@@ -162,7 +194,7 @@ const Notes: React.FC<NotesProps> = ({ id }) => {
           </button>
           <input
             type="text"
-            placeholder="Start typing..."
+            placeholder="Yazmak istediğiniz notu girin..."
             className="bg-transparent outline-none w-full"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}

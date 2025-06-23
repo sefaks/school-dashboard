@@ -2,6 +2,8 @@
 import Image from "next/image";
 import React, { useState, useEffect, useRef } from "react";
 import MarkdownRenderer from "../MarkdownRenderer";
+import apiClient from "@/lib/apiClient";
+import { useSession } from "next-auth/react";
 
 type MessageType = "user" | "assistant";
 
@@ -20,6 +22,7 @@ export default function ChatBox() {
     },
   ]);
   const [inputValue, setInputValue] = useState("");
+  const session = useSession();
 
   // Reference to the chat container for scrolling
   const chatContainerRef = useRef<HTMLDivElement>(null);
@@ -50,9 +53,12 @@ export default function ChatBox() {
   // Fetch assistant response from the API
   const fetchAssistantResponse = async (userInput: string) => {
     try {
-      const response = await apiClient.post("/students/ask-question-for-content", {
+      const response = await apiClient.post("/teachers/ask-question-for-content", {
         prompt: userInput,
-      });
+      },
+      {headers: {
+        Authorization: `Bearer ${session.data?.user.accessToken}`,
+      }});
 
       const assistantMessage: ChatMessage = {
         id: Date.now() + 1,
@@ -61,6 +67,7 @@ export default function ChatBox() {
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
+
     } catch (error) {
       const errorMessage: ChatMessage = {
         id: Date.now() + 1,
@@ -118,7 +125,7 @@ export default function ChatBox() {
             <Image src="/icons/a.svg" width={20.4} height={20.4} alt="@" />
             <input
               type="text"
-              placeholder="Message"
+              placeholder="Sohbete başla..."
               className="bg-transparent outline-none ml-2 mr-2"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
@@ -138,9 +145,7 @@ export default function ChatBox() {
         </div>
 
         {/* Footer / Terms */}
-        <div className="text-center py-2 text-sm text-gray-500">
-          Check our Terms & Conditions.
-        </div>
+      
       </div>
     </div>
   );

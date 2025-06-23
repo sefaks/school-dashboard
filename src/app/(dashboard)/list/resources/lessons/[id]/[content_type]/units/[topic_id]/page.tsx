@@ -14,6 +14,7 @@ import usePdfLoader from "@/components/LessonsPage/UsePdfLoader";
 import Notes from "@/components/LessonsPage/Notes";
 import ChatBox from "@/components/LessonsPage/ChatBox";
 import TopicsList from "@/components/LessonsPage/TopicList";
+import { useSession } from "next-auth/react";
 
 // Topic Page Component
 const Page = () => {
@@ -37,6 +38,8 @@ const Page = () => {
   //set content type from url. url example: /list/resources/lessons/id/content_type
   const pathName = usePathname()
   const content_type = pathName.split('/')[5] || 'pdf'; // Default to 'pdf' if not found
+
+  const session = useSession();
   
 
 
@@ -87,7 +90,6 @@ const Page = () => {
              
             <div className="flex flex-col items-center space-y-2"> {/* Changed to column layout */}
               <Loading />
-              <p className="text-center text-sm text-gray-600">{currentLanguageContent.wait_info || "Lütfen bekleyin, içerik yükleniyor..."}</p>
             </div>
           </div>
       </div>
@@ -140,37 +142,40 @@ const Page = () => {
           </p>
          
         </div>
+        {session.data?.user.role && session.data.user.role != "admin" && (
 
-        <div className="flex items-center gap-[15px]">
-          <button
-            onClick={() => setIsContent(true)}
-            className={`flex ${
-              !isContent ? "bg-[#A6A6A61F] text-[#090909]" : "bg-[#090909] text-white"
-            } items-center py-[4px] font-medium text-[16px] leading-[20px] gap-[6px] px-[10px] rounded-[200px] h-[41px]`}
-          >
-           {currentLanguageContent.content || "İçerik"}
-            <Image
-              src={`/icons/${!isContent ? "toolbar" : "content"}.svg`}
-              width={25}
-              height={30}
-              alt="no image"
-            />
-          </button>
-          <button
-            onClick={() => setIsContent(false)}
-            className={`flex ${
-              isContent ? "bg-[#A6A6A61F] text-[#090909]" : "bg-[#090909] text-white"
-            } items-center py-[4px] font-medium text-[16px] leading-[20px] gap-[6px] px-[10px] rounded-[200px] h-[41px]`}
-          >
-            {currentLanguageContent.toolbar || "Araç Çubuğu"}
-            <Image
-              src={`/icons/${isContent ? "toolbar" : "content"}.svg`}
-              width={25}
-              height={30}
-              alt="no image"
-            />
-          </button>
-        </div>
+              <div className="flex items-center gap-[15px]">
+              <button
+                onClick={() => setIsContent(true)}
+                className={`flex ${
+                  !isContent ? "bg-[#A6A6A61F] text-[#090909]" : "bg-[#090909] text-white"
+                } items-center py-[4px] font-medium text-[16px] leading-[20px] gap-[6px] px-[10px] rounded-[200px] h-[41px]`}
+              >
+              {currentLanguageContent.content || "İçerik"}
+                <Image
+                  src={`/icons/${!isContent ? "toolbar" : "content"}.svg`}
+                  width={25}
+                  height={30}
+                  alt="no image"
+                />
+              </button>
+              <button
+                onClick={() => setIsContent(false)}
+                className={`flex ${
+                  isContent ? "bg-[#A6A6A61F] text-[#090909]" : "bg-[#090909] text-white"
+                } items-center py-[4px] font-medium text-[16px] leading-[20px] gap-[6px] px-[10px] rounded-[200px] h-[41px]`}
+              >
+                {currentLanguageContent.toolbar || "Araç Çubuğu"}
+                <Image
+                  src={`/icons/${isContent ? "toolbar" : "content"}.svg`}
+                  width={25}
+                  height={30}
+                  alt="no image"
+                />
+              </button>
+              </div>
+            
+        )}
       </div>
 
       {/* Grid Section */}
@@ -210,8 +215,9 @@ const Page = () => {
             setPdfInfo={setPdfInfo}
           />
         ) : (
-          // "Toolbar" section with Notes & ChatBot
-          <div className="border-[#FFFFFF] bg-[#FFFFFF] px-[16px] flex flex-col py-[19px] shadow-custom-daow rounded-[14px]">
+
+          session.data?.user.role && session.data.user.role != "admin" && (
+            <div className="border-[#FFFFFF] bg-[#FFFFFF] px-[16px] flex flex-col py-[19px] shadow-custom-daow rounded-[14px]">
             <div className="bg-[#f6f6f6] flex w-full rounded-full gap-[6px] p-[8px]">
               {/* Notes Tab */}
               <div
@@ -248,6 +254,8 @@ const Page = () => {
             {/* Render either Notes or ChatBot */}
             {isNotes ? <Notes id={topicId?.toString() || ''} /> : <ChatBox />}
           </div>
+      
+        )
         )}
       </div>
     </div>

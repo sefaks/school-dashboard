@@ -21,6 +21,7 @@ export type Content = {
     content_id: string;
     content_count: number;
     content_name: string;
+    name: string;
     level: number;
     unit_id: number;
     src:string;
@@ -30,6 +31,7 @@ export type Content = {
     page_end?: number,
     min_page_start?: number; // Optional field for minimum page start
     children?: Content[]; // Optional array of child contents (nested content)
+    is_completed?: boolean; // Optional field to indicate if the content is completed
 
 
     
@@ -69,6 +71,7 @@ export type subcontents=
  export type contents = {
   id: number;
   content_id: string;
+  name: string;
   content_name: string;
   level: number;
   content_number: string;
@@ -76,6 +79,7 @@ export type subcontents=
   page_end?: number;
   min_page_start?: number; // Optional field for minimum page start
   children?: contents[]; // Optional array of child contents (nested content)
+  is_completed?: boolean; // Optional field to indicate if the content is completed
  }
 
  export type publishes=

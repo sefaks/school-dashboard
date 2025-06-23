@@ -7,7 +7,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { Avatar, Box, Button, Checkbox, CircularProgress, Container, Grid, Grid2, IconButton, List, ListItem, ListItemAvatar, ListItemText, Modal, Tab, Tabs, TextField, ThemeProvider, Typography, createTheme } from '@mui/material';
 import en from "@/app/messages/en.json";
 import tr from "@/app/messages/tr.json";
-import { Clock, DeleteIcon, Plus, Trash2 } from 'lucide-react';
+import { CheckCircle, Clock, DeleteIcon, Plus, Trash2 } from 'lucide-react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -427,7 +427,6 @@ const TeacherDashboard = () => {
   };
 
 
-
   if (loading) {
     return <Loading/>
   }
@@ -517,7 +516,10 @@ const TeacherDashboard = () => {
                             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400"
                             />
                         </div>
-                        <div className="col-span-1 flex justify-end">
+                        <div className="col-span-1 flex items-center justify-end">
+                        {task.is_completed  && (
+                              <CheckCircle className="text-[#702DFF] w-5 h-5" />
+                          )}
                           <IconButton
                             onClick={() => handleDeleteTask(day, dayTasks.indexOf(task))}
                             className="text-red-500 hover:bg-red-50"

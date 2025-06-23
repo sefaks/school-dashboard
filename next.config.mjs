@@ -12,6 +12,19 @@ const nextConfig = {
       use: ['@svgr/webpack']
     });
     return config;
+  },
+  headers: async () => {
+    return [
+      {
+        source: '/sw.ts',
+        headers: [
+          {
+            key: 'Service-Worker-Allowed',
+            value: '/'
+          }
+        ]
+      }
+    ];
   }
 };
 

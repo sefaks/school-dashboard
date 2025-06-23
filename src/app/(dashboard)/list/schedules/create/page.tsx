@@ -7,7 +7,7 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { Avatar, Box, Button, Checkbox, CircularProgress, Container, Grid, Grid2, IconButton, List, ListItem, ListItemAvatar, ListItemText, Modal, Tab, Tabs, TextField, ThemeProvider, Typography, createTheme } from '@mui/material';
 import en from "@/app/messages/en.json";
 import tr from "@/app/messages/tr.json";
-import { Clock, DeleteIcon, Plus, Trash2, UserSearch } from 'lucide-react';
+import { CheckCircle, Clock, DeleteIcon, Plus, Trash2, UserSearch } from 'lucide-react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import AddIcon from '@mui/icons-material/Add';
@@ -484,6 +484,9 @@ const studentId = searchParams.get('student_id') as string | null;
     return <Loading/>
   }
 
+  console.log("tasks", tasks);
+
+
   const setScheduleName = (name: string) => {
     setSchedule((prev:any) => ({
       ...prev,
@@ -582,11 +585,18 @@ const studentId = searchParams.get('student_id') as string | null;
                       {dayTasks.map((task:any) => (
                         <div
                           key={task.id || Math.random()}
-                          className={`p-4 flex items-center justify-between ${
+                          className={`p-4 flex items-center  gap-2 justify-between ${
                             task.is_completed ? 'bg-purple-50/60' : 'hover:bg-gray-50'
                           }`}
                         >
+                           <div>
+                            {task.is_completed  && (
+                              <CheckCircle className="text-[#702DFF] w-5 h-5" />
+                          )}
+                            </div>
                           <div className="flex-1 grid grid-cols-12 gap-4 items-center">
+                           
+                         
                             <div className="col-span-3">
                             <input
                                   type="text"
@@ -616,7 +626,7 @@ const studentId = searchParams.get('student_id') as string | null;
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400"
                                 />
                             </div>
-                            <div className="col-span-1 flex justify-end">
+                            <div className="col-span-1 flex items-center justify-end">
                               <IconButton
                                 onClick={() => handleDeleteTask(day, dayTasks.indexOf(task))}
                                 className="text-red-500 hover:bg-red-50"
@@ -770,7 +780,10 @@ const studentId = searchParams.get('student_id') as string | null;
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400"
                               />
                             </div>
-                            <div className="col-span-1 flex justify-end">
+                            <div className="col-span-1 flex items-center justify-end">
+                            {task.is_completed  && (
+                              <CheckCircle className="text-[#702DFF] w-5 h-5" />
+                          )}
                               <IconButton
                                 onClick={() => handleDeleteTask(day, dayTasks.indexOf(task))}
                                 className="text-red-500 hover:bg-red-50"
