@@ -102,7 +102,7 @@ const Tests: React.FC = () => {
           const response = await apiClient.get(
             `/teachers/me/publishes/${publish_id}/tests?test_type=${test_type}`,
             {
-              headers: { Authorization: `Bearer ${session?.user.accessToken}` }, d
+              headers: { Authorization: `Bearer ${session?.user.accessToken}` }, 
             }
           );
           setTests(response.data);
