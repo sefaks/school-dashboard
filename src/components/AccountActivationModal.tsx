@@ -76,7 +76,7 @@ const AccountActivationModal = () => {
         title: formData.title,
       };
 
-      const response = await fetch("http://127.0.0.1:8000/auth/teacher/activate", {
+      const response = await fetch("https://arfbackend-h3g2bdftbxdffqcy.westeurope-01.azurewebsites.net/auth/teacher/activate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

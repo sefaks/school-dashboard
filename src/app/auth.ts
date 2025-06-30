@@ -74,7 +74,7 @@ export const authOptions: NextAuthOptions = {
             }
           } else if (admin) {
             // Eğer admin bulunduysa, admin girişi için API'yi çağırıyoruz
-            let backendResponse = await fetch("http://127.0.0.1:8000/auth/institution_admin/login", {
+            let backendResponse = await fetch("https://arfbackend-h3g2bdftbxdffqcy.westeurope-01.azurewebsites.net/auth/institution_admin/login", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ email, password }),
