@@ -1,5 +1,5 @@
 "use client"
-import { Check } from 'lucide-react';
+import { Check, X } from 'lucide-react';
 import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
@@ -85,8 +85,7 @@ const TaskStatsWithChart: React.FC<TaskStatsWithChartProps> = ({ activeTab, anal
 
   console.log("Grouped Tasks:", groupedTasks);
   
-  return (
-    ({ activeTab }) => activeTab === "tasks" && (
+  return activeTab === "tasks" ? (
       <div className="p-4 border rounded-lg shadow space-y-6">
         {analysisData?.report?.total_weekly_tasks > 0 ? (
           <>
@@ -195,7 +194,11 @@ const TaskStatsWithChart: React.FC<TaskStatsWithChartProps> = ({ activeTab, anal
         )}
       </div>
     )
+  : (
+    <div className="p-4 border rounded-lg shadow">
+      <p className="text-gray-500">Görev istatistikleri bu sekmede görüntülenir.</p>
+    </div>
   );
-
+ 
 }
 export default TaskStatsWithChart;

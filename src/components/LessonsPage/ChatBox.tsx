@@ -11,6 +11,9 @@ const MessageBubble = React.memo(({ message }: { message: ChatMessage }) => {
     ? "max-w-sm mr-[30px]"
     : "max-w-xs ml-[30px]";
 
+  // displayName for better debugging
+  MessageBubble.displayName = "MessageBubble";
+
   return (
     <div className={`${maxWidthClass}`}>
       <div
