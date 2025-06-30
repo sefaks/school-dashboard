@@ -1,4 +1,36 @@
 "use client";
+
+// Optimize message rendering with React.memo
+const MessageBubble = React.memo(({ message }: { message: ChatMessage }) => {
+  const isAssistant = message.type === "assistant";
+  const isLoadingMessage = isAssistant && message.text === "...";
+  const bubbleClass = isAssistant
+    ? "bg-[#F2F2F2] text-[#000000] self-start"
+    : "bg-[#702DFF] text-[#FFFFFF] self-end";
+  const maxWidthClass = isAssistant
+    ? "max-w-sm mr-[30px]"
+    : "max-w-xs ml-[30px]";
+
+  return (
+    <div className={`${maxWidthClass}`}>
+      <div
+        className={`${bubbleClass} font-normal text-[14px] leading-[20px] px-[20px] py-[18px] rounded-[18px] break-words`}
+      >
+        {isLoadingMessage ? (
+          <div className="animate-pulse">
+            <div className="h-4 bg-gray-300 rounded w-3/4 mb-2"></div>
+            <div className="h-4 bg-gray-300 rounded w-full"></div>
+          </div>
+        ) : isAssistant ? (
+          <MarkdownRenderer content={message.text} />
+        ) : (
+          message.text
+        )}
+      </div>
+    </div>
+  );
+});
+
 import Image from "next/image";
 import React, { useState, useEffect, useRef } from "react";
 import MarkdownRenderer from "../MarkdownRenderer";
@@ -8,145 +40,218 @@ import { useSession } from "next-auth/react";
 type MessageType = "user" | "assistant";
 
 interface ChatMessage {
-  id: number;
-  type: MessageType;
-  text: string;
+id: number;
+type: MessageType;
+text: string;
 }
 
-export default function ChatBox() {
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: 1,
-      type: "assistant",
-      text: "👋 Selam, sana nasıl yardımcı olabilirim?",
-    },
-  ]);
-  const [inputValue, setInputValue] = useState("");
-  const session = useSession();
+type ChatBoxProps = {
+content_id: string;
+}
 
-  // Reference to the chat container for scrolling
-  const chatContainerRef = useRef<HTMLDivElement>(null);
+export default function ChatBox({ content_id }: ChatBoxProps) {
+const [messages, setMessages] = useState<ChatMessage[]>([
+  {
+    id: 1,
+    type: "assistant",
+    text: "👋 Selam, sana nasıl yardımcı olabilirim?",
+  },
+]);
+const [inputValue, setInputValue] = useState("");
+const [isLoading, setIsLoading] = useState(false);
+const [isInitialLoading, setIsInitialLoading] = useState(true);
+const session = useSession();
 
-  // Scroll to the bottom when messages are updated
-  useEffect(() => {
-    if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
-    }
-  }, [messages]);
+// Debounce input to prevent lag during typing
+const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const value = e.target.value;
+  setInputValue(value);
+};
 
-  // Add a user message and make API call
-  const handleAddMessage = async () => {
-    if (!inputValue.trim()) return;
+// Reference to the chat container for scrolling
+const chatContainerRef = useRef<HTMLDivElement>(null);
 
-    const newUserMessage: ChatMessage = {
-      id: Date.now(),
-      type: "user",
-      text: inputValue.trim(),
-    };
+// Optimize scrolling by using a callback ref
+const scrollToBottom = () => {
+  if (chatContainerRef.current) {
+    const { scrollHeight, clientHeight } = chatContainerRef.current;
+    chatContainerRef.current.scrollTop = scrollHeight - clientHeight;
+  }
+};
 
-    setMessages((prev) => [...prev, newUserMessage]);
-    setInputValue("");
+// Use a more efficient way to handle scrolling
+useEffect(() => {
+  // Only scroll if we have messages
+  if (messages.length > 0) {
+    scrollToBottom();
+  }
+}, [messages.length]);
 
-    await fetchAssistantResponse(inputValue.trim());
-  };
-
-  // Fetch assistant response from the API
-  const fetchAssistantResponse = async (userInput: string) => {
+// Fetch previous messages on component mount
+useEffect(() => {
+  const fetchPreviousMessages = async () => {
     try {
-      const response = await apiClient.post("/teachers/ask-question-for-content", {
-        prompt: userInput,
-      },
-      {headers: {
-        Authorization: `Bearer ${session.data?.user.accessToken}`,
-      }});
+      const response = await apiClient.get(`/teachers/lessons/chat-history/${content_id}`, {
+        headers: {
+          Authorization: `Bearer ${session.data?.user.accessToken}`,
+        },
+      });
 
-      const assistantMessage: ChatMessage = {
-        id: Date.now() + 1,
-        type: "assistant",
-        text: response.data || "I couldn't get a response. Please try again.",
-      };
+      const previousMessages: ChatMessage[] = response.data.chat_history.map((msg: any) => ({
+        id: msg.id,
+        type: msg.role,
+        text: msg.content,
+      }));
 
-      setMessages((prev) => [...prev, assistantMessage]);
-
+      setMessages((prev) => {
+        // Skip duplicating the initial welcome message if it's already in the history
+        if (previousMessages.length > 0) {
+          return previousMessages;
+        }
+        return prev;
+      });
     } catch (error) {
-      const errorMessage: ChatMessage = {
-        id: Date.now() + 1,
-        type: "assistant",
-        text: "There was an error processing your request. Please try again later.",
-      };
-      setMessages((prev) => [...prev, errorMessage]);
+      console.error("Error fetching previous messages:", error);
+    } finally {
+      setIsInitialLoading(false);
     }
   };
 
-  return (
-    <div className="flex justify-between flex-grow flex-col">
-      {/* Conversation Container */}
-      <div
-        className="p-4 flex max-h-[50vh] overflow-y-auto flex-col gap-3"
-        ref={chatContainerRef}
-        style={{
-          overflowX: "hidden", // Prevent horizontal overflow
-        }}
-      >
-        {messages.map((msg) => {
-          const isAssistant = msg.type === "assistant";
-          const bubbleClass = isAssistant
-            ? "bg-[#F2F2F2] text-[#000000] self-start"
-            : "bg-[#702DFF] text-[#FFFFFF] self-end";
-          const maxWidthClass = isAssistant
-            ? "max-w-sm mr-[30px]"
-            : "max-w-xs ml-[30px]";
+  if (session.data?.user.accessToken) {
+    fetchPreviousMessages();
+  } else {
+    setIsInitialLoading(false);
+  }
+}, [content_id, session.data?.user.accessToken]);
 
-          return (
-            <div key={msg.id} className={`${maxWidthClass}`}>
-              {isAssistant ? (
-                <div
-                  className={`${bubbleClass} font-normal text-[14px] leading-[20px] px-[20px] py-[18px] rounded-[18px] break-words`}
-                 
-                >
-                    <MarkdownRenderer content={msg.text} />
-                                    </div>
-              ) : (
-                <div
-                  className={`${bubbleClass} font-normal text-[14px] leading-[20px] px-[20px] py-[18px] rounded-[18px] break-words`}
-                >
-                  {msg.text}
-                </div>
-              )}
+// Add a user message and make API call
+const handleAddMessage = async () => {
+  if (!inputValue.trim() || isLoading) return;
+
+  const newUserMessage: ChatMessage = {
+    id: Date.now(),
+    type: "user",
+    text: inputValue.trim(),
+  };
+
+  setMessages((prev) => [...prev, newUserMessage]);
+  setInputValue("");
+  
+  // Add a small delay before focusing on the API call
+  // This helps UI remain responsive during message transition
+  setTimeout(() => {
+    // Create a temporary loading message
+    const tempId = Date.now() + 1;
+    setMessages((prev) => [
+      ...prev, 
+      {
+        id: tempId,
+        type: "assistant",
+        text: "..."
+      }
+    ]);
+    
+    setIsLoading(true);
+    apiClient.post(
+      "/teachers/lessons/ask-question", 
+      {
+        prompt: newUserMessage.text,
+        content_id: content_id,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${session.data?.user.accessToken}`,
+        }
+      }
+    )
+    .then(response => {
+      // Replace the temporary message with the actual response
+      setMessages((prev) => 
+        prev.map(msg => 
+          msg.id === tempId 
+            ? {
+                id: tempId,
+                type: "assistant",
+                text: response.data.content || "I couldn't get a response. Please try again."
+              } 
+            : msg
+        )
+      );
+    })
+    .catch(error => {
+      // Replace the temporary message with an error message
+      setMessages((prev) => 
+        prev.map(msg => 
+          msg.id === tempId 
+            ? {
+                id: tempId,
+                type: "assistant",
+                text: "There was an error processing your request. Please try again later."
+              } 
+            : msg
+        )
+      );
+    })
+    .finally(() => {
+      setIsLoading(false);
+    });
+  }, 10);
+};
+
+return (
+  <div className="flex justify-between flex-grow flex-col">
+    {/* Conversation Container */}
+    <div
+      className="p-4 flex max-h-[50vh] overflow-y-auto flex-col gap-3"
+      ref={chatContainerRef}
+      style={{
+        overflowX: "hidden", // Prevent horizontal overflow
+      }}
+    >
+      {isInitialLoading ? (
+        <div className="self-start max-w-sm mr-[30px]">
+          <div className="bg-[#F2F2F2] text-[#000000] font-normal text-[14px] leading-[20px] px-[20px] py-[18px] rounded-[18px] break-words">
+            <div className="animate-pulse">
+              <div className="h-4 bg-gray-300 rounded w-3/4 mb-2"></div>
+              <div className="h-4 bg-gray-300 rounded w-full"></div>
             </div>
-          );
-        })}
-      </div>
-
-      {/* Bottom Input Bar */}
-      <div>
-        <div className="shadow-custom-black pl-[22px] py-[12px] justify-between rounded-[12010px] flex items-center">
-          <div className="flex gap-1 items-center">
-            <Image src="/icons/a.svg" width={20.4} height={20.4} alt="@" />
-            <input
-              type="text"
-              placeholder="Sohbete başla..."
-              className="bg-transparent outline-none ml-2 mr-2"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleAddMessage();
-              }}
-            />
-          </div>
-          <div className="flex gap-2 justify-center items-center">
-            <button
-              className=" bg-[#702DFF] flex items-center justify-center flex-shrink-0 rounded-[104px] text-white w-[34px] h-[34px] mr-[22px] hover:bg-purple-700"
-              onClick={handleAddMessage}
-            >
-              ↑
-            </button>
           </div>
         </div>
+      ) : (
+        messages.map((msg) => (
+          <MessageBubble key={msg.id} message={msg} />
+        ))
+      )}
+    </div>
 
-        {/* Footer / Terms */}
-      
+    {/* Bottom Input Bar */}
+    <div>
+      <div className="shadow-custom-black pl-[22px] py-[12px] justify-between rounded-[12010px] flex items-center">
+        <div className="flex gap-1 items-center">
+          <Image src="/icons/a.svg" width={20.4} height={20.4} alt="@" />
+          <input
+            type="text"
+            placeholder="Sohbete başla..."
+            className="bg-transparent outline-none ml-2 mr-2 w-full"
+            value={inputValue}
+            onChange={handleInputChange}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !isLoading) handleAddMessage();
+            }}
+            disabled={isLoading}
+          />
+        </div>
+        <div className="flex gap-2 justify-center items-center">
+          <button
+            className={`${isLoading ? 'bg-gray-400' : 'bg-[#702DFF] hover:bg-purple-700'} flex items-center justify-center flex-shrink-0 rounded-[104px] text-white w-[34px] h-[34px] mr-[22px]`}
+            onClick={handleAddMessage}
+            disabled={isLoading}
+          >
+            ↑
+          </button>
+        </div>
       </div>
     </div>
-  );
+  </div>
+);
 }

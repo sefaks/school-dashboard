@@ -76,6 +76,7 @@ const Page = () => {
             const response_data = data
             console.log("Fetched contents:", data);
             setContents(response_data);
+            
 
 
     } catch (err) {
