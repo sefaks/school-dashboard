@@ -24,8 +24,9 @@ const RecentAssignments = ({ language = 'tr' }) => {
                     },
                 }
             );        
-        console.log('Son gönderilen ödevler:', response.data);
+          console.log('Son gönderilen ödevler:', response.data);
           setAssignments(response.data);
+          console.log('Ödevler başarıyla yüklendi:', response.data);
           setLoading(false);
         
       } catch (error) {
@@ -41,9 +42,9 @@ const RecentAssignments = ({ language = 'tr' }) => {
   // Ödevi görüntüleme işlevi
   const handleViewAssignment = (assignmentId) => {
     if (assignmentId === 'all') {
-      router.push('/assignments');
+      router.push('/list/assignments');
     } else {
-      router.push(`/assignments/${assignmentId}`);
+      router.push(`/list/assignments/${assignmentId}`);
     }
   };
 
@@ -77,7 +78,7 @@ const RecentAssignments = ({ language = 'tr' }) => {
             
             return (
               <div 
-                key={assignment.id || index} 
+                key={assignment.assignment_id || index} 
                 className="flex items-center justify-between p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 <div className="flex items-center gap-3">
@@ -115,7 +116,7 @@ const RecentAssignments = ({ language = 'tr' }) => {
                   
                   {/* Görüntüleme butonu */}
                   <button
-                    onClick={() => handleViewAssignment(assignment.id)}
+                    onClick={() => handleViewAssignment(assignment.assignment_id)}
                     className="ml-2 p-2 rounded-md text-gray-600 hover:bg-gray-100"
                     aria-label="Ödevi görüntüle"
                   >

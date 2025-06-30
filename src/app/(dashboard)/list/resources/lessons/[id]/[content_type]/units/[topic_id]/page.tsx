@@ -30,6 +30,8 @@ const Page = () => {
   const params = useParams();
   const topicId = params.topic_id; 
 
+  console.log("topicId:", topicId);
+
   const searchParams = useSearchParams()
   const storedLanguage = localStorage.getItem("language") || "en";
   const [language, setLanguage] = useState(storedLanguage);
@@ -252,7 +254,7 @@ const Page = () => {
               </div>
             </div>
             {/* Render either Notes or ChatBot */}
-            {isNotes ? <Notes id={topicId?.toString() || ''} /> : <ChatBox />}
+            {isNotes ? <Notes id={topicId?.toString() || ''} /> : <ChatBox content_id = {topicId?.toString() || 'undefined'} />}
           </div>
       
         )
