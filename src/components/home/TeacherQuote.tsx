@@ -11,7 +11,7 @@ const TeacherQuote = ({ quote = "Bilgi bir ışıktır ve öğretmenler bu ış�
         </div>
         
         <blockquote className="italic text-gray-700">
-          "{quote}"
+          {quote}
         </blockquote>
       </div>
     </div>

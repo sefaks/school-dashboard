@@ -109,7 +109,7 @@ const TeacherForm = ({
           error={errors.validation_code}
         />
        <p className="text-xs text-green-600">
-        Kod, öğretmenin "Kodlarım" bölümünde bulunan 5 haneli paylaşım kodu olacaktır.
+        Kod, öğretmenin Kodlarım bölümünde bulunan 5 haneli paylaşım kodu olacaktır.
       </p>
       </div>
       <button

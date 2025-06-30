@@ -36,6 +36,7 @@ import React, { useState, useEffect, useRef } from "react";
 import MarkdownRenderer from "../MarkdownRenderer";
 import apiClient from "@/lib/apiClient";
 import { useSession } from "next-auth/react";
+import { Chat } from "@mui/icons-material";
 
 type MessageType = "user" | "assistant";
 
@@ -255,3 +256,6 @@ return (
   </div>
 );
 }
+
+
+ChatBox.displayName = "ChatBox"; 
