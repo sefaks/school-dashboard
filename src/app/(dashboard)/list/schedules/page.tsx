@@ -322,9 +322,7 @@ const ScheduleListPage = async ({
         }
       },
       orderBy: {
-        student_schedules: {
-          _count: 'desc', // Programı olan öğrenciler önce gelsin
-        },
+        id: 'asc',
       },
       take: ITEM_PER_PAGE,
       skip: (p - 1) * ITEM_PER_PAGE,
