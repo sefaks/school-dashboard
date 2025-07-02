@@ -98,6 +98,7 @@ model contents {
   publishes          publishes            @relation(fields: [publish_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   units              units                @relation(fields: [unit_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   student_content    student_content[]
+  teacher_content    teacher_content[]
 
   @@index([id], map: "ix_contents_id")
 }
@@ -163,7 +164,6 @@ model parent_student {
   students   students @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@id([parent_id, student_id])
-
 }
 
 model parents {
@@ -313,6 +313,7 @@ model teachers {
   announcement_teachers      announcement_teachers[]
   lesson_schedules           lesson_schedules[]
   teacher_class              teacher_class[]
+  teacher_content            teacher_content[]
   teacher_institution        teacher_institution[]
   teacher_lesson             teacher_lesson[]
   teacher_subject            teacher_subject[]
@@ -391,6 +392,7 @@ model admins {
   email          String?       @unique(map: "ix_admins_email") @db.VarChar
   password       String        @db.VarChar
   institution_id Int?
+  surname        String?       @db.VarChar
   institutions   institutions? @relation(fields: [institution_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([id], map: "ix_admins_id")
@@ -401,12 +403,10 @@ model admins {
 model announcement_classes {
   announcement_id Int
   class_id        Int
-  announcements   announcements? @relation(fields: [announcement_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  classes         classes?       @relation(fields: [class_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  announcements   announcements @relation(fields: [announcement_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  classes         classes       @relation(fields: [class_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@id([announcement_id, class_id])
-
-
 }
 
 model announcement_parents {
@@ -466,12 +466,14 @@ model documents {
 }
 
 model notes {
-  id                 Int             @id @default(autoincrement())
-  student_content_id Int
+  id                 Int              @id @default(autoincrement())
+  student_content_id Int?
   note               String
-  created_at         DateTime?       @db.Timestamp(6)
-  updated_at         DateTime?       @db.Timestamp(6)
-  student_content    student_content @relation(fields: [student_content_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  created_at         DateTime?        @db.Timestamp(6)
+  updated_at         DateTime?        @db.Timestamp(6)
+  teacher_content_id Int?
+  student_content    student_content? @relation(fields: [student_content_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  teacher_content    teacher_content? @relation(fields: [teacher_content_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([id], map: "ix_notes_id")
 }
@@ -711,6 +713,7 @@ model student_schedules {
   assignee_type assigneetype
   student_id    Int
   is_active     Boolean?
+  name          String?         @db.VarChar
   students      students        @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   student_tasks student_tasks[]
 
@@ -732,19 +735,33 @@ model student_tasks {
 }
 
 model content_embeddings {
-  id              Int                    @id @default(autoincrement())
-  content_id      String                 @db.Uuid
-  chunk_text      String
-  chunk_embedding Unsupported("vector")?
+  id              Int      @id @default(autoincrement())
+  content_id      String   @db.Uuid
+  chunk_text      String   @db.VarChar
+  chunk_embedding String   @db.VarChar
   chunk_number    Int
-  unit_id         Int?
-  level           Int?                   @db.SmallInt
-  subject_id      Int?
-  grade           Int?
-  parent_id       String?                @db.Uuid
-  publish_id      Int?
-  created_at      DateTime?              @default(now()) @db.Timestamptz(6)
-  contents        contents               @relation(fields: [content_id], references: [content_id], onDelete: NoAction, onUpdate: NoAction)
+  contents        contents @relation(fields: [content_id], references: [content_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([id], map: "ix_content_embeddings_id")
+}
+
+model teacher_content {
+  id           Int       @id @default(autoincrement())
+  teacher_id   Int
+  content_id   String    @db.Uuid
+  created_at   DateTime? @db.Timestamptz(6)
+  updated_at   DateTime? @db.Timestamptz(6)
+  is_completed Boolean?
+  completed_at DateTime? @db.Timestamp(6)
+  notes        notes[]
+  contents     contents  @relation(fields: [content_id], references: [content_id], onDelete: NoAction, onUpdate: NoAction)
+  teachers     teachers  @relation(fields: [teacher_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([content_id], map: "ix_teacher_content_content_id")
+  @@index([created_at], map: "ix_teacher_content_created_at")
+  @@index([id], map: "ix_teacher_content_id")
+  @@index([teacher_id], map: "ix_teacher_content_teacher_id")
+  @@index([updated_at], map: "ix_teacher_content_updated_at")
 }
 
 enum assigneetype {
@@ -757,7 +774,6 @@ enum assignmentstatus {
   COMPLETED
   PENDING
   PAST_DUE
-  DRAFT
 }
 
 enum dayofweek {
