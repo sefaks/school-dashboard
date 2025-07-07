@@ -403,8 +403,8 @@ model admins {
 model announcement_classes {
   announcement_id Int
   class_id        Int
-  announcements   announcements @relation(fields: [announcement_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  classes         classes       @relation(fields: [class_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  announcements   announcements? @relation(fields: [announcement_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  classes         classes?       @relation(fields: [class_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@id([announcement_id, class_id])
 }

@@ -77,14 +77,12 @@ const CourseContentCard: React.FC<CourseContentCardProps> = ({
            
           </div>
           <div className="flex items-center gap-3">
-          
-          <p
-            onClick={() => handleViewClick(minPageStart)}
-            className="font-normal rounded-[8px] px-[10px] py-[8px] text-[14px] leading-[16px] bg-[#702DFF14] text-[#702DFF] cursor-pointer"
-          >
-            {currentLanguageContent.view || "Görüntüle"}
-          </p>
-
+            <p
+              onClick={() => handleViewClick(minPageStart)}
+              className="font-normal rounded-[8px] px-[10px] py-[8px] text-[14px] leading-[16px] bg-[#702DFF14] text-[#702DFF] cursor-pointer"
+            >
+              {currentLanguageContent.view || "Görüntüle"}
+            </p>
           </div>
 
          
