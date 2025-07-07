@@ -2,7 +2,7 @@ import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import prisma from "@/lib/prisma";
-import { classes, schedules, Prisma } from "@prisma/client";
+import { classes, schedules, Prisma, student_schedules } from "@prisma/client";
 import Image from "next/image";
 import Link from "next/link";
 import { ITEM_PER_PAGE } from "@/lib/settings";
@@ -24,8 +24,8 @@ type StudentSchedule = {
   grade: number;
   created_at: Date;
   school_no: string;
-  // Prisma şemanızda tanımlandığı gibi doğru ilişki adı
-  student_schedules?: any[]; // Daha spesifik tipinize göre düzeltilebilir
+  // array schedules
+  student_schedules?: any[];
 };
 
 const columns = [
@@ -36,7 +36,10 @@ const columns = [
 ];
 
 // Admin için satır render fonksiyonu
+// Admin için satır render fonksiyonu
 const renderAdminRow = (item: ClassWithSchedule, role: string) => {
+  console.log("Item:", item);
+  
   // Eğer schedule yoksa tek satır göster, varsa schedule'ları listele
   return !item.schedules || item.schedules.length === 0 ? (
     <tr
@@ -100,6 +103,7 @@ const renderAdminRow = (item: ClassWithSchedule, role: string) => {
                 page_type="schedules"
                 overrideUrl={`/list/schedules/create-class-schedule?id=${schedule.id}`}
               />
+              {/* Delete butonunu sadece ilk schedule'da göster */}
               <FormContainer table="schedule" type="delete" id={schedule.id} />
             </div>
           </td>
@@ -110,11 +114,12 @@ const renderAdminRow = (item: ClassWithSchedule, role: string) => {
 };
 
 // Öğretmen için satır render fonksiyonu
-const renderTeacherRow = (item: StudentSchedule) => {
-  // Prisma şemanıza göre doğru ilişki adını kullanıyoruz
-  const studentSchedules = item.student_schedules || [];
+const renderTeacherRow = (item: StudentSchedule) => (
+
+  // öğrencinin her bir programı için ayrı satır oluştur
+  // Eğer öğrenci programı yoksa tek satır göster
   
-  return studentSchedules.length === 0 ? (
+  (!item.student_schedules || item.student_schedules.length ===0) ? (
     <tr
       key={item.id}
       className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
@@ -144,55 +149,55 @@ const renderTeacherRow = (item: StudentSchedule) => {
       </td>
     </tr>
   ) : 
-  studentSchedules.map((schedule) => (
+
+  item.student_schedules.map((schedule) => (
     <tr
-      key={`${item.id}-${schedule.id}`}
-      className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
-    >
-      <td className="flex items-center gap-4">{`${item.name} ${item.surname}`}</td>
-      <td className="hidden md:table-cell">
-        {schedule.created_at ? new Date(schedule.created_at).toLocaleString('tr-TR', {
-          year: 'numeric',
-          month: 'long',
-          day: '2-digit',
-        }) : 'Tarih Yok'}
-      </td>
-      
-      <td>{item.grade}. Sınıf</td>
-      <td className="hidden md:table-cell">
-        <span className={`${schedule.is_active ? 'bg-green-500' : 'bg-yellow-600'} text-white py-1 px-3 rounded-full`}>
-          {schedule.is_active ? 'Aktif' : 'Pasif'}
-        </span>
-      </td>
+    key={item.id}
+    className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
+  >
+    <td className="flex items-center gap-4">{`${item.name} ${item.surname}`}</td>
+    <td className="hidden md:table-cell">
+      {schedule.created_at ? new Date(schedule.created_at).toLocaleString('tr-TR', {
+        year: 'numeric',
+        month: 'long',
+        day: '2-digit',
+      }) : 'Tarih Yok'}
+    </td>
+    
+    <td>{item.grade}. Sınıf</td>
+      {schedule.is_active ? (
+         <td className="hidden md:table-cell">
+         <span className={`bg-green-500 text-white py-1 px-3 rounded-full`}>
+            Aktif
+         </span>
+       </td>
+      ) : (
+        <td className="hidden md:table-cell">
+          <span className={`bg-yellow-600 text-white py-1 px-3 rounded-full`}>
+            Pasif
+          </span>
+        </td>
+      )}
 
-      <td>
-        <div className="flex items-center gap-2">
-          <RedirectButton 
-            type="update" 
-            page_type="schedules" 
-            overrideUrl={`/list/schedules/create?id=${schedule ? schedule.id : ''}`} 
-          />
-          <RedirectButton
-            type="create"
-            page_type="schedules"
-            overrideUrl={`/list/schedules/create?student_id=${item.id}`} 
-          />
-        </div>
-      </td>
-    </tr>
+    <td>
+      <div className="flex items-center gap-2">
+      <RedirectButton 
+          type="update" 
+          page_type="schedules" 
+          overrideUrl={`/list/schedules/create?id=${schedule ? schedule.id : ''}`} 
+        />
+         <RedirectButton
+          type="create"
+          page_type="schedules"
+          // özel URL override ediliyor
+          overrideUrl={`/list/schedules/create?student_id=${item.id}`} 
+        />
+      </div>
+    </td>
+  </tr>
   ))
-};
-
-// Bu işlev client-side'da çalışmalı ve localStorage kontrolü yapmalı
-export function clientSideComponent() {
-  // Client-side kodunu buraya koy
-  // Bu kod yalnızca tarayıcıda çalışır
-  if (typeof window !== 'undefined') {
-    // localStorage burada güvenle kullanılabilir
-    const storage = localStorage;
-    // localStorage ile ilgili işlemler...
-  }
-}
+    
+);
 
 const ScheduleListPage = async ({
   searchParams,
@@ -205,6 +210,7 @@ const ScheduleListPage = async ({
   // Sayfalama parametrelerini al
   const { page, ...queryParams } = searchParams || {};
   const p = page ? parseInt(page) : 1;
+
 
   // Veri ve toplam sayı değişkenleri
   let data: ClassWithSchedule[] | StudentSchedule[] = [];
@@ -229,6 +235,7 @@ const ScheduleListPage = async ({
         where: classQuery,
         include: {
           schedules: true,
+
         },
         take: ITEM_PER_PAGE,
         skip: (p - 1) * ITEM_PER_PAGE,
@@ -236,10 +243,13 @@ const ScheduleListPage = async ({
       prisma.classes.count({
         where: classQuery,
       }),
+      
     ]);
 
     // data'da schedule olmayan sınıfları filtrele
     data = data.filter(item => item.schedules && item.schedules.length > 0);
+
+    console.log("Data:", data);
 
   } else if (role === "teacher") {
     // Öğretmenin öğrencilerini ve programlarını al
@@ -263,79 +273,93 @@ const ScheduleListPage = async ({
           },
         },
       },
+      
     };
   
     // Arama parametresi
-    if (queryParams.search && queryParams.search.trim() !== "") {
-      const searchTerm = queryParams.search.trim();
-      const gradeNumber = parseInt(searchTerm);
-      
-      // Önceki koşulları koru ve AND ile birleştir
-      studentQuery = {
-        AND: [
-          // Önceki sınıf koşulu
-          {
-            student_class: {
-              some: {
-                class_id: {
-                  in: classIds,
-                },
+    // Arama parametresi
+  if (queryParams.search && queryParams.search.trim() !== "") {
+    const searchTerm = queryParams.search.trim();
+    const gradeNumber = parseInt(searchTerm);
+    
+    // Önceki koşulları koru ve AND ile birleştir
+    studentQuery = {
+      AND: [
+        // Önceki sınıf koşulu
+        {
+          student_class: {
+            some: {
+              class_id: {
+                in: classIds,
               },
             },
           },
-          // Arama koşulu
-          {
-            OR: [
-              { name: { contains: searchTerm, mode: "insensitive" } },
-              { surname: { contains: searchTerm, mode: "insensitive" } },
-              ...((!isNaN(gradeNumber)) ? [{ grade: gradeNumber }] : []),
-            ],
+        },
+        // Arama koşulu
+        {
+          OR: [
+            { name: { contains: searchTerm, mode: "insensitive" } },
+            { surname: { contains: searchTerm, mode: "insensitive" } },
+            ...((!isNaN(gradeNumber)) ? [{ grade: gradeNumber }] : []),
+          ],
+        },
+      ],
+    };
+  } else {
+    // Arama yoksa sadece sınıf koşulunu kullan
+    studentQuery = {
+      student_class: {
+        some: {
+          class_id: {
+            in: classIds,
           },
-        ],
-      };
-    }
-
-    try {
-      // Prisma şemanızda var olan doğru ilişki adını kullanıyoruz
-      const allStudents = await prisma.students.findMany({
-        where: studentQuery,
-        include: {
-          // student_schedules ilişkisi şemada tanımlı olduğu için doğru şekilde kullanılıyor
-          student_schedules: { 
-            orderBy: {
-              is_active: 'desc', // Aktif programlar önce gelsin
-            },
-          }
         },
-        orderBy: {
-          id: 'asc',
-        },
-        take: ITEM_PER_PAGE,
-        skip: (p - 1) * ITEM_PER_PAGE,
-      });
-      
-      // Öğrenci sayısını al
-      count = await prisma.students.count({
-        where: studentQuery,
-      });
-    
-      // Görüntülenecek verileri oluştur
-      data = allStudents.map(student => ({
-        id: student.id,
-        name: student.name,
-        surname: student.surname,
-        grade: student.grade,
-        school_no: student.school_no,
-        // İlişki adını student_schedules olarak düzelttik
-        schedule_student: student.student_schedules,
-      }));
-    } catch (error) {
-      console.error("Prisma error:", error);
-      // Hata durumunda boş veri döndür
-      data = [];
-      count = 0;
-    }
+      },
+    };
   }
+
+    // Öğrencileri al
+    const allStudents = await prisma.students.findMany({
+      where: studentQuery,
+      include: {
+        student_schedules: {
+          orderBy: {
+            is_active: 'desc', // Aktif programlar önce gelsin
+          },
+        }
+      },
+      orderBy: {
+        student_schedules: {
+          _count: 'desc', // Programı olan öğrenciler önce gelsin
+        },
+      },
+      take: ITEM_PER_PAGE,
+      skip: (p - 1) * ITEM_PER_PAGE,
+     
+    });
+    
+    // Görüntülenecek satırları belirle
+    const displayedStudents = allStudents.filter(student => 
+      !student.student_schedules || student.student_schedules.length === 0 || 
+      student.student_schedules.some(schedule => true) // Burada ek filtreler ekleyebilirsin
+    );
+    
+    // Gerçek count'u hesapla
+    count = await prisma.students.count({
+      where: studentQuery,
+    });
+  
+    data = displayedStudents.map(student => ({
+      id: student.id,
+      name: student.name,
+      surname: student.surname,
+      grade: student.grade,
+      school_no: student.school_no,
+      student_schedules: student.student_schedules,
+    }));
+    
+  }
+
 
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
@@ -352,12 +376,13 @@ const ScheduleListPage = async ({
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
             {role === "admin" && (
-              <RedirectButton
-                type="create"
-                page_type="schedules"
-                overrideUrl="/list/schedules/create-class-schedule"
-              />
-            )}
+        <RedirectButton
+          type="create"
+          page_type="schedules"
+          // özel URL override ediliyor
+          overrideUrl="/list/schedules/create-class-schedule"
+        />
+      )}
           </div>
         </div>
       </div>
