@@ -1,3 +1,4 @@
+
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
@@ -25,7 +26,7 @@ type StudentSchedule = {
   created_at: Date;
   school_no: string;
   // array schedules
-  student_schedules?: any[];
+  student_schedules?: student_schedules[];
 };
 
 const columns = [
