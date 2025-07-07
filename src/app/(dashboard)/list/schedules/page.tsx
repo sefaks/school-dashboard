@@ -120,6 +120,13 @@ const renderTeacherRow = (item: StudentSchedule) => {
       className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
     >
       <td className="flex items-center gap-4">{`${item.name} ${item.surname}`}</td>
+      <td className="hidden md:table-cell">
+        {item.created_at ? new Date(item.created_at).toLocaleString('tr-TR', {
+          year: 'numeric',
+          month: 'long',
+          day: '2-digit',
+        }) : 'Tarih Yok'}
+      </td>
       <td>{item.grade}. Sınıf</td>
       <td className="hidden md:table-cell">
         <span className="bg-gray-500 text-white py-1 px-3 rounded-full">
