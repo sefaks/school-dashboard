@@ -328,18 +328,20 @@ const ScheduleListPage = async ({
           },
         }
       },
+      // İlişkisel sıralama yerine doğrudan öğrenci alanlarını kullan
       orderBy: {
-        student_schedules: {
-          _count: 'desc', // Programı olan öğrenciler önce gelsin
-        },
+        id: 'asc', // veya başka bir alan kullanabilirsiniz
       },
       take: ITEM_PER_PAGE,
       skip: (p - 1) * ITEM_PER_PAGE,
-     
     });
     
+    const sortedStudents = [...allStudents].sort((a, b) => 
+    (b.student_schedules?.length || 0) - (a.student_schedules?.length || 0)
+  );
+    
     // Görüntülenecek satırları belirle
-    const displayedStudents = allStudents.filter(student => 
+    const displayedStudents = sortedStudents.filter(student => 
       !student.student_schedules || student.student_schedules.length === 0 || 
       student.student_schedules.some(schedule => true) // Burada ek filtreler ekleyebilirsin
     );
