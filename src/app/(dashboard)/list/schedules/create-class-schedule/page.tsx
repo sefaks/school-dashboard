@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { redirect } from 'next/navigation';
 import SchedulePage from './add-schedule';
 import { serverGet } from '@/lib/apiClient_new';
