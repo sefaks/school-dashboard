@@ -17,7 +17,7 @@ export async function serverApi(endpoint: string, options: RequestInit = {}) {
     throw new Error('Authentication token not found');
   }
   
-  const baseURL = process.env.NEXT_PUBLIC_API_URL || 'https://arfbackend-h3g2bdftbxdffqcy.westeurope-01.azurewebsites.net';
+  const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
   const url = `${baseURL}${endpoint}`;
   
   const fetchOptions: RequestInit = {
