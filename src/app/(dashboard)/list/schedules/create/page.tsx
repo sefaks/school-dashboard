@@ -376,19 +376,27 @@ const studentId = searchParams.get('student_id') as string | null;
 
 
         if (studentId && !scheduleId) {
-            const response = await addScheduleToStudent(
+            try{
+              const response = await addScheduleToStudent(
                 { tasks: formattedTasks,
                   name: schedule?.name || `${studentInfo?.student_name} ${studentInfo?.student_surname} İçin Yeni Haftalık Program`,
                   is_active: isActive,
                  }, 
                 session?.user?.accessToken || "", 
                 Number(studentId)
-              );      
+              );
+            }      
+            catch (error) {
+              console.error("Program eklenirken hata oluştu:", error);
+              toast.error(currentLanguageContent.schedule_add_error || "Program eklenirken bir hata oluştu.");
+              return;
+            }
                           
         } else if (scheduleId && !studentId) {
             // tasks ile birlikte is_active ve name 
 
-            const response = await updateScheduleToStudent(
+            try{
+              const response = await updateScheduleToStudent(
                 { tasks: formattedTasks,
                   name: schedule?.name || `${studentData?.student_name} ${studentData?.student_surname} İçin Yeni Haftalık Program`,
                   is_active: isActive,
@@ -396,6 +404,14 @@ const studentId = searchParams.get('student_id') as string | null;
                 session?.user?.accessToken || "", 
                 Number(scheduleId)
               );
+            }
+            catch (error) {
+              console.error("Program güncellenirken hata oluştu:", error);
+              toast.error(currentLanguageContent.schedule_update_error || error.message || "Program güncellenirken bir hata oluştu.");
+              return;
+            }
+                 
+
         }
 
         toast.success(currentLanguageContent.schedule_save_success);
