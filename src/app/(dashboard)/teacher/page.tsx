@@ -1,13 +1,11 @@
 import Announcements from "@/components/Announcements";
-import BigCalenderContainer from "@/components/BigCalenderContainer";
 import LastContents from "@/components/home/LastContents";
 import RecentAssignments from "@/components/home/RecentAssignmentSubmission";
 import TeacherQuote from "@/components/home/TeacherQuote";
 import WeeklySchedule from "@/components/schedules/WeeklySchedule";
 import prisma from "@/lib/prisma";
 import { getRoleAndUserIdAndInstitutionId } from "@/lib/utils";
-import { auth } from "@clerk/nextjs/server";
-import { parse } from "path";
+
 
 const TeacherPage = async () => {
 

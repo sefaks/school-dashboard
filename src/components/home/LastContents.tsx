@@ -21,8 +21,15 @@ interface LastCompletedContent {
 }
 
 const LastContents: React.FC = () => {
-  const storedLanguage = localStorage.getItem("language") || "en";
-  const [language, setLanguage] = useState(storedLanguage);
+  const [language, setLanguage] = useState("en");
+  
+  // useEffect içinde localStorage'a eriş
+  useEffect(() => {
+    // Tarayıcıda çalıştığından emin ol
+    const storedLanguage = localStorage.getItem("language") || "en";
+    setLanguage(storedLanguage);
+  }, []);
+  
   const currentLanguageContent = language === "en" ? en : tr;
   
   const [completedContents, setCompletedContents] = useState<LastCompletedContent[]>([]);
