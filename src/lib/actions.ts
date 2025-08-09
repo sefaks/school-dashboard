@@ -1178,3 +1178,24 @@ export const fetchPdfContent = async (topicId: string) => {
     throw error;
   }
 };
+
+
+export const deleteAssignmentTeacher = async (assignmentId: number, token: string) => {
+  try {
+    const response = await axios.delete(`${API_BASE_URL}/teachers/me/delete-assignment/${assignmentId}`, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return response.data;
+  } catch (error: any) {
+      if (error.response) {
+        console.error("API Response Error:", error.response);
+        throw new Error(error.response.data.detail || "Failed to delete assignment!");
+      }
+      console.error("Network Error:", error);
+      throw new Error("An unexpected error occurred!");
+    }
+}

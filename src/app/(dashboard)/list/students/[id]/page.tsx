@@ -296,9 +296,9 @@ const relatedData = {
             </Link>
             <Link
               className="p-3 rounded-md bg-lamaYellowLight"
-              href={`/list/results?studentId=${student.id}`}
+              href={`/list/results?studentId=${student.id}&grade=${firstClass?.grade ?? ''}`}
             >
-              Öğrenci&apos;nin Sonuçları
+              Öğrenci&apos;nin İlerleyişi
             </Link>
           </div>
         </div>

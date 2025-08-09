@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Dispatch, SetStateAction, useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { FormContainerProps } from "./FormContainer";
-import { deleteAnnoucementAdmin, deleteAnnoucementTeacher, deleteClass, deleteStudent, deleteTeacher,deleteSchedule } from "@/lib/actions";
+import { deleteAnnoucementAdmin, deleteAnnoucementTeacher, deleteClass, deleteStudent, deleteTeacher,deleteSchedule, deleteAssignmentTeacher } from "@/lib/actions";
 import React from "react";
 import { useSession } from "next-auth/react";
 import en from "@/app/messages/en.json";  
@@ -165,7 +165,8 @@ const currentLanguageContent = language === "en" ? en : tr;
       }
     },
     class: deleteClass,
-    schedule : deleteSchedule
+    schedule : deleteSchedule,
+    assignment: deleteAssignmentTeacher
   }; 
 
   const handleDelete = async () => {

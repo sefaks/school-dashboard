@@ -77,7 +77,7 @@ const menuItems = [
       {
         icon: "/message.png",
         label: "Mesajlar",
-        href: "/list/messages",
+        href: "/list/progress",
         visible: ["admin", "teacher", "student", "parent"],
       },
       {
