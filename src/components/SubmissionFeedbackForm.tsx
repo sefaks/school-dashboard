@@ -41,7 +41,7 @@ const SubmissionFeedbackForm = ({
             }
         
         const response = await fetch(
-                `http://127.0.0.1:8000/teachers/me/grade-student-submission/${submissionId}`,
+                `http://arfbackend-h3g2bdftbxdffqcy.westeurope-01.azurewebsites.net/teachers/me/grade-student-submission/${submissionId}`,
                 {
                   method: "PATCH", // POST yerine PUT/PATCH daha uygun
                   headers: {

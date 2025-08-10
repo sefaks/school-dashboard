@@ -38,9 +38,9 @@ const DownloadDocumentButton = ({
 
         // Endpoint, `downloadType` prop'una göre ayarlanır
         if (downloadType === "assignment") {
-          endpoint = `http://127.0.0.1:8000/teachers/me/download-assignment-document/${assignmentId}/${documentId}`;
+          endpoint = `http://arfbackend-h3g2bdftbxdffqcy.westeurope-01.azurewebsites.net/teachers/me/download-assignment-document/${assignmentId}/${documentId}`;
         } else if (downloadType === "submission") {
-          endpoint = `http://127.0.0.1:8000/teachers/me/download-student-submission/${documentId}`;
+          endpoint = `http://arfbackend-h3g2bdftbxdffqcy.westeurope-01.azurewebsites.net/teachers/me/download-student-submission/${documentId}`;
         }
   
         // Endpoint'e istek atılır
