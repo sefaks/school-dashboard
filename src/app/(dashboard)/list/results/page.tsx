@@ -6,12 +6,15 @@ import { useEffect, useState } from "react";
 import { LineChart, Line, XAxis, YAxis,ZAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import Loading from "../loading";
 import apiClient from "@/lib/apiClient";
-import { fi } from "date-fns/locale";
+import { el, fi } from "date-fns/locale";
 import { set } from "date-fns";
 import TestProgressChart from "@/components/results/ProgressChart";
+import UnitProgress from "@/components/results/UnitProgress";
+import ContentProgressChart from "@/components/results/ContentProgressChart";
+import UnitContentProgress from "@/components/results/UnitContentProgress";
 
 //define the ProgressData type
-type ProgressDataType = {
+type TestProgressDataType = {
   student_name: string;
   student_surname: string;
   grade: string;
@@ -32,16 +35,37 @@ type ProgressDataType = {
   }[];
 };
 
-    
+type ContentProgressDataType = {
+  student_name: string;
+  student_surname: string;
+  grade: string;
+  progress_data: {
+    completed_at: string;
+    is_completed: boolean;
+    unit_name: string;
+    unit_no: number;
+    percentage: number;
+    content_name: string;
+    level: string;
+  }[];
+  all_units: {
+    unit_no: number;
+    unit_name: string;
+  }[];
+};
 
 
 const ProgressPage = () => {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const { data: session } = useSession();
-  const [progressData, setProgressData] = useState<ProgressDataType | null>(null);
+  const [progressData, setProgressData] = useState<TestProgressDataType | null>(null);
+  const [contentProgressData, setContentProgressData] = useState<ContentProgressDataType | null>(null);
   const [subjects, setSubjects] = useState([]);
   const [selectedSubject, setSelectedSubject] = useState('');
+  const [selectedProgresstType, setSelectedProgressType] = useState('Konu Çalışması'); // Default progress type
+  const [progressTypes, setProgressTypes] = useState(['Konu Çalışması', 'Test Çalışması']); // Example progress types
+  
 
   const searchParams = useSearchParams();
   const id = searchParams.get('studentId'); // Get student ID from query params
@@ -51,7 +75,7 @@ const ProgressPage = () => {
   useEffect(() => {
     const fetchSubjects = async () => {
       try {
-        console.log('Fetching subjects for grade:', grade);
+        
         const response = await apiClient.get(`/subjects/all/${grade}`, {
             headers: { Authorization: `Bearer ${session?.user.accessToken}` },
         });      
@@ -82,15 +106,32 @@ const ProgressPage = () => {
       if (!id || !selectedSubject || !session?.user?.accessToken) return;
       
       setLoading(true);
-      
+
       try {
-        const response = await apiClient.get(`/teachers/students/${id}/test-progress/${selectedSubject}`, {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session?.user?.accessToken}`,
-          },
-        });
+        let response;
         
+        if(selectedProgresstType === 'Konu Çalışması') {
+           response = await apiClient.get(`/teachers/students/${id}/content-progress/${selectedSubject}`, {
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session?.user?.accessToken}`,
+            },
+          });
+        }
+        else if(selectedProgresstType === 'Test Çalışması') {
+           response = await apiClient.get(`/teachers/students/${id}/test-progress/${selectedSubject}`, {
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session?.user?.accessToken}`,
+            },
+          });
+        }
+        
+        if (!response || !response.data) {
+          console.error('No data received from API');
+          return;
+        }
+
         const data = response.data
         console.log('Fetched progress data:', data);
 
@@ -101,8 +142,12 @@ const ProgressPage = () => {
           console.log('No units found in progress data');
         }
 
-        setProgressData(data);
-
+        if (selectedProgresstType === 'Konu Çalışması') {
+          setContentProgressData(data);
+        }
+        else if (selectedProgresstType === 'Test Çalışması') {
+          setProgressData(data);
+        }
       } catch (error) {
         console.error('Error fetching progress data:', error);
       } finally {
@@ -111,39 +156,20 @@ const ProgressPage = () => {
     };
     
     fetchProgressData();
-  }, [id, selectedSubject, session?.user?.accessToken]);
+  }, [id, selectedSubject, session?.user?.accessToken, selectedProgresstType]);
   
   // Handle subject selection
   const handleSubjectChange = (e:any) => {
     console.log('Selected subject:', e.target.value);
     setSelectedSubject(e.target.value);
   };
-  
-  // Process data for the test progress chart
-  const prepareTestProgressData = () => {
-    if (!progressData || !progressData.progress_data) return [];
-    
-    // Sort progress data by date
-    const sortedData = [...progressData.progress_data].sort(
-        (a, b) => new Date(a.submitted_at).getTime() - new Date(b.submitted_at).getTime()
-    );
-    
-    // Format data for the chart
-    return sortedData.map(item => ({
-      date: new Date(item.submitted_at).toLocaleDateString(),
-      unitName: item.unit_name,
-      unitNo: item.unit_no,
-      percentage: item.percentage,
-      testName: item.test_name,
-      correctAnswers: item.correct_answers,
-      falseAnswers: item.false_answers,
-      emptyAnswers: item.empty_answers,
-      totalQuestions: item.total_questions
-    }));
-  };
-    
 
+  const handleProgressTypeChange = (e:any) => {
+  console.log('Selected progress type:', e.target.value);
+    setSelectedProgressType(e.target.value);
+  }
   
+
   if (loading) {
     return (
       <Loading />
@@ -162,7 +188,27 @@ const ProgressPage = () => {
           </div>
         )}
         
-        <div className="mt-4 sm:mt-0">
+        <div className="mt-4 sm:mt-0 flex flex-row items-center gap-4">
+         
+          <div>
+          <label htmlFor="progress-type-select" className="block text-sm font-medium text-gray-700 mb-1">
+            İlerleme Türü Seçin:
+          </label>
+          <select
+            id="progress-type-select"
+            value={selectedProgresstType}
+            onChange={handleProgressTypeChange}
+            className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+          >
+            {progressTypes.map((progress_type) => (
+              <option key={progress_type} value={progress_type}>
+                {progress_type}
+              </option>
+            ))}
+          </select>
+          </div>
+
+           <div>
           <label htmlFor="subject-select" className="block text-sm font-medium text-gray-700 mb-1">
             Ders Seçin:
           </label>
@@ -178,92 +224,34 @@ const ProgressPage = () => {
               </option>
             ))}
           </select>
+
+          </div>
+
         </div>
       </div>
       
       {/* Test Progress Chart */}
-      {progressData && progressData.progress_data && progressData.progress_data.length > 0 ? (
-        <TestProgressChart progressData={progressData} />
+      {progressData && progressData.progress_data && progressData.progress_data.length > 0 && selectedProgresstType == 'Test Çalışması' ? (
+        <TestProgressChart progressData={progressData} /> ) :
+        contentProgressData && contentProgressData.progress_data && contentProgressData.progress_data.length > 0 && selectedProgresstType == 'Konu Çalışması' ? (
+       <ContentProgressChart progressData={contentProgressData} />
       ) : (
         <div className="bg-white p-6 rounded-lg shadow-md mb-8 text-center">
-          <p className="text-gray-600">Bu ders için test verisi bulunmamaktadır.</p>
+          <p className="text-gray-600">Bu ders için öğrenciye ait ilerleme verisi bulunmamaktadır.</p>
         </div>
       )}
       
       {/* Unit Progress Overview */}
-      {progressData && progressData.all_units && progressData.all_units.length > 0 && (
-  <div className="bg-white p-6 rounded-lg shadow-md">
-    <h2 className="text-xl font-semibold mb-4">Ünite Bazlı İlerleme</h2>
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {[...progressData.all_units]
-        .sort((a, b) => a.unit_no - b.unit_no) // unit_no'ya göre sıralama
-        .map((unit) => {
-          // unit_no'ya göre testleri filtrele
-          const unitTests = progressData.progress_data.filter(
-            (test) => test.unit_no === unit.unit_no
-          );
-
-          // Ortalama başarı oranı hesapla (progress_data'da success yüzdesi yoksa kendin hesapla)
-          const avgSuccess = unitTests.length
-            ? unitTests.reduce((sum, test) => {
-                // Eğer test objesinde 'percentage' yoksa hesapla
-                const percentage = test.percentage !== undefined
-                  ? test.percentage
-                  : Math.round((test.correct_answers / test.total_questions) * 100);
-                return sum + percentage;
-              }, 0) / unitTests.length
-            : 0;
-
-          // Son test tarihi (varsa)
-          const latestTest = unitTests.length
-            ? unitTests.sort((a, b) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime())[0]
-            : null;
-
-          return (
-            <div key={unit.unit_no} className="border rounded-lg p-4 bg-gray-50">
-              <h3 className="font-medium text-lg">
-                {unit.unit_no} - {unit.unit_name}
-              </h3>
-              <div className="mt-2">
-                <div className="flex justify-between text-sm text-gray-600 mb-1">
-                  <span>Ortalama Başarı:</span>
-                  <span
-                    className={`font-medium ${
-                      avgSuccess >= 70
-                        ? 'text-green-600'
-                        : avgSuccess >= 50
-                        ? 'text-yellow-600'
-                        : 'text-red-600'
-                    }`}
-                  >
-                    {avgSuccess.toFixed(1)}%
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div
-                    className={`h-2.5 rounded-full ${
-                      avgSuccess >= 70
-                        ? 'bg-green-600'
-                        : avgSuccess >= 50
-                        ? 'bg-yellow-500'
-                        : 'bg-red-500'
-                    }`}
-                    style={{ width: `${avgSuccess}%` }}
-                  ></div>
-                </div>
-              </div>
-              <div className="mt-3 text-sm">
-                <p>Test Sayısı: {unitTests.length}</p>
-                {latestTest && (
-                  <p>Son Test: {new Date(latestTest.submitted_at).toLocaleDateString()}</p>
-                )}
-              </div>
-                </div>
-              );
-            })}
-          </div>
+      {progressData && progressData.all_units && progressData.all_units.length > 0 &&  selectedProgresstType == 'Test Çalışması' ? (
+     <UnitProgress progressData={progressData} />) :  
+     contentProgressData && contentProgressData.progress_data && contentProgressData.progress_data.length > 0 && selectedProgresstType == 'Konu Çalışması' ? (
+        <UnitContentProgress progressData={contentProgressData} />
+      ) : (
+        <div className="bg-white p-6 rounded-lg shadow-md mb-8 text-center">
+          <p className="text-gray-600">Bu ders için öğrenciye ait ünite ilerleme verisi bulunmamaktadır.</p>
         </div>
       )}
+
     </div>
   );
 };
