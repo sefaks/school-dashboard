@@ -37,7 +37,7 @@ const RecentAssignments = ({ language = 'tr' }) => {
     };
     
     fetchAssignments();
-  }, [session]);
+  }, [session.data?.user.accessToken]);
   
   // Ödevi görüntüleme işlevi
   const handleViewAssignment = (assignmentId) => {
