@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { CgLogOut, CgProfile } from "react-icons/cg";
 import { authOptions } from '@/app/auth';
 import { getSession, signOut, useSession } from 'next-auth/react';
+import { useNotificationStore } from "@/app/store/notificationStore";
 
 
 const Navbar =  () => {
@@ -21,6 +22,10 @@ const Navbar =  () => {
 
     const [language, setLanguage] = useState<string>("en");
     const [isClient, setIsClient] = useState(false); // Track if we are on the client-side
+
+    const [hasNotifications, setHasNotifications] = useState(true);
+    const [count, setCount] = useState(0);
+    const { openModal } = useNotificationStore();
 
     useEffect(() => {
         setIsClient(true); // Only run this on client-side
@@ -81,6 +86,16 @@ const Navbar =  () => {
   };
 
 
+  const handleNotificationsClick = () => {
+    // Your notification handling logic here
+    console.log("Notifications clicked");
+    setHasNotifications(false);
+    setCount(0);
+    openModal();  // Open the notifications modal
+
+  };
+
+
 
     const role_turkish = (role: string) => {
         if (role === 'admin') {
@@ -93,7 +108,6 @@ const Navbar =  () => {
             return 'Rol bilinmiyor';
         }
     }
-
 
 
     return (
@@ -128,9 +142,10 @@ const Navbar =  () => {
                 <div className="bg-white rounded-full w-7 h-7 flex items-center justify-center cursor-pointer ">
                     <img src="/message.png" alt="" width={20} height={20} />
                 </div>
+                
                 <div className="bg-white rounded-full w-7 h-7 flex items-center justify-center cursor-pointer relative">
-                    <img src="/announcement.png" alt="" width={20} height={20} />
-                    <div className="absolute -top-3 -right-3 h-5 w-5 flex items-center justify-center bg-purple-500 text-white rounded-full text-xs">1 </div>
+                    <img src="/announcement.png" alt="" width={20} height={20} onClick={handleNotificationsClick} />
+                    <div className="absolute -top-3 -right-3 h-5 w-5 flex items-center justify-center bg-purple-500 text-white rounded-full text-xs">{count} </div>
                 </div>
                 <div className="flex flex-col">
                     <span className="text-xs leading-3 font-medium">{session?.user.name}</span>
