@@ -94,45 +94,52 @@ interface AnalysisDetail {
     const currentLanguageContent = language === "en" ? en : tr;
 
 
-    const fetchAnalysisDetail = async (analysisId: string) => {
-      try {
-        setLoading(true);
-        
-        let response; 
-    
-        if (role === 'teacher') {
-          response= await apiClient.get(`/teachers/me/get-analysis/${analysisId}`, {
-            headers: {
-              Authorization: `Bearer ${session?.user.accessToken}`
-            }
-          });
-        } else {
-          console.log("Fetching analysis for admin role");
-          response= await apiClient.get(`/admins/me/get-analysis/${analysisId}`, {
-            headers: {
-              Authorization: `Bearer ${session?.user.accessToken}`
-            }
-          });
-        }
-      
-        // Gelen veriyi state'e set et
-        setAnalysisData(response.data); 
-    
-        console.log("Fetched Analysis Data:", response.data);
-      } catch (err) {
-        setError('Analiz detayları yüklenirken bir hata oluştu.');
-        console.error('Error fetching analysis detail:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
     useEffect(() => {
+
       const analysisId = window.location.pathname.split('/').pop();
+
+      const fetchAnalysisDetail = async (analysisId: string) => {
+        try {
+          setLoading(true);
+          
+          let response; 
+          console.log("User Role:", role);
+      
+          if (role === 'teacher') {
+            response= await apiClient.get(`/teachers/me/get-analysis/${analysisId}`, {
+              headers: {
+                Authorization: `Bearer ${session?.user.accessToken}`
+              }
+            });
+          } else {
+            console.log("Fetching analysis for admin role");
+            response= await apiClient.get(`/admins/me/get-analysis/${analysisId}`, {
+              headers: {
+                Authorization: `Bearer ${session?.user.accessToken}`
+              }
+            });
+          }        
+          // Gelen veriyi state'e set et
+          setAnalysisData(response.data); 
+      
+          console.log("Fetched Analysis Data:", response.data);
+        } catch (err) {
+          setError('Analiz detayları yüklenirken bir hata oluştu.');
+          console.error('Error fetching analysis detail:', err);
+        } finally {
+          setLoading(false);
+        }
+      };
+
       if (analysisId) {
         fetchAnalysisDetail(analysisId);
       }
-    }, []);
+
+    } , [role]);
+    
+      
+
+    
 
     const routeEvaluation = (testId: number,student_id:number) => {
       router.push(`/list/resources/tests?resultId=${testId}&userId=${student_id}&showEvaluation=true`);
