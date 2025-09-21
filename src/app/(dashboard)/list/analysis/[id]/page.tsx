@@ -136,10 +136,6 @@ interface AnalysisDetail {
       }
 
     } , [role]);
-    
-      
-
-    
 
     const routeEvaluation = (testId: number,student_id:number) => {
       router.push(`/list/resources/tests?resultId=${testId}&userId=${student_id}&showEvaluation=true`);

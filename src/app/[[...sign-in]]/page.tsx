@@ -4,12 +4,17 @@ import { useRouter } from "next/navigation" // Yönlendirme işlemi için useRou
 import { LiaChalkboardTeacherSolid } from "react-icons/lia"
 import { RiSchoolLine } from "react-icons/ri"
 import { signIn } from "next-auth/react" // next-auth'dan signIn fonksiyonunu import ediyoruz
+import { FaRegEye, FaRegEyeSlash } from "react-icons/fa";
+import { Eye, EyeOff } from "lucide-react"
+
 
 const LoginPage = () => {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null) // Hata mesajını tutacağız
+  const [error, setError] = useState<string | null>(null)
+  const [showPassword, setShowPassword] = useState(false); // Password visibility toggle
+
   const router = useRouter()
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -81,14 +86,23 @@ const LoginPage = () => {
   
         <div className="flex flex-col">
           <label className="text-sm font-medium text-gray-700">Şifre</label>
+          <div className="relative">
           <input
-            type="password"
-            className="p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 transition-all"
+            type={showPassword ? "text" : "password"}
+            className="w-full p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 transition-all pr-10"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
           />
+          <div 
+            onClick={() => setShowPassword(!showPassword)} 
+            className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-500 hover:text-gray-700"
+          >
+            {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
+          </div>
+          </div>
         </div>
+        
   
         {/* Error Message */}
         {error && (

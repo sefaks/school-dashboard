@@ -11,7 +11,7 @@ import NotificationLayout from "@/components/NotificationLayout";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "Arf - Okul",
+  title: "Arf - Eğitimci",
   description: "Next.js School Management System",
 };
 

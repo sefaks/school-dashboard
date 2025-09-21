@@ -676,7 +676,7 @@ export const forgetPassword = async (email: string) => {
 
 export const resetPassword = async (formData: any) => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/auth/reset-password`, formData);
+    const response = await axios.post(`${API_BASE_URL}/auth/reset-password/educator`, formData);
     return response.data;  // Yanıtın tamamını döndürür
   } catch (error: any) {
     if (error.response) {
