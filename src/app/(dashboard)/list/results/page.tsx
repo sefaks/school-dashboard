@@ -12,12 +12,15 @@ import TestProgressChart from "@/components/results/ProgressChart";
 import UnitProgress from "@/components/results/UnitProgress";
 import ContentProgressChart from "@/components/results/ContentProgressChart";
 import UnitContentProgress from "@/components/results/UnitContentProgress";
+import en from "@/app/messages/en.json";  
+import tr from "@/app/messages/tr.json"; 
 
 //define the ProgressData type
 type TestProgressDataType = {
   student_name: string;
   student_surname: string;
   grade: string;
+  student_no: number;
   progress_data: {
     submitted_at: string;
     unit_name: string;
@@ -39,6 +42,7 @@ type ContentProgressDataType = {
   student_name: string;
   student_surname: string;
   grade: string;
+  student_no: number;
   progress_data: {
     completed_at: string;
     is_completed: boolean;
@@ -54,6 +58,11 @@ type ContentProgressDataType = {
   }[];
 };
 
+type SubjectModel = {
+  id: number;
+  subject_name: string;
+}
+
 
 const ProgressPage = () => {
   const [loading, setLoading] = useState(true);
@@ -61,7 +70,7 @@ const ProgressPage = () => {
   const { data: session } = useSession();
   const [progressData, setProgressData] = useState<TestProgressDataType | null>(null);
   const [contentProgressData, setContentProgressData] = useState<ContentProgressDataType | null>(null);
-  const [subjects, setSubjects] = useState([]);
+  const [subjects, setSubjects] = useState<SubjectModel[]>([]);
   const [selectedSubject, setSelectedSubject] = useState('');
   const [selectedProgresstType, setSelectedProgressType] = useState('Konu Çalışması'); // Default progress type
   const [progressTypes, setProgressTypes] = useState(['Konu Çalışması', 'Test Çalışması']); // Example progress types
@@ -70,6 +79,17 @@ const ProgressPage = () => {
   const searchParams = useSearchParams();
   const id = searchParams.get('studentId'); // Get student ID from query params
   const grade = searchParams.get('grade'); // Get grade from query params
+
+  const [language, setLanguage] = useState("en");
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedLanguage = localStorage.getItem("language") || "en";
+      setLanguage(storedLanguage);
+    }
+  }, []);
+  const currentLanguageContent = language === "en" ? en : tr;
+
+//loading
   
   // Fetch subjects
   useEffect(() => {
@@ -82,6 +102,7 @@ const ProgressPage = () => {
          
         const data = await response.data;
         setSubjects(data);
+        console.log("Subjects are", data);
         
         if (data.length > 0) {
           setSelectedSubject(data[0]); // Set first subject as default
@@ -133,7 +154,6 @@ const ProgressPage = () => {
         }
 
         const data = response.data
-        console.log('Fetched progress data:', data);
 
         //log all units
         if (data.all_units && data.all_units.length > 0) {
@@ -179,14 +199,32 @@ const ProgressPage = () => {
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6">
-        {progressData && (
+
+      {(selectedProgresstType == "Test Çalışması" && progressData) &&
           <div>
             <h1 className="text-2xl font-bold">
-              {progressData.student_name} {progressData.student_surname}
+              {progressData.student_name} {progressData.student_surname} 
             </h1>
+            <div className="flex flex-row gap-3">
             <p className="text-gray-600">Sınıf: {progressData.grade}</p>
+            <p className="text-gray-600">{currentLanguageContent.no}: {progressData.student_no}</p>
+            </div>
           </div>
-        )}
+          }
+
+      {(selectedProgresstType == "Konu Çalışması" && contentProgressData)  &&
+        <div>
+          <h1 className="text-2xl font-bold">
+            {contentProgressData.student_name} {contentProgressData.student_surname} 
+          </h1>
+          <div className="flex flex-row gap-3">
+          <p className="text-gray-600">{currentLanguageContent.grade}: {contentProgressData.grade}</p>
+          <p className="text-gray-600">{currentLanguageContent.no}: {contentProgressData.student_no}</p>
+          </div>
+        </div>
+        }
+
+      
         
         <div className="mt-4 sm:mt-0 flex flex-row items-center gap-4">
          
@@ -218,9 +256,11 @@ const ProgressPage = () => {
             onChange={handleSubjectChange}
             className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
           >
-            {subjects.map((subject) => (
-              <option key={subject} value={subject}>
-                {subject || subject}
+          { subjects.length >0 &&
+
+            subjects.map((subject) => (
+              <option key={subject} value={subject.subject_name}>
+                {subject.subject_name || subject.subject_name}
               </option>
             ))}
           </select>
