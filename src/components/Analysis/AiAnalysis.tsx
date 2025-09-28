@@ -14,6 +14,7 @@ interface AIAnalysisSectionProps {
     startDate: string;
     endDate: string;
   };
+  other_parts: any;
 }
 
 const AIAnalysisSection: React.FC<AIAnalysisSectionProps> = ({ 
@@ -21,10 +22,12 @@ const AIAnalysisSection: React.FC<AIAnalysisSectionProps> = ({
   currentLanguageContent,
   activeTab,
   studentName = '',
-  reportDates
+  reportDates,
+  other_parts
 }) => {
   if (activeTab !== 'ai_analysis' || !analysis) return null;
 
+  console.log("other_parts:", other_parts);
 
 
   const sectionStyles = [
@@ -280,7 +283,6 @@ const AIAnalysisSection: React.FC<AIAnalysisSectionProps> = ({
           </svg>
           <p className='text-sm'>
           {currentLanguageContent.download_report || "PDF İndir"}
-
           </p>
         </button>
       </div>

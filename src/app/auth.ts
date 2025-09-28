@@ -39,6 +39,7 @@ export const authOptions: NextAuthOptions = {
               email: registeredTeacher.email,
               name: registeredTeacher.name,
               role: "teacher",
+              institution_id: registeredTeacher.institution_id?.toString() || null,
             };
           }
 
@@ -65,6 +66,7 @@ export const authOptions: NextAuthOptions = {
                   name: teacher.name || teacher.email,
                   token: access_token,
                   role: "teacher",
+                  institution_id: teacher.teacher_institution[0]?.institution_id?.toString() || null,
                   is_active: teacher.is_active,
                 };
              

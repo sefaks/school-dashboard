@@ -1199,3 +1199,23 @@ export const deleteAssignmentTeacher = async (assignmentId: number, token: strin
       throw new Error("An unexpected error occurred!");
     }
 }
+
+export const activateTeacherAccount = async (formData: any, token:string) => {
+  try {
+    const response = await axios.post(`${API_BASE_URL}/auth/teacher/activate`, formData, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return response.data;
+  } catch (error: any) {
+    if (error.response) {
+      console.error("API Response Error:", error.response);
+      throw new Error(error.response.data.detail || "Failed to activate account!");
+    }
+    console.error("Network Error:", error);
+    throw new Error("An unexpected error occurred!");
+  }
+}

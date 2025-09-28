@@ -49,8 +49,8 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  const userRole = token.role;  // Token'dan role bilgisini alıyoruz
-
+  const userRole = token.role;
+  
   // Ana sayfa yönlendirmesi
   if (path === '/') {
     if (userRole === 'teacher') {

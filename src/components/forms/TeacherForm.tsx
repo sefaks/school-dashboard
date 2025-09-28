@@ -1,4 +1,5 @@
-import React, { Dispatch, SetStateAction } from 'react';
+"use client";
+import React, { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useFormState } from 'react-dom';
 import { useSession } from 'next-auth/react';
@@ -8,6 +9,8 @@ import { addTeacherToInstitution, updateTeacher } from '@/lib/actions';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
 import InputField from '../InputField';
+import en from "@/app/messages/en.json";  
+import tr from "@/app/messages/tr.json"; 
 
 const TeacherForm = ({
   type,
@@ -34,6 +37,15 @@ const TeacherForm = ({
   
   const { data: session } = useSession();
   const router = useRouter();
+
+  const [language, setLanguage] = useState("en");
+    useEffect(() => {
+      if (typeof window !== "undefined") {
+        const storedLanguage = localStorage.getItem("language") || "en";
+        setLanguage(storedLanguage);
+      }
+    }, []);
+    const currentLanguageContent = language === "en" ? en : tr;
 
   const [state, formAction] = useFormState(async (prevState: any, formData: string) => {
     try {
@@ -109,7 +121,7 @@ const TeacherForm = ({
           error={errors.validation_code}
         />
        <p className="text-xs text-green-600">
-        Kod, öğretmenin Kodlarım bölümünde bulunan 5 haneli paylaşım kodu olacaktır.
+        {currentLanguageContent.teacher_code_information}
       </p>
       </div>
       <button

@@ -50,6 +50,7 @@ const LastContents: React.FC = () => {
             }
         );
 
+        console.log("Son tamamlanan içerikler:", response.data);
         setCompletedContents(response.data);
       } catch (err) {
         console.error("Son tamamlanan içerikler yüklenirken hata:", err);
@@ -128,7 +129,7 @@ const LastContents: React.FC = () => {
       
       {/* Carousel Container */}
       <div className="flex lg:flex-row flex-col gap-4">
-        {completedContents.length === 0 ? (
+        {(completedContents.length === 0 && completedContents) ? (
           <div className="w-full py-8 text-center text-gray-500">
             {currentLanguageContent.no_completed_content || "Henüz tamamlanmış içerik bulunmamaktadır."}
           </div>

@@ -1,33 +1,17 @@
 "use client"
 import React, { useState, useEffect } from 'react';  
-import axios from 'axios';  
 import { useSession } from 'next-auth/react';
-import { addScheduleToStudent, getStudent, getStudentSchedule, getTeacherStudentsAndClasses, updateScheduleToStudent } from '@/lib/actions';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { Avatar, Box, Button, Checkbox, CircularProgress, Container, Grid, Grid2, IconButton, List, ListItem, ListItemAvatar, ListItemText, Modal, Tab, Tabs, TextField, ThemeProvider, Typography, createTheme } from '@mui/material';
+import { addScheduleToStudent, getStudent, getStudentSchedule, updateScheduleToStudent } from '@/lib/actions';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { IconButton } from '@mui/material';
 import en from "@/app/messages/en.json";
 import tr from "@/app/messages/tr.json";
-import { CheckCircle, Clock, DeleteIcon, Plus, Trash2, UserSearch } from 'lucide-react';
-import dayGridPlugin from '@fullcalendar/daygrid';
-import timeGridPlugin from '@fullcalendar/timegrid';
-import AddIcon from '@mui/icons-material/Add';
+import { CheckCircle, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'react-toastify';
-import { set } from 'date-fns';
 import { ArrowBackIos } from '@mui/icons-material';
 import Loading from '../../loading';
-import { format } from 'path';
 import WeeklySchedule from '@/components/schedules/WeeklySchedule';
 
-const theme = createTheme({  
-    palette: {  
-      primary: {  
-        main: "#A78BFA",  
-      },  
-      secondary: {  
-        main: '#A8DADC', // İkinci bir renk örneği  
-      },  
-    },  
-  });  
 
 type Task = {
     day: string;
@@ -69,14 +53,11 @@ const TeacherDashboard = () => {
   const [schedule, setSchedule] = useState(null);
   const [studentData, setStudentData] = useState<Student | null>(null);
   const [studentInfo, setStudentInfo] = useState(null);
-  const [students, setStudents] = useState([]);
   const [isActive, setIsActive] = useState(true); // Varsayılan olarak aktif
 
-
-const searchParams = useSearchParams();
-const scheduleId = searchParams.get('id') as string | null;
-const studentId = searchParams.get('student_id') as string | null;
-
+  const searchParams = useSearchParams();
+  const scheduleId = searchParams.get('id') as string | null;
+  const studentId = searchParams.get('student_id') as string | null;
 
     const [lessonSchedules, setLessonSchedules] = useState([]);
     const [relatedData, setRelatedData] = useState({
@@ -410,8 +391,6 @@ const studentId = searchParams.get('student_id') as string | null;
               toast.error(currentLanguageContent.schedule_update_error || error.message || "Program güncellenirken bir hata oluştu.");
               return;
             }
-                 
-
         }
 
         toast.success(currentLanguageContent.schedule_save_success);
@@ -531,7 +510,7 @@ const studentId = searchParams.get('student_id') as string | null;
                   type="text"
                   value={schedule?.name || ''}
                   onChange={(e) => setScheduleName(e.target.value)}
-                  placeholder={`Program İsmi`}
+                  placeholder= {currentLanguageContent.schedule_name || `Program İsmi`}
                   className="text-lg font-medium text-gray-800 bg-white border border-gray-300 rounded-lg py-2 px-4 pr-10 w-full focus:outline-none focus:ring-2 focus:ring-lamaPurple focus:border-transparent transition-all"
                   aria-label="Program Adı"
                 />
@@ -669,7 +648,7 @@ const studentId = searchParams.get('student_id') as string | null;
                     onClick={handleSubmit}
                     className="px-6 py-2 bg-lamaPurple text-white rounded-lg hover:bg-[#5a25cc] transition-all"
                     >
-                    Programı Kaydet
+                    {currentLanguageContent.save_schedule}
                     </button>
                 </div>
                 </div>
@@ -825,7 +804,7 @@ const studentId = searchParams.get('student_id') as string | null;
                 onClick={handleSubmit}
                 className="px-6 py-2 bg-lamaPurple text-white rounded-lg hover:bg-[#5a25cc] transition-all"
                 >
-                Programı Kaydet
+               {currentLanguageContent.save_schedule}
                 </button>
             </div>
             </div>

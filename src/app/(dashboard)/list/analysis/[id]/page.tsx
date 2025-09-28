@@ -325,6 +325,7 @@ interface AnalysisDetail {
 
   <AIAnalysisSection 
   analysis={analysisData?.report?.ai_analysis || ''}
+  other_parts = {analysisData?.report?.report_details || null}
   currentLanguageContent={currentLanguageContent}
   activeTab={activeTab}
   studentName={`${analysisData.student_name} ${analysisData.student_surname}`}

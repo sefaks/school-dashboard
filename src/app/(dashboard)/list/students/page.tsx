@@ -213,22 +213,15 @@ const columns = [
         query.student_class = {
           some: {
             classes: {
-              AND: [
-                {
-                  teacher_class: {
+              schedules: {
+                some: {
+                  lesson_schedules: {
                     some: {
-                      teacher_id: parseInt(current_user_id),
+                      teacher_id: Number(current_user_id)
                     },
                   },
                 },
-                ...(queryParams.classId
-                  ? [
-                      {
-                        id: parseInt(queryParams.classId),
-                      },
-                    ]
-                  : []),
-              ],
+              },
             },
           },
         };

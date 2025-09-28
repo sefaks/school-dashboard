@@ -87,7 +87,7 @@ const Page = () => {
     if (session?.user.accessToken) {
       fetchLessons();
     }
-  }, [session]);
+  }, [session?.user.accessToken, session?.user.role]);
   
   
   if (loading) {
