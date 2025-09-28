@@ -129,7 +129,7 @@ const LastContents: React.FC = () => {
       
       {/* Carousel Container */}
       <div className="flex lg:flex-row flex-col gap-4">
-        {(completedContents.length === 0 && completedContents) ? (
+        {(completedContents.length === 0 || !completedContents) ? (
           <div className="w-full py-8 text-center text-gray-500">
             {currentLanguageContent.no_completed_content || "Henüz tamamlanmış içerik bulunmamaktadır."}
           </div>
@@ -143,7 +143,7 @@ const LastContents: React.FC = () => {
                   title={content.content_name}
                   progress={getProgressForContent(content)}
                   tags={getTagsForContentType(content.content_type)}
-                  content_id={content.content_id.toString()}
+                  content_id={content.content_id.toString() || ""}
                   publisher_id={content.publisher_id}
                   content_type={content.content_type}
                   content_uuid={content.content_uuid}
