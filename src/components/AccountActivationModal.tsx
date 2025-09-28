@@ -6,7 +6,8 @@ import { TeacherActivateSchema } from "@/lib/formValidationSchemas";
 import { useSession } from "next-auth/react";
 import { toast } from "react-toastify";
 import { X } from "lucide-react";
-import { SUBJECTS } from "@/lib/utils";
+import { SUBJECTS, activateTeacherSubjects } from "@/lib/utils";
+import { activateTeacherAccount } from "@/lib/actions";
 
 const AccountActivationModal = () => {
   const { data: session, update } = useSession(); // update'i ekledik
@@ -19,7 +20,7 @@ const AccountActivationModal = () => {
     handleSubmit,
     formState: { errors },
     setValue,
-    watch,
+    watch
   } = useForm({
     resolver: zodResolver(TeacherActivateSchema),
     defaultValues: {
@@ -29,11 +30,8 @@ const AccountActivationModal = () => {
     }
   });
 
-  // Watch subjects field for validation
-  const watchedSubjects = watch("subjects");
-
   useEffect(() => {
-    console.log(session?.user.is_active)
+    console.log("User active", session?.user.is_active)
     if (session?.user?.is_active === false && session?.user?.role === "teacher") {
       setIsModalVisible(true);
     }
@@ -49,6 +47,7 @@ const AccountActivationModal = () => {
   };
 
   const handleSubjectToggle = (subjectName: string) => {
+    console.log("Toggling subject:", subjectName);
     setSelectedSubjects(prev => {
       const newSubjects = prev.includes(subjectName)
         ? prev.filter(name => name !== subjectName)
@@ -57,7 +56,8 @@ const AccountActivationModal = () => {
     });
   };
 
-  const onSubmit = async (formData: any) => {
+  const teacherActivate = async (formData: any) => {
+    console.log("Form Data:", formData);
     if (!session?.user?.accessToken) {
       toast.error("Oturum bilgisi bulunamadı");
       return;
@@ -76,18 +76,8 @@ const AccountActivationModal = () => {
         title: formData.title,
       };
 
-      const response = await fetch("http://127.0.0.1:8000/teacher/activate", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.user.accessToken}`,
-        },
-        body: JSON.stringify(dataToSubmit),
-      });
-
-      if (!response.ok) {
-        throw new Error("Aktivasyon başarısız");
-      }
+      const response = await activateTeacherAccount(dataToSubmit, session.user.accessToken );
+      console.log("API Response:", response);
 
       await update({
         ...session,
@@ -97,17 +87,23 @@ const AccountActivationModal = () => {
         }
       });
 
+      console.log("Session after update:", session);
+
       toast.success("Hesabınız başarıyla aktifleştirildi!");
-      setTimeout(() => {
-        setIsModalVisible(false);
-        window.location.reload();
-      }, 2000);
+      session.user.is_active = true;
+      setIsModalVisible(false);
     } catch (error) {
       toast.error("Bir hata oluştu. Lütfen tekrar deneyin.");
     } finally {
       setIsSubmitting(false);
     }
   };
+  useEffect(() => {
+    if (Object.keys(errors).length > 0)
+    {
+      console.log("Form hataları:", errors);
+    }
+  }, [errors]);
 
   if (!isModalVisible) return null;
 
@@ -130,7 +126,7 @@ const AccountActivationModal = () => {
 
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={handleSubmit(teacherActivate)} className="space-y-6">
           <div>
             <label className="block mb-2 text-sm font-medium">Ünvan</label>
             <input
@@ -161,7 +157,7 @@ const AccountActivationModal = () => {
           <div>
             <label className="block mb-2 text-sm font-medium">Dersler</label>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-              {SUBJECTS.map(subject => (
+              {activateTeacherSubjects.map(subject => (
                 <button
                   key={subject.id}
                   type="button"

@@ -22,6 +22,9 @@ const SingleStudentPage = async ({
 
   const {role, current_user_id, institution_id} = await getRoleAndUserIdAndInstitutionId();
 
+  console.log("role", role);
+  console.log("current_user_id", current_user_id);
+
   let student: 
     | (students & {
         student_class: Array<{
@@ -83,12 +86,17 @@ const SingleStudentPage = async ({
 
   const class_count = student?.student_class?.length || 0;
 
+  console.log("institution_id", institution_id);
+
   // fetching lesson schedules with the first class id for the student
   const rawSchedules = await prisma.lesson_schedules.findMany({
     where:{
       schedules: {
         class_id: firstClass?.id,
-        status: "ACTIVE"
+        status: "ACTIVE",
+        classes: {
+          institution_id: institution_id ? parseInt(institution_id) : undefined,
+        },
       },
     }
   });

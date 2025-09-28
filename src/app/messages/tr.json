@@ -103,7 +103,11 @@
     "cancel": "İptal",
     "noteDeletedSuccessfully": "Not başarıyla silindi.",
     "notes": "Notlar",
-    "no": "Numara"
+    "no": "Numara",
+    "save_schedule": "Programı Kaydet",
+    "schedule_name": "Program Adı",
+    "student_code_information": "Öğrenci Kodu, öğrencinin profilindeki kodlarım bölgesinde olan 5 haneli paylaşım kodudur.",
+    "teacher_code_information": "Öğretmen Kodu, öğretmenin profilindeki kodlarım bölgesinde olan 5 haneli paylaşım kodudur."
 
 
 

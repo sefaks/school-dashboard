@@ -76,10 +76,10 @@ const StudentForm = ({
         formattedData,
         session?.user.accessToken || ""
       );
-      console.log("Response from server:", response); // Sunucu yanıtını yazdır
+      console.log("Response from server:", response);
     } else {
       const response = await updateStudent(formattedData, session?.user.accessToken || "");
-      console.log("Response from server:", response); // Sunucu yanıtını yazdır
+      console.log("Response from server:", response);
     }
 
     // Başarılı olduğunda kullanıcıya mesaj göster
@@ -87,11 +87,10 @@ const StudentForm = ({
       `Student has been ${type === "create" ? "created" : "updated"}!`
     );
 
-    // Bir süre bekleyin ve sonra yenileyin
     setTimeout(() => {
       setOpen(false);
       router.refresh();
-    }, 2000); // 2 saniye bekle
+    }, 2000);
   } catch (error: any) {
     console.error("Error Details:", error); 
     if (error.response?.data?.detail) {
@@ -158,13 +157,14 @@ const handleRemoveParent = (index: number) => {
          <InputField label="Email" name="email" register={register} error={errors?.email} />
          <InputField label={currentLanguageContent.student_code} name="student_code" register={register} error={errors?.student_code} />
          <p className="text-xs text-green-600">
-               Kod öğrencinin profilindeki kodlarım bölgesinde olan 5 haneli paylaşım kodudur.
+               Öğrenci Kodu, öğrencinin profilindeki kodlarım bölgesinde olan 5 haneli paylaşım kodudur.
             </p>
       </div>
             )}
 
 
       {/* Class Selection */}
+      <div className="flex flex-col gap-2">
       <span className="text-sm text-gray-400 font-medium">{currentLanguageContent.class_selection}</span>
       <div className="flex flex-col gap-2">
         <label className="text-xs text-gray-500">{currentLanguageContent.class}</label>
@@ -180,6 +180,8 @@ const handleRemoveParent = (index: number) => {
         </select>
         {errors.class_id?.message && <p className="text-xs text-red-400">{errors.class_id.message}</p>}
       </div>
+      </div>
+      
 
       {/* Student School No */}
       <InputField label={currentLanguageContent.school_no} name="school_no" register={register} error={errors?.school_no} />

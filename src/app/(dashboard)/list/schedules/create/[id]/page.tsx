@@ -1,19 +1,13 @@
 "use client"
 import React, { useState, useEffect } from 'react';  
-import axios from 'axios';  
 import { useSession } from 'next-auth/react';
 import { addScheduleToStudent, getStudentSchedule, getTeacherStudentsAndClasses } from '@/lib/actions';
 import { useParams, useRouter } from 'next/navigation';
-import { Avatar, Box, Button, Checkbox, CircularProgress, Container, Grid, Grid2, IconButton, List, ListItem, ListItemAvatar, ListItemText, Modal, Tab, Tabs, TextField, ThemeProvider, Typography, createTheme } from '@mui/material';
+import { IconButton, createTheme } from '@mui/material';
 import en from "@/app/messages/en.json";
 import tr from "@/app/messages/tr.json";
-import { CheckCircle, Clock, DeleteIcon, Plus, Trash2 } from 'lucide-react';
-import FullCalendar from '@fullcalendar/react';
-import dayGridPlugin from '@fullcalendar/daygrid';
-import timeGridPlugin from '@fullcalendar/timegrid';
-import AddIcon from '@mui/icons-material/Add';
+import { CheckCircle, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'react-toastify';
-import { set } from 'date-fns';
 import { ArrowBackIos } from '@mui/icons-material';
 import Loading from '../../../loading';
 import WeeklySchedule from '@/components/schedules/WeeklySchedule';
@@ -336,7 +330,7 @@ const TeacherDashboard = () => {
         console.log(formattedTasks);
         if (id) {
             const response = await addScheduleToStudent(
-                { tasks: formattedTasks }, // Burada tasks key'i ile gönderdik
+                { tasks: formattedTasks },
                 session?.user?.accessToken || "", 
                 Number(id)
               );      
@@ -545,7 +539,7 @@ const TeacherDashboard = () => {
               onClick={handleSubmit}
               className="px-6 py-2 bg-lamaPurple text-white rounded-lg hover:bg-[#5a25cc] transition-all"
             >
-              Programı Kaydet
+              {currentLanguageContent.save_schedule}
             </button>
           </div>
         </div>

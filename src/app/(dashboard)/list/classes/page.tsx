@@ -56,6 +56,10 @@ const ClassListPage = async ({searchParams}:{searchParams:{[key:string]:string} 
 
   const { role, current_user_id,institution_id } = await getRoleAndUserIdAndInstitutionId();
 
+  console.log("Role:", role);
+  console.log("Current User ID:", current_user_id);
+  console.log("Institution ID:", institution_id);
+
   const columns = [
     {
       header: "Sınıf İsmi",
@@ -146,14 +150,22 @@ const ClassListPage = async ({searchParams}:{searchParams:{[key:string]:string} 
     case "admin":
       query.institution_id = parseInt(institution_id);
       break;
-    case "teacher":
-      query.teacher_class = {
-        some:{
-          teachers:{
-            id: parseInt(current_user_id)
-          }
+      case "teacher":
+      query.schedules = {
+        some: {
+          classes: {
+            schedules: {
+              some: {
+                lesson_schedules: {
+                  some: {
+                    teacher_id: parseInt(current_user_id),
+                  },
+                },
+              },
+            },
+          },
         }
-      }
+      };
       break;
     default:
       return null;
@@ -171,6 +183,8 @@ const ClassListPage = async ({searchParams}:{searchParams:{[key:string]:string} 
         teacher_class: {
           include: {
             teachers: true, // Öğretmenler dahil
+            classes: true,
+
           },
         },
       },
@@ -181,6 +195,8 @@ const ClassListPage = async ({searchParams}:{searchParams:{[key:string]:string} 
       where: query, // Filtreli sınıf sayısı
     }),
   ]);
+
+  console.log("Classes Data:", classesData);
 
   classesData.forEach((classItem) => {
     console.log(`Class: ${classItem.class_code}`);

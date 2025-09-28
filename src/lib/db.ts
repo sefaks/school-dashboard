@@ -11,6 +11,9 @@ export const getTeacherFromDb = async (email: string) => {
         where: {
           email: email,
         },
+        include: {
+          teacher_institution: true,
+        },
       })
       if (teacher_example) {
        

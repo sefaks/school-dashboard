@@ -142,12 +142,12 @@ const viewLessonStartAndEndTime = (start: any, end: any) => {
 
    // Yükleniyor göstergesi eklenebilir
    html2canvas(scheduleRef.current, {
-    scale: 3, // veya 3 – daha yüksek kalite için artırabilirsiniz
+    scale: 3,
   }).then(canvas => {
     const image = canvas.toDataURL('image/png');
     const link = document.createElement('a');
     link.href = image;
-    link.download = 'ders-programi.png';
+    link.download = header ? `${header}.png` : 'ders-programi.png';
     link.click();
     }).catch(err => {
    console.error('Takvim indirme hatası:', err);

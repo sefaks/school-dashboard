@@ -195,9 +195,9 @@ const TaskStatsWithChart: React.FC<TaskStatsWithChartProps> = ({ activeTab, anal
       </div>
     )
   : (
-    <div className="p-4 border rounded-lg shadow">
-      <p className="text-gray-500">Görev istatistikleri bu sekmede görüntülenir.</p>
-    </div>
+    // Boş bir div döndür (görünmez olacak)
+    <div></div>
+   
   );
  
 }
