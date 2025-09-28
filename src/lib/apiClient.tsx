@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const apiClient = axios.create({
-  baseURL: "https://arfbackend-h3g2bdftbxdffqcy.westeurope-01.azurewebsites.net", // Backend API URL
+  baseURL: "http://127.0.0.1:8000", // Backend API URL
   headers: {
     "Content-Type": "application/json",
   },
