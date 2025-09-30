@@ -1,10 +1,14 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { signIn } from "next-auth/react"; // NextAuth için gerekli import
 import { ZodError } from "zod";
 import { TeacherRegisterSchema } from "@/lib/formValidationSchemas";
 import { teacherRegister } from "@/lib/actions";
 import { toast } from "react-toastify";
+import { ro } from "date-fns/locale";
+import en from "@/app/messages/en.json";
+import tr from "@/app/messages/tr.json";
+import { useRouter } from "next/navigation";
 
 function RegisterPage() {
   const [name, setName] = React.useState("");
@@ -14,6 +18,16 @@ function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = React.useState("");
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState("");
+  const router = useRouter();
+
+  const [language, setLanguage] = useState("en");
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedLanguage = localStorage.getItem("language") || "en";
+      setLanguage(storedLanguage);
+    }
+  }, []);
+  const currentLanguageContent = language === "en" ? en : tr;
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,15 +48,12 @@ function RegisterPage() {
       await teacherRegister(formData);
 
       console.log("Registration successful!");
-      toast.success("Registration successful! Welcome to the best platform for education.");
+      toast.success(currentLanguageContent.registrationSuccess || "Registration successful! Please log in.");
 
       // redirect to login page with 2 seconds delay
       setTimeout(() => {
-        signIn("credentials", {
-          email: formData.email,
-          password: formData.password,
-          callbackUrl: "/",
-        });
+        router.push("/login");
+        
       }, 2000);
     } catch (err) {
       if (err instanceof ZodError) {

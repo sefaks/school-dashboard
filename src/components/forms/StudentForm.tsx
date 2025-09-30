@@ -84,7 +84,7 @@ const StudentForm = ({
 
     // Başarılı olduğunda kullanıcıya mesaj göster
     toast.success(
-      `Student has been ${type === "create" ? "created" : "updated"}!`
+      `${type === "create" ? currentLanguageContent.student_created_successfully : currentLanguageContent.student_updated_successfully}!`
     );
 
     setTimeout(() => {

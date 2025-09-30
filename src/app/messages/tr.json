@@ -107,7 +107,10 @@
     "save_schedule": "Programı Kaydet",
     "schedule_name": "Program Adı",
     "student_code_information": "Öğrenci Kodu, öğrencinin profilindeki kodlarım bölgesinde olan 5 haneli paylaşım kodudur.",
-    "teacher_code_information": "Öğretmen Kodu, öğretmenin profilindeki kodlarım bölgesinde olan 5 haneli paylaşım kodudur."
+    "teacher_code_information": "Öğretmen Kodu, öğretmenin profilindeki kodlarım bölgesinde olan 5 haneli paylaşım kodudur.",
+    "student_created_successfully": "Öğrenci başarıyla oluşturuldu.",
+    "student_updated_successfully": "Öğrenci başarıyla güncellendi",
+    "registrationSuccess": "Kayıt işlemi başarıyla tamamlandı. En teknolojik eğitim platformuna hoş geldiniz!"
 
 
 
