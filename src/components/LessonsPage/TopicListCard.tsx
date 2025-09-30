@@ -35,7 +35,6 @@ const TopicListCard: React.FC<TopicListCardProps> = ({
         ? `/teachers/me/contents/${topic.content_id}/reverse-complete`
         : `/teachers/me/contents/${topic.content_id}/complete`;
 
-      console.log("accessToken", session.data?.user.accessToken);
 
       await apiClient.post(
             endpoint,

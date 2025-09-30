@@ -103,7 +103,6 @@ interface AnalysisDetail {
           setLoading(true);
           
           let response; 
-          console.log("User Role:", role);
       
           if (role === 'teacher') {
             response= await apiClient.get(`/teachers/me/get-analysis/${analysisId}`, {

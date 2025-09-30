@@ -38,6 +38,7 @@ export const usePdfLoader = () => {
 
         if ('caches' in window) {
           const cache = await caches.open('pdf-cache-v1');
+          const requestUrl = `${window.location.origin}/lessons/contents/${topicId}`;
           
           const cachedResponse = await cache.match(`/lessons/contents/${topicId}`);
 

@@ -127,6 +127,7 @@ export const SUBJECTS = [
   { id: 8, name: "Kimya", displayName: "Kimya" },
   { id: 9, name: "Biyoloji", displayName: "Biyoloji" },
   {id:10,name:"Rehberlik",displayName:"Rehberlik"},
+  {id: 15, name : "T.C. İnkılap Tarihi ve Atatürkçülük", displayName : "T.C. İnkılap Tarihi ve Atatürkçülük"},
 ];
 
 export const activateTeacherSubjects = [
