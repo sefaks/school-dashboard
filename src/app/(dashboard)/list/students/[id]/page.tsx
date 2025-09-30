@@ -60,14 +60,7 @@ const SingleStudentPage = async ({
         include: {
           student_class: {
             where: {
-              classes: {
-                // get teacher_classes with teacher_id
-                teacher_class:{
-                  some:{
-                    teacher_id: parseInt(current_user_id)
-                  }
-                }
-              },
+             student_id : parseInt(student?.id || "0"),
             },
             take: 1, // İlk eşleşen sınıf
             include: {
@@ -79,6 +72,7 @@ const SingleStudentPage = async ({
   }
 
   const firstClass = student?.student_class?.[0]?.classes;
+  console.log("First class", firstClass);
 
   if (!student) {
     return notFound();
@@ -156,6 +150,8 @@ const relatedData = {
   lessons: lessons,
 };
 
+  console.log("Student gender", student.gender);
+
 
   return (
     <div className="flex-1 p-4 flex flex-col gap-4 xl:flex-row">
@@ -166,13 +162,25 @@ const relatedData = {
           {/* USER INFO CARD */}
           <div className="bg-lamaSky py-6 px-4 rounded-md flex-1 flex gap-4">
             <div className="w-1/3">
-              <Image
-                src={student.photo || "/noAvatar.png"}
+              {student.gender == "Erkek" ? (
+                <Image
+                src={student.photo || "/heavatar1.png"}
                 alt=""
                 width={144}
                 height={144}
                 className="w-36 h-36 rounded-full object-cover"
               />
+              ) : (
+                <Image
+                src={student.photo || "/sheavatar1.png"}
+                alt=""
+                width={144}
+                height={144}
+                className="w-36 h-36 rounded-full object-cover"
+              />
+              )
+              }
+              
             </div>
             <div className="w-2/3 flex flex-col justify-between gap-4">
               <div className="flex items-center gap-4">

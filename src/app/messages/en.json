@@ -108,7 +108,10 @@
     "save_schedule": "Save Schedule",
     "schedule_name": "Schedule Name",
     "student_code_information": "The student code is 5 characters identifier and exist in student's account",
-    "teacher_code_information": "The teacher code is 5 characters identifier and exist in teacher's account"
+    "teacher_code_information": "The teacher code is 5 characters identifier and exist in teacher's account",
+    "student_created_successfully": "Student created successfully.",
+    "student_updated_successfully": "Student updated successfully.",
+    "registrationSuccess": "Registration Successfully. Welcome to the most comprehensive educational platform."
     
 
 

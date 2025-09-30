@@ -76,13 +76,14 @@ const renderRow = (item:TeacherList) => (
       </div>
     </td>
     <td className="hidden md:table-cell">
-  {item.teacher_subject.map((subject, index) => (
-    <span key={subject.subjects.id}>
-      {subjectNameMap[subject.subjects.subject_name] || subject.subjects.subject_name}
-      {index < item.teacher_subject.length - 1 && ", "}
-    </span>
-  ))}
-</td>
+        {item.teacher_subject.slice(0, 3).map((subject, index) => (
+      <span key={subject.subjects.id}>
+        {subjectNameMap[subject.subjects.subject_name] || subject.subjects.subject_name}
+        {index < Math.min(2, item.teacher_subject.length - 1) && ", "}
+      </span>
+      ))}
+      {item.teacher_subject.length > 3 && " ..."}
+    </td>
 
     <td className="hidden md:table-cell">
       {item.teacher_class.map((classItem: { classes: classes }, index: number) => (
