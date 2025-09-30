@@ -138,7 +138,6 @@ callbacks: { // this callback function is used to add the role to the JWT token 
     },      
 
     async session({ session, token }: { session: any, token: any }) { // Add accessToken and role to session
-      // console.log("Session:", session);
       session.user.accessToken = token.accessToken as string;
       session.user.role = token.role as string;
       session.user.id = token.id as string;

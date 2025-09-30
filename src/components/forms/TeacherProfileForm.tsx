@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react";
+import { use, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z, ZodError } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -53,13 +53,21 @@ const TeacherProfileForm = ({ initialData }: { initialData: any }) => {
     },
   });
 
+  //log form errors
+  useEffect(() => {
+    console.log(errors);
+  }
+  , [errors]);
+
   const onSubmit = async (formData: any) => {
     // Şema doğrulama
     try {
         const validatedData = TeacherUpdateSchema.parse({
             ...formData,
+            phone_number: formData.phone_number || undefined,
             subjects: selectedSubjects,
         });
+        console.log("Validated Data:", validatedData);
 
         // API'ye gönderim
         const response = await teacherUpdateProfile(validatedData, session?.user.accessToken || ""); // Update API çağrısı
@@ -74,14 +82,16 @@ const TeacherProfileForm = ({ initialData }: { initialData: any }) => {
         } else {
             toast.error("Profil güncellenemedi.");
         }
-    } catch (error) {
-      if (error instanceof ZodError) {
-        toast.error("Doğrulama hatası. Lütfen bilgileri kontrol edin.");
-      } else {
-        toast.error("Bir hata oluştu.");
+      } catch (error: any) {
+        console.error("Catch error:", error);
+        if (error instanceof ZodError) {
+          console.log("Validation Errors:", error.errors);
+          toast.error("Doğrulama hatası. Lütfen bilgileri kontrol edin.");
+        } else {
+          toast.error("Bir hata oluştu.");
+        }
       }
-    }
-  };
+  }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="bg-white p-6 rounded-lg shadow-md">

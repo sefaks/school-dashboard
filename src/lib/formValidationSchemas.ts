@@ -128,7 +128,7 @@ export const TeacherUpdateSchema = z.object({
   subjects: z.array(z.string()).optional(), // Optional olacak
   title: z.string().min(1, { message: "Title is required!" }).optional(),
   gender: z.enum(["Erkek", "Kadın"], { message: "Required field!" }).optional(),
-  phone_number: z.string().min(1, { message: "Phone number is required!" }).optional(),
+  phone_number: z.string().min(1, { message: "Phone number is required!" }).optional().nullable(),
 });
 
 export type TeacherUpdateSchema = z.infer<typeof TeacherUpdateSchema>;

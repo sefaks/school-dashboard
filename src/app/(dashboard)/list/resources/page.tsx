@@ -67,6 +67,7 @@ const Page = () => {
         }
         
         const fetchedLessons = response.data;
+        console.log("Fetched Lessons:", fetchedLessons);
         setLessons(fetchedLessons);
         setFilteredLessons(fetchedLessons);
         

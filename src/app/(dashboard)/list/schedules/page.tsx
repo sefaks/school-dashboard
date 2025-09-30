@@ -254,16 +254,24 @@ const ScheduleListPage = async ({
 
   } else if (role === "teacher") {
     // Öğretmenin öğrencilerini ve programlarını al
-    const teacherClasses = await prisma.teacher_class.findMany({
+    const teacherClasses = await prisma.classes.findMany({
       where: {
-        teacher_id: parseInt(current_user_id),
-      },
-      select: {
-        class_id: true,
+        institution_id: parseInt(institution_id),
+        schedules: {
+          some: {
+            lesson_schedules: {
+              some: {
+                teacher_id: parseInt(current_user_id),
+              },
+            },
+          },
+        },
       },
     });
 
-    const classIds = teacherClasses.map(tc => tc.class_id);
+    const classIds = teacherClasses.map(cls => cls.id);
+
+    console.log("Teacher Class IDs:", classIds);
 
     // Öğrencileri sorgula
     let studentQuery: Prisma.studentsWhereInput = {
