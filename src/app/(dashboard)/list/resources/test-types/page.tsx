@@ -45,7 +45,7 @@ const TestTypesPage = () => {
   }, [publish_id]);
 
     const handleTestTypeClick = (testType:any) => {
-        router.push(`/list/resources/tests?test_type=${testType}`);
+        router.push(`/list/resources/tests?test_type=${testType}&publisher_id=${publish_id}`);
     };
 
   
