@@ -49,7 +49,10 @@ const QuestionsDetailsView = ({
           {currentQuestion.question_number}. {currentLanguageContent.explanation_for_question}
         </p>
         <div className="mt-2 p-4 bg-gray-100 border-l-4 border-blue-500 rounded-lg shadow-md">
+          {(currentQuestion.explanation && currentQuestion.explanation !== "") &&
           <MarkdownRenderer content={currentQuestion.explanation} />
+          }
+          
         </div>
       </div>
 
