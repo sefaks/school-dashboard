@@ -1,11 +1,11 @@
-// src/components/PdfViewer.tsx
 "use client"
+
 import { useServiceWorker } from '@/app/hooks/useServiceWorker';
 import { useEffect, useRef, useState } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
 
-// Worker dosyasını ayarla
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+// pdf.js worker ayarı
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
 interface PdfViewerProps {
   topicId: string;
@@ -32,21 +32,17 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({
   onPageChange
 }) => {
   useServiceWorker();
-
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [pdf, setPdf] = useState<pdfjsLib.PDFDocumentProxy | null>(null);
-  const [currentPage, setCurrentPage] = useState(initialPage);
-  const [totalPages, setTotalPages] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const [zoom, setZoom] = useState(100);
-  const [isMobile, setIsMobile] = useState(false);
+  const [pdfDoc, setPdfDoc] = useState<pdfjsLib.PDFDocumentProxy | null>(null);
+  const [pageNum, setPageNum] = useState<number>(initialPage);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [iframeHeight, setIframeHeight] = useState(600);
 
-  // Responsive kontrol
+  // responsive height
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
+      setIframeHeight(window.innerWidth < 768 ? 400 : 600);
     };
-
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -55,80 +51,67 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({
   // PDF yükle
   useEffect(() => {
     if (!pdfInfo?.url) return;
+    setLoading(true);
 
     const loadPdf = async () => {
       try {
-        setIsLoading(true);
-        if (!pdfInfo.url) throw new Error('PDF URL is null');
-        const pdf = await pdfjsLib.getDocument(pdfInfo.url).promise;
-        setPdf(pdf);
-        setTotalPages(pdf.numPages);
-        setCurrentPage(pdfInfo.pageStart);
-      } catch (error) {
-        console.error('PDF yüklenirken hata:', error);
-      } finally {
-        setIsLoading(false);
+        const loadingTask = pdfjsLib.getDocument(pdfInfo.url);
+        const pdf = await loadingTask.promise;
+        setPdfDoc(pdf);
+        const firstPage = pdfInfo.pageStart - min_page_start + 1;
+        setPageNum(firstPage);
+        setLoading(false);
+      } catch (err) {
+        console.error("PDF yüklenemedi:", err);
+        setLoading(false);
       }
     };
 
     loadPdf();
-  }, [pdfInfo?.url]);
+  }, [pdfInfo, min_page_start]);
 
-  // Sayfayı render et
+  // Sayfa render et
   useEffect(() => {
-    if (!pdf || !canvasRef.current) return;
+    if (!pdfDoc || !canvasRef.current) return;
 
-    const renderPage = async () => {
-      try {
-        const pageNum = currentPage;
-        if (pageNum < 1 || pageNum > totalPages) return;
+    const renderPage = async (num: number) => {
+      setLoading(true);
+      const page = await pdfDoc.getPage(num);
 
-        const page = await pdf.getPage(pageNum);
-        const scale = zoom / 100;
-        const viewport = page.getViewport({ scale });
+      const canvas = canvasRef.current;
+      const context = canvas.getContext('2d');
+      if (!context) return;
 
-        const canvas = canvasRef.current;
-        if (!canvas) return;
+      const viewport = page.getViewport({ scale: 1.5 });
+      canvas.height = viewport.height;
+      canvas.width = viewport.width;
 
-        const context = canvas.getContext('2d');
-        if (!context) return;
+      const renderContext = {
+        canvasContext: context,
+        viewport: viewport,
+      };
 
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
-
-        const renderContext: pdfjsLib.RenderParams = {
-          canvasContext: context,
-          viewport: viewport,
-        };
-
-        await page.render(renderContext).promise;
-      } catch (error) {
-        console.error('Sayfa render edilirken hata:', error);
-      }
+      await page.render(renderContext).promise;
+      setLoading(false);
     };
 
-    renderPage();
-  }, [pdf, currentPage, zoom, totalPages]);
+    renderPage(pageNum);
+  }, [pdfDoc, pageNum]);
 
-  // Sayfa değişikliğini kontrol et
-  useEffect(() => {
-    setCurrentPage(pdfInfo.pageStart);
-  }, [pdfInfo.pageStart]);
-
-  const handleZoomIn = () => {
-    setZoom(prev => Math.min(prev + 20, 300));
+  // sayfa değiştir
+  const handlePrev = () => {
+    if (pageNum <= 1) return;
+    setPageNum(pageNum - 1);
+    onPageChange('prev');
   };
 
-  const handleZoomOut = () => {
-    setZoom(prev => Math.max(prev - 20, 50));
+  const handleNext = () => {
+    if (!pdfDoc || pageNum >= pdfDoc.numPages) return;
+    setPageNum(pageNum + 1);
+    onPageChange('next');
   };
 
-  const handlePageInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const page = parseInt(e.target.value) || 1;
-    setCurrentPage(Math.min(Math.max(page, 1), totalPages));
-  };
-
-  if (isLoading) {
+  if (!pdfInfo?.url) {
     return (
       <div className="flex items-center justify-center h-[600px] bg-gray-50 border rounded-lg">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
@@ -136,94 +119,46 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({
     );
   }
 
-  if (!pdf || !pdfInfo?.url) {
-    return (
-      <div className="flex items-center justify-center h-[600px] bg-gray-50 border rounded-lg">
-        <div className="text-center">
-          <p className="text-gray-600 mb-4">PDF yüklenemedi</p>
-          <a
-            href={pdfInfo?.url}
-            download="document.pdf"
-            className="px-4 py-2 bg-[#702DFF] text-white rounded hover:opacity-90"
-          >
-        PDF&apos;i indir
-          </a>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex flex-col gap-4">
-      {/* Toolbar */}
-      <div className="bg-white border border-gray-200 rounded-lg p-4 flex flex-wrap items-center gap-2 sm:gap-4">
-        {/* Sayfa navigasyonu */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => onPageChange('prev')}
-            disabled={pdfInfo.pageStart <= min_page_start}
-            className="px-3 py-2 bg-[#702DFF] text-white rounded disabled:opacity-50 hover:opacity-90 transition text-sm"
-          >
-            {translations.previous}
-          </button>
-
-          <div className="flex items-center gap-1">
-            <input
-              type="number"
-              min={min_page_start}
-              max={totalPages}
-              value={currentPage}
-              onChange={handlePageInput}
-              className="w-16 px-2 py-2 border border-gray-300 rounded text-center text-sm"
-            />
-            <span className="text-gray-600 text-sm whitespace-nowrap">/ {totalPages}</span>
-          </div>
-
-          <button
-            onClick={() => onPageChange('next')}
-            disabled={pdfInfo.pageEnd >= totalPages}
-            className="px-3 py-2 bg-[#702DFF] text-white rounded disabled:opacity-50 hover:opacity-90 transition text-sm"
-          >
-            {translations.next}
-          </button>
+    <div className="flex flex-col items-center">
+      {loading && (
+        <div className="flex items-center justify-center h-[600px] bg-gray-50 border rounded-lg">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
         </div>
+      )}
 
-        {/* Zoom kontrolleri */}
-        <div className="border-l border-gray-300 h-8 hidden sm:block"></div>
+      <canvas
+        ref={canvasRef}
+        style={{
+          display: loading ? 'none' : 'block',
+          width: '100%',
+          maxWidth: '100%',
+          height: iframeHeight,
+          borderRadius: '8px',
+          border: '1px solid #ddd'
+        }}
+      />
 
-        <div className="flex items-center gap-2 ml-auto sm:ml-0">
-          <button
-            onClick={handleZoomOut}
-            className="px-3 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition text-sm"
-          >
-            −
-          </button>
+      <div className="flex justify-between items-center mt-4 w-full">
+        <button
+          onClick={handlePrev}
+          disabled={pageNum <= 1}
+          className="px-4 py-2 bg-[#702DFF] text-white rounded disabled:opacity-50"
+        >
+          {translations.previous}
+        </button>
 
-          <span className="text-gray-600 w-14 text-center text-sm font-medium">{zoom}%</span>
-
-          <button
-            onClick={handleZoomIn}
-            className="px-3 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition text-sm"
-          >
-            +
-          </button>
-        </div>
-      </div>
-
-      {/* PDF Canvas */}
-      <div className="flex justify-center bg-gray-50 rounded-lg p-4 overflow-auto max-h-[calc(100vh-300px)] border border-gray-200">
-        <canvas
-          ref={canvasRef}
-          className="bg-white shadow-lg rounded-lg max-w-full h-auto"
-        />
-      </div>
-
-      {/* Sayfa bilgisi */}
-      <div className="flex justify-between items-center text-sm text-gray-600">
-        <span>
-          Sayfa {pdfInfo.pageStart} - {pdfInfo.pageEnd}
+        <span className="text-[#161439]">
+          {pageNum} / {pdfDoc?.numPages ?? 0}
         </span>
-        <span>Toplam: {totalPages} sayfa</span>
+
+        <button
+          onClick={handleNext}
+          disabled={pageNum >= (pdfDoc?.numPages ?? 0)}
+          className="px-4 py-2 bg-[#702DFF] text-white rounded disabled:opacity-50"
+        >
+          {translations.next}
+        </button>
       </div>
     </div>
   );
