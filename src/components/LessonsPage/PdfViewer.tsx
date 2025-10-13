@@ -2,7 +2,7 @@
 "use client"
 
 import { useServiceWorker } from '@/app/hooks/useServiceWorker';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface PdfViewerProps {
   topicId: string;
@@ -30,6 +30,22 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({
 }) => {
   useServiceWorker();
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [iframeHeight, setIframeHeight] = useState(600);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setIframeHeight(400);
+      } else {
+        setIframeHeight(600);
+      }
+    };
+  
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
 
   useEffect(() => {
     if (!iframeRef.current || !pdfInfo?.url) return;
@@ -53,16 +69,13 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({
 
   return (
     <>
-       <iframe
-      ref={iframeRef}
-      src={`${pdfInfo.url}#page=${pdfInfo.pageStart - min_page_start + 1}&zoom=100&toolbar=0&navpanes=0&scrollbar=0`}
-      width="100%"
-      height="600"
-      style={{ border: 'none', borderRadius: '0.5rem' }}
-      title="PDF Viewer"
-    >
-      <p>PDF göremiyorsanız <a href={pdfInfo.url} download="document.pdf">buradan indir</a>.</p>
-    </iframe>
+        <iframe
+    ref={iframeRef}
+    src={`${pdfInfo.url}#page=${pdfInfo.pageStart - min_page_start + 1}&zoom=100&toolbar=0&navpanes=0&scrollbar=0`}
+    width="100%"
+    height={iframeHeight}
+    style={{ border: 'none' }}
+  />
 
       <div className="flex justify-between items-center mt-4">
         <button
