@@ -35,7 +35,8 @@ export const usePdfLoader = () => {
       setIsLoading(true);
             
       try {
-
+        
+        /*
         if ('caches' in window) {
           const cache = await caches.open('pdf-cache-v1');
           const requestUrl = `${window.location.origin}/lessons/contents/${topicId}`;
@@ -57,7 +58,7 @@ export const usePdfLoader = () => {
             return;
           }
         }
-
+        */
         // Cache'de yoksa PDF'i API'den al
         console.log('Fetching PDF from API');
         //fetch pdf with axios  

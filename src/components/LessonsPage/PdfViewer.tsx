@@ -2,8 +2,8 @@
 "use client"
 
 import { useServiceWorker } from '@/app/hooks/useServiceWorker';
-import { useEffect } from 'react';
-// PdfViewer.tsx
+import { useEffect, useRef } from 'react';
+
 interface PdfViewerProps {
   topicId: string;
   initialPage?: number;
@@ -29,8 +29,19 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({
   onPageChange
 }) => {
   useServiceWorker();
-  
-  console.log('PdfViewer rendered with:', { pdfInfo, topicId, initialPage, min_page_start });
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  useEffect(() => {
+    if (!iframeRef.current || !pdfInfo?.url) return;
+
+    // iframe src'sini mount sonrasında ayarla
+    console.log("setting iframe src");
+    iframeRef.current.src = `${pdfInfo.url}#page=${pdfInfo.pageStart - min_page_start + 1}&zoom=100&toolbar=0&navpanes=0&scrollbar=0`;
+    console.log("Iframe src set to:", iframeRef.current.src);
+  }, [pdfInfo, min_page_start]);
+
+  //log src
+  console.log("PdfViewer rendered with pdfInfo:", pdfInfo);
 
   if (!pdfInfo || !pdfInfo.url) {
     return (
@@ -42,13 +53,17 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({
 
   return (
     <>
-      <iframe
-        key={pdfInfo.pageStart}
-        src={`${pdfInfo.url}#page=${pdfInfo.pageStart - min_page_start + 1}&zoom=100&toolbar=0&navpanes=0&scrollbar=0`}
-        width="100%"
-        height="600px"
-        className="border rounded-lg shadow-sm"
-      />
+       <iframe
+      ref={iframeRef}
+      src={`${pdfInfo.url}#page=${pdfInfo.pageStart - min_page_start + 1}&zoom=100&toolbar=0&navpanes=0&scrollbar=0`}
+      width="100%"
+      height="600"
+      style={{ border: 'none', borderRadius: '0.5rem' }}
+      title="PDF Viewer"
+    >
+      <p>PDF göremiyorsanız <a href={pdfInfo.url} download="document.pdf">buradan indir</a>.</p>
+    </iframe>
+
       <div className="flex justify-between items-center mt-4">
         <button
           onClick={() => onPageChange('prev')}
@@ -57,9 +72,11 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({
         >
           {translations.previous}
         </button>
+
         <span className="text-[#161439]">
           {pdfInfo.pageStart} - {pdfInfo.pageEnd}
         </span>
+
         <button
           onClick={() => onPageChange('next')}
           disabled={pdfInfo.pageStart >= pdfInfo.pageEnd}

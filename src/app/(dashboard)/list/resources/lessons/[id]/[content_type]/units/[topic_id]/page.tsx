@@ -185,26 +185,22 @@ const Page = () => {
         {/* Main Content Area */}
         <div className="border px-[40px] py-[27px] bg-[#F5F5DC] border-[#FFFFFF] shadow-custom-daow rounded-[14px] overflow-auto">
           <p className="font-semibold text-[20px] leading-[24px] text-[#161439]">
-           
           </p>
-          
           <div className="my-3">
-
-
-          <div className="my-3">
-            <PdfViewer 
-              topicId={topicId?.toString() || ''} 
-              initialPage={ 1}
-              min_page_start={min_page_start}
-              translations={{
-                previous: currentLanguageContent.previous,
-                next: currentLanguageContent.next
-              }}
-              pdfInfo={pdfInfo}
-              onPageChange={handlePageChange}
-            />
+            <div className="my-3">
+              <PdfViewer 
+                topicId={topicId?.toString() || ''} 
+                initialPage={ 1}
+                min_page_start={min_page_start}
+                translations={{
+                  previous: currentLanguageContent.previous,
+                  next: currentLanguageContent.next
+                }}
+                pdfInfo={pdfInfo}
+                onPageChange={handlePageChange}
+              />
+            </div>
           </div>
-    </div>
                 
 
         </div>
