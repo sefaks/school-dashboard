@@ -146,7 +146,7 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({
             download="document.pdf"
             className="px-4 py-2 bg-[#702DFF] text-white rounded hover:opacity-90"
           >
-            PDF'i indir
+        PDF&apos;i indir
           </a>
         </div>
       </div>
